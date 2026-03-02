@@ -1,14 +1,14 @@
 <x-filament-panels::page>
-    <div class="flex items-center space-x-1 mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
+    <div class="flex items-center space-x-1 mb-2 sm:mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
         <button 
             wire:click="setTab('order')" 
-            class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'order' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $activeTab === 'order' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
         >
             By Order
         </button>
         <button 
             wire:click="setTab('unit')" 
-            class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $activeTab === 'unit' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $activeTab === 'unit' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
         >
             By Unit
         </button>
@@ -16,45 +16,156 @@
 
     @if($activeTab === 'order')
         <div wire:key="tab-order">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex flex-wrap gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #f97316;"></div>
-                    <span class="text-sm">Quotation</span>
+            {{-- Legend and Add Button --}}
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 sm:mb-4">
+                {{-- Legend - Always visible with labels --}}
+                <div class="flex flex-wrap gap-x-2 gap-y-1 sm:gap-4 text-[10px] sm:text-sm">
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #f97316;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Quotation</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #3b82f6;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Confirmed</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #22c55e;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Active</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #a855f7;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Done</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #6b7280;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Cancel</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #ef4444;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Late</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #eab308;"></div>
+                        <span class="text-gray-600 dark:text-gray-400">Partial</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #3b82f6;"></div>
-                    <span class="text-sm">Confirmed</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #22c55e;"></div>
-                    <span class="text-sm">Active</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #a855f7;"></div>
-                    <span class="text-sm">Completed</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #6b7280;"></div>
-                    <span class="text-sm">Cancelled</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #ef4444;"></div>
-                    <span class="text-sm">Late Pickup/Return</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 rounded" style="background: #eab308;"></div>
-                    <span class="text-sm">Partial Return</span>
+
+                <a href="{{ url('/admin/rentals/create') }}" class="inline-flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition shrink-0 self-end sm:self-auto">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span class="sm:hidden">Add</span>
+                    <span class="hidden sm:inline">New Rental</span>
+                </a>
+            </div>
+
+            {{-- Mobile Calendar Controls --}}
+            <div id="mobile-calendar-controls" class="md:hidden bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-white/10 shadow-sm p-2 mb-2">
+                <div class="flex items-center justify-between gap-1">
+                    {{-- Navigation --}}
+                    <div class="flex items-center gap-0.5">
+                        <button onclick="calendarNav('prev')" class="p-1.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        <button onclick="calendarNav('next')" class="p-1.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    {{-- Title --}}
+                    <span id="mobile-calendar-title" class="text-xs font-semibold text-gray-900 dark:text-white flex-1 text-center truncate">
+                        Loading...
+                    </span>
+                    
+                    {{-- View Switcher --}}
+                    <div class="flex items-center gap-0.5">
+                        <button onclick="calendarNav('today')" class="px-2 py-1 text-xs font-medium rounded bg-primary-500 text-white hover:bg-primary-600 transition">
+                            Today
+                        </button>
+                        <select id="mobile-view-select" onchange="calendarChangeView(this.value)" class="text-xs font-medium rounded bg-gray-100 dark:bg-gray-800 border-0 py-1 pl-1 pr-5 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-primary-500">
+                            <option value="dayGridMonth">Month</option>
+                            <option value="listWeek">List</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <a href="{{ url('/admin/rentals/create') }}" class="filament-button filament-button-size-md bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition">
-                New Rental
-            </a>
-        </div>
-
         @livewire(\App\Filament\Widgets\RentalCalendarWidget::class)
         </div>
+
+        @push('scripts')
+        <script>
+            // Get FullCalendar instance from Alpine component
+            function getCalendar() {
+                var calendarEl = document.querySelector('[wire\\:id] .fc');
+                if (!calendarEl) {
+                    calendarEl = document.querySelector('.fc');
+                }
+                if (calendarEl && calendarEl.__fullcalendar) {
+                    return calendarEl.__fullcalendar;
+                }
+                // Try Alpine approach
+                var alpineEl = document.querySelector('[x-data*="fullcalendar"]');
+                if (alpineEl && alpineEl._x_dataStack) {
+                    for (var i = 0; i < alpineEl._x_dataStack.length; i++) {
+                        var data = alpineEl._x_dataStack[i];
+                        if (data.calendar) return data.calendar;
+                    }
+                }
+                return null;
+            }
+            
+            function calendarNav(action) {
+                var calendar = getCalendar();
+                if (!calendar) {
+                    console.log('Calendar not found');
+                    return;
+                }
+                if (action === 'prev') calendar.prev();
+                else if (action === 'next') calendar.next();
+                else if (action === 'today') calendar.today();
+                updateMobileTitle();
+            }
+            
+            function calendarChangeView(view) {
+                var calendar = getCalendar();
+                if (!calendar) return;
+                calendar.changeView(view);
+                updateMobileTitle();
+            }
+            
+            function updateMobileTitle() {
+                var calendar = getCalendar();
+                var titleEl = document.getElementById('mobile-calendar-title');
+                if (titleEl && calendar) {
+                    titleEl.textContent = calendar.view.title;
+                }
+            }
+            
+            // Auto-update title when calendar is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                var checkCalendar = setInterval(function() {
+                    var calendar = getCalendar();
+                    if (calendar) {
+                        updateMobileTitle();
+                        clearInterval(checkCalendar);
+                    }
+                }, 200);
+                
+                // Clear after 10 seconds to avoid infinite loop
+                setTimeout(function() { clearInterval(checkCalendar); }, 10000);
+            });
+            
+            // Also listen for Livewire updates
+            document.addEventListener('livewire:navigated', function() {
+                setTimeout(updateMobileTitle, 500);
+            });
+        </script>
+        @endpush
     @else
         <div wire:key="tab-unit" class="space-y-4">
             @php

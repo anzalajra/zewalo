@@ -160,63 +160,15 @@ class RentalCalendarWidget extends FullCalendarWidget implements HasActions
             'headerToolbar' => [
                 'left' => 'prev,next today',
                 'center' => 'title',
-                'right' => 'dayGridMonth,timeGridWeek,listWeek',
+                'right' => 'dayGridMonth,listWeek',
             ],
+            'initialView' => 'dayGridMonth',
+            'eventMaxStack' => 3,
+            'dayMaxEvents' => true,
+            'moreLinkClick' => 'popover',
             'selectable' => false,
             'editable' => false,
             'selectMirror' => false,
-            'dateClick' => "function(info) {
-                try {
-                    if (info.jsEvent) { info.jsEvent.preventDefault(); info.jsEvent.stopPropagation(); }
-                } catch(e){}
-                var params = new URLSearchParams();
-                params.set('start', info.dateStr);
-                window.location.href = '/admin/rentals/create?' + params.toString();
-            }",
-            'eventDidMount' => "function({ event, el, view }) {
-                el.setAttribute('title', event.title + ' — ' + (event.extendedProps.items || ''));
-                el.style.cursor = 'pointer';
-
-                el.addEventListener('click', function(ev) {
-                    try { ev.preventDefault(); ev.stopImmediatePropagation(); } catch(e) {}
-                    var componentId = el.closest('[wire\\\\:id]').getAttribute('wire:id');
-                    Livewire.find(componentId).mountAction('viewRentalDetails', { rentalId: event.id });
-                }, true);
-
-                if (!window.__filament_rental_calendar_setup_done) {
-                    window.__filament_rental_calendar_setup_done = true;
-                    document.addEventListener('click', function(e) {
-                        var t = e.target;
-                        var btn = t.closest && t.closest('.fc-button, button, a');
-                        if (!btn) return;
-                        var text = (btn.innerText || btn.textContent || '').trim().toLowerCase();
-                        var aria = (btn.getAttribute && btn.getAttribute('aria-label') || '').trim().toLowerCase();
-                        if (text.includes('create') || text.includes('new') || aria.includes('create') || aria.includes('new')) {
-                            try { e.preventDefault(); e.stopImmediatePropagation(); } catch(err) {}
-                            window.location.href = '/admin/rentals/create';
-                        }
-                    }, true);
-                    try {
-                        var observer = new MutationObserver(function(mutations) {
-                            for (var i=0;i<mutations.length;i++){
-                                var m = mutations[i];
-                                for (var j=0;j<m.addedNodes.length;j++){
-                                    var node = m.addedNodes[j];
-                                    if (!(node instanceof HTMLElement)) continue;
-                                    if (node.matches && (node.matches('.filament-modal') || node.querySelector && node.querySelector('[data-testid=\"filament-modal\"]'))) {
-                                        var titleEl = node.querySelector && (node.querySelector('.filament-modal__heading, h2, h3') || node.querySelector('[data-testid=\"modal-title\"]'));
-                                        var title = titleEl ? (titleEl.innerText || '').trim().toLowerCase() : '';
-                                        if (title === 'create' || title.includes('create')) {
-                                            window.location.href = '/admin/rentals/create';
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        observer.observe(document.body, { childList: true, subtree: true });
-                    } catch (e) {}
-                }
-            }",
             'eventDisplay' => 'block',
         ];
     }
