@@ -14,6 +14,10 @@ class Rental extends Model
         'rental_code',
         'user_id',
         'discount_id',
+        'daily_discount_id',
+        'daily_discount_amount',
+        'date_promotion_id',
+        'date_promotion_amount',
         'quotation_id',
         'invoice_id',
         'discount_code',
@@ -165,6 +169,16 @@ class Rental extends Model
     public function discountRelation(): BelongsTo
     {
         return $this->belongsTo(Discount::class, 'discount_id');
+    }
+
+    public function dailyDiscount(): BelongsTo
+    {
+        return $this->belongsTo(DailyDiscount::class);
+    }
+
+    public function datePromotion(): BelongsTo
+    {
+        return $this->belongsTo(DatePromotion::class);
     }
 
     public function quotation(): BelongsTo

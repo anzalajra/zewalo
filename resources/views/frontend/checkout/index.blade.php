@@ -107,6 +107,20 @@
                             </div>
                         @endif
 
+                        @if(isset($dailyDiscountAmount) && $dailyDiscountAmount > 0)
+                            <div class="flex justify-between text-green-600">
+                                <span>{{ $dailyDiscountName ?? 'Diskon Harian' }}</span>
+                                <span>- Rp {{ number_format($dailyDiscountAmount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
+                        @if(isset($datePromotionAmount) && $datePromotionAmount > 0)
+                            <div class="flex justify-between text-green-600">
+                                <span>{{ $datePromotionName ?? 'Promo Khusus' }}</span>
+                                <span>- Rp {{ number_format($datePromotionAmount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+
                         <div id="discount_row" class="flex justify-between text-green-600 {{ isset($discountAmount) && $discountAmount > 0 ? '' : 'hidden' }}">
                             <span>Discount (Coupon)</span>
                             <span id="discount_amount">-Rp {{ number_format($discountAmount ?? 0, 0, ',', '.') }}</span>
@@ -121,9 +135,20 @@
                         <hr>
                         <div class="flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span class="text-primary-600" id="grand_total">Rp {{ number_format(($subtotal - ($discountAmount ?? 0)), 0, ',', '.') }}</span>
+                            <span class="text-primary-600" id="grand_total">Rp {{ number_format(($subtotal - ($totalDiscount ?? $discountAmount ?? 0)), 0, ',', '.') }}</span>
                         </div>
                     </div>
+
+                    @if(isset($activePromotions) && count($activePromotions) > 0)
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs font-semibold text-green-700 mb-1">Promo Aktif:</p>
+                        <ul class="text-xs text-green-600 space-y-1">
+                            @foreach($activePromotions as $promo)
+                                <li>• {{ $promo }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
 
                     <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition">
                         Confirm Booking

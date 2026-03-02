@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Discounts;
 
 use App\Models\Discount;
-use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Checkbox;
@@ -18,20 +17,18 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 
 class DiscountResource extends Resource
 {
     protected static ?string $model = Discount::class;
 
-    // Navigation Configuration
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
-    
-    protected static string|UnitEnum|null $navigationGroup = 'Sales';
-    
-    protected static ?int $navigationSort = 3;
-    
-    protected static ?string $navigationLabel = 'Discounts';
+    protected static bool $shouldRegisterNavigation = false;
+
+    protected static ?string $slug = 'discount-codes';
+
+    protected static ?string $modelLabel = 'Discount Code';
+
+    protected static ?string $pluralModelLabel = 'Discount Codes';
 
     public static function form(Schema $schema): Schema
     {

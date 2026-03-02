@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Rental;
 use App\Models\RentalItem;
 use App\Models\Discount;
+use App\Models\DailyDiscount;
+use App\Models\DatePromotion;
+use App\Services\PromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,50 +35,55 @@ class CheckoutController extends Controller
         
         // Calculate Gross Total and Category Discount
         $grossTotal = 0;
+        $totalDays = 0;
+        $totalDailyRate = 0;
         foreach ($cartItems as $item) {
              $unit = $item->productUnit;
              $originalDailyRate = $unit->variation->daily_rate ?? $unit->product->daily_rate;
              $grossTotal += $originalDailyRate * $item->days;
+             $totalDays += $item->days;
+             $totalDailyRate += $item->daily_rate;
         }
         $categoryDiscountAmount = $grossTotal - $subtotal;
         $categoryName = $customer->category ? $customer->category->name : null;
 
+        // Calculate average days and daily rate for promotions
+        $avgDays = $cartItems->count() > 0 ? (int) round($totalDays / $cartItems->count()) : 0;
+        $avgDailyRate = $cartItems->count() > 0 ? $totalDailyRate / $cartItems->count() : 0;
+        $startDate = $cartItems->min('start_date');
+
         $deposit = Rental::calculateDeposit($subtotal);
         
-        // Clear previous discount session on page load to ensure fresh start
-        // or check if valid? Better to let user re-apply or persist if valid.
-        // Let's persist for better UX if they refresh.
-        // But we should validate if it's still valid for current cart.
-        
-        $discountAmount = 0;
+        // Calculate promotions using PromotionService
         $discountCode = session('checkout_discount_code');
-        
-        if ($discountCode) {
-            $discount = Discount::where('code', $discountCode)
-                ->where('is_active', true)
-                ->whereDate('start_date', '<=', now())
-                ->whereDate('end_date', '>=', now())
-                ->first();
-                
-            if ($discount && $subtotal >= $discount->min_rental_amount) {
-                if ($discount->type === 'percentage') {
-                    $discountAmount = $subtotal * ($discount->value / 100);
-                    if ($discount->max_discount_amount && $discountAmount > $discount->max_discount_amount) {
-                        $discountAmount = $discount->max_discount_amount;
-                    }
-                } else {
-                    $discountAmount = $discount->value;
-                }
-                
-                if ($discountAmount > $subtotal) $discountAmount = $subtotal;
-            } else {
-                session()->forget(['checkout_discount_code', 'checkout_discount_amount']);
-            }
+        $promotions = PromotionService::calculatePromotions(
+            $subtotal,
+            $avgDays,
+            $avgDailyRate,
+            $startDate ? Carbon::parse($startDate) : null,
+            $discountCode
+        );
+
+        $dailyDiscountAmount = $promotions['daily_discount_amount'];
+        $dailyDiscountName = $promotions['daily_discount']?->name;
+        $datePromotionAmount = $promotions['date_promotion_amount'];
+        $datePromotionName = $promotions['date_promotion']?->name;
+        $discountAmount = $promotions['code_discount_amount'];
+        $totalDiscount = $promotions['total_discount'];
+
+        // Clear invalid discount code
+        if ($discountCode && !$promotions['code_discount']) {
+            session()->forget(['checkout_discount_code', 'checkout_discount_amount']);
         }
+
+        // Get active promotions for display
+        $activePromotions = PromotionService::getActivePromotionsSummary();
 
         return view('frontend.checkout.index', compact(
             'customer', 'cartItems', 'subtotal', 'deposit', 'discountAmount',
-            'categoryDiscountAmount', 'categoryName', 'grossTotal'
+            'categoryDiscountAmount', 'categoryName', 'grossTotal',
+            'dailyDiscountAmount', 'dailyDiscountName', 'datePromotionAmount', 'datePromotionName',
+            'totalDiscount', 'activePromotions'
         ));
     }
 
@@ -209,41 +217,36 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        // Calculate global totals
+        // Calculate global totals and averages for promotions
         $globalSubtotal = $cartItems->sum('subtotal');
-        $globalDiscountAmount = 0;
+        $totalDays = $cartItems->sum('days');
+        $totalDailyRate = $cartItems->sum('daily_rate');
+        $avgDays = $cartItems->count() > 0 ? (int) round($totalDays / $cartItems->count()) : 0;
+        $avgDailyRate = $cartItems->count() > 0 ? $totalDailyRate / $cartItems->count() : 0;
+        $startDate = $cartItems->min('start_date');
+
         $discountCode = session('checkout_discount_code');
-        $discountId = null;
+        
+        // Calculate all promotions using PromotionService
+        $promotions = PromotionService::calculatePromotions(
+            $globalSubtotal,
+            $avgDays,
+            $avgDailyRate,
+            $startDate ? Carbon::parse($startDate) : null,
+            $discountCode
+        );
 
-        // Validate and apply discount
-        if ($discountCode) {
-            $discount = Discount::where('code', $discountCode)
-                ->where('is_active', true)
-                ->whereDate('start_date', '<=', now())
-                ->whereDate('end_date', '>=', now())
-                ->first();
+        $discountId = $promotions['code_discount']?->id;
+        $globalDiscountAmount = $promotions['code_discount_amount'];
+        $globalDailyDiscountId = $promotions['daily_discount']?->id;
+        $globalDailyDiscountAmount = $promotions['daily_discount_amount'];
+        $globalDatePromotionId = $promotions['date_promotion']?->id;
+        $globalDatePromotionAmount = $promotions['date_promotion_amount'];
+        $globalTotalDiscount = $promotions['total_discount'];
 
-            if ($discount && $globalSubtotal >= $discount->min_rental_amount) {
-                if ($discount->usage_limit && $discount->usage_count >= $discount->usage_limit) {
-                    // Limit reached, ignore discount
-                } else {
-                    $discountId = $discount->id;
-                    if ($discount->type === 'percentage') {
-                        $globalDiscountAmount = $globalSubtotal * ($discount->value / 100);
-                        if ($discount->max_discount_amount && $globalDiscountAmount > $discount->max_discount_amount) {
-                            $globalDiscountAmount = $discount->max_discount_amount;
-                        }
-                    } else {
-                        $globalDiscountAmount = $discount->value;
-                    }
-                    if ($globalDiscountAmount > $globalSubtotal) {
-                        $globalDiscountAmount = $globalSubtotal;
-                    }
-                    
-                    // Increment usage
-                    $discount->increment('usage_count');
-                }
-            }
+        // Increment code discount usage if applicable
+        if ($promotions['code_discount']) {
+            $promotions['code_discount']->increment('usage_count');
         }
 
         // Group cart items by date range
@@ -263,10 +266,16 @@ class CheckoutController extends Controller
                 
                 // Calculate proportional discount for this rental
                 $rentalDiscount = 0;
-                if ($globalSubtotal > 0 && $globalDiscountAmount > 0) {
+                $rentalDailyDiscountAmount = 0;
+                $rentalDatePromotionAmount = 0;
+                if ($globalSubtotal > 0) {
                     $proportion = $subtotal / $globalSubtotal;
                     $rentalDiscount = $globalDiscountAmount * $proportion;
+                    $rentalDailyDiscountAmount = $globalDailyDiscountAmount * $proportion;
+                    $rentalDatePromotionAmount = $globalDatePromotionAmount * $proportion;
                 }
+                
+                $rentalTotalDiscount = $rentalDiscount + $rentalDailyDiscountAmount + $rentalDatePromotionAmount;
 
                 // Deposit calculation
                 $deposit = Rental::calculateDeposit($subtotal); // Keeping it based on subtotal as per original logic
@@ -279,7 +288,7 @@ class CheckoutController extends Controller
                     'status' => \App\Models\Quotation::STATUS_ON_QUOTE,
                     'subtotal' => $subtotal,
                     'tax' => 0,
-                    'total' => $subtotal - $rentalDiscount,
+                    'total' => $subtotal - $rentalTotalDiscount,
                     'notes' => $request->notes,
                 ]);
 
@@ -293,7 +302,11 @@ class CheckoutController extends Controller
                     'discount' => $rentalDiscount,
                     'discount_id' => $discountId,
                     'discount_code' => $discountCode,
-                    'total' => $subtotal - $rentalDiscount,
+                    'daily_discount_id' => $globalDailyDiscountId,
+                    'daily_discount_amount' => $rentalDailyDiscountAmount,
+                    'date_promotion_id' => $globalDatePromotionId,
+                    'date_promotion_amount' => $rentalDatePromotionAmount,
+                    'total' => $subtotal - $rentalTotalDiscount,
                     'deposit' => $deposit,
                     'notes' => $request->notes,
                 ]);
