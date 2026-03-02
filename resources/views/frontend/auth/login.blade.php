@@ -15,6 +15,12 @@
         <form class="mt-8 space-y-6" action="{{ route('customer.login') }}" method="POST">
             @csrf
 
+            @if(session('status'))
+                <div class="bg-green-50 text-green-600 p-4 rounded-lg text-sm">
+                    {{ session('status') }}
+                </div>
+            @endif
+
             @if($errors->any())
                 <div class="bg-red-50 text-red-600 p-4 rounded-lg text-sm">
                     @foreach($errors->all() as $error)
@@ -39,6 +45,7 @@
                         <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                         <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
                     </div>
+                    <a href="{{ route('customer.password.request') }}" class="text-sm text-primary-600 hover:underline">Forgot password?</a>
                 </div>
             </div>
 

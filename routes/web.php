@@ -57,6 +57,12 @@ if (!$isInstalled) {
         Route::post('/login', [CustomerAuthController::class, 'login'])->middleware('throttle:6,1');
         Route::get('/register', [CustomerAuthController::class, 'showRegistrationForm'])->name('customer.register');
         Route::post('/register', [CustomerAuthController::class, 'register'])->middleware('throttle:6,1');
+        
+        // Password Reset
+        Route::get('/forgot-password', [CustomerAuthController::class, 'showForgotPasswordForm'])->name('customer.password.request');
+        Route::post('/forgot-password', [CustomerAuthController::class, 'sendResetLink'])->name('customer.password.email')->middleware('throttle:3,1');
+        Route::get('/reset-password/{token}', [CustomerAuthController::class, 'showResetPasswordForm'])->name('customer.password.reset');
+        Route::post('/reset-password', [CustomerAuthController::class, 'resetPassword'])->name('customer.password.update')->middleware('throttle:3,1');
     });
 
     Route::match(['get', 'post'], '/logout', [CustomerAuthController::class, 'logout'])->name('customer.logout')->middleware('customer.auth');
