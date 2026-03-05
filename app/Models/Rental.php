@@ -755,8 +755,8 @@ class Rental extends Model
 
     public function validateReturn(): void
     {
-        // Check if all items (main units and kits) in Delivery IN are checked
-        $deliveryIn = $this->deliveries->where('type', Delivery::TYPE_IN)->first();
+        // Check the latest Delivery IN (not the first, which may be a completed partial return)
+        $deliveryIn = $this->deliveries->where('type', Delivery::TYPE_IN)->sortByDesc('id')->first();
 
         if (! $deliveryIn || ! $deliveryIn->allItemsChecked()) {
             throw new \Exception('All items must be checked in the Delivery Note before validating return.');
@@ -856,8 +856,19 @@ class Rental extends Model
         }
 
         // Create or Update Delivery In (SJM)
-        $deliveryIn = $this->deliveries()->where('type', Delivery::TYPE_IN)->first();
+        // Find active (non-completed) Delivery IN to avoid re-populating completed ones
+        $deliveryIn = $this->deliveries()->where('type', Delivery::TYPE_IN)
+            ->where('status', '!=', Delivery::STATUS_COMPLETED)
+            ->first();
+
         if (! $deliveryIn) {
+            // Only create if no Delivery IN exists at all (first time)
+            $hasAnyDeliveryIn = $this->deliveries()->where('type', Delivery::TYPE_IN)->exists();
+            if ($hasAnyDeliveryIn) {
+                // All Delivery INs are completed (partial returns done), skip
+                return;
+            }
+
             $deliveryIn = Delivery::create([
                 'rental_id' => $this->id,
                 'type' => Delivery::TYPE_IN,
@@ -866,7 +877,7 @@ class Rental extends Model
             ]);
         }
 
-        if ($deliveryIn->status === Delivery::STATUS_DRAFT || $deliveryIn->items()->count() === 0) {
+        if ($deliveryIn->status === Delivery::STATUS_DRAFT) {
             foreach ($this->items as $item) {
                 // Main Unit
                 $deliveryIn->items()->firstOrCreate([
