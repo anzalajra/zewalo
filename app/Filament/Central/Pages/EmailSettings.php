@@ -2,6 +2,7 @@
 
 namespace App\Filament\Central\Pages;
 
+use App\Models\CentralSetting;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
@@ -33,33 +34,38 @@ class EmailSettings extends Page implements HasForms
 
     public ?array $data = [];
 
-    protected static function getSettingsPath(): string
-    {
-        return storage_path('app/mail-settings.json');
-    }
-
     public static function loadSettings(): array
     {
-        $path = static::getSettingsPath();
-
-        if (file_exists($path)) {
-            $settings = json_decode(file_get_contents($path), true);
-            if (is_array($settings)) {
+        try {
+            $settings = CentralSetting::getGroup('mail');
+            if (! empty($settings)) {
                 return $settings;
             }
+        } catch (\Exception $e) {
+            // DB not available yet
+        }
+
+        // Legacy JSON file fallback
+        $path = storage_path('app/mail-settings.json');
+        if (file_exists($path)) {
+            return json_decode(file_get_contents($path), true) ?? [];
         }
 
         return [];
     }
 
-    protected static function saveSettingsToFile(array $settings): void
+    protected static function saveSettings(array $settings): void
     {
-        $dir = dirname(static::getSettingsPath());
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
+        $encryptedKeys = ['mail_password'];
 
-        file_put_contents(static::getSettingsPath(), json_encode($settings, JSON_PRETTY_PRINT));
+        foreach ($settings as $key => $value) {
+            CentralSetting::set(
+                $key,
+                $value ?? '',
+                encrypted: in_array($key, $encryptedKeys),
+                group: 'mail'
+            );
+        }
     }
 
     public function mount(): void
@@ -154,15 +160,23 @@ class EmailSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        static::saveSettingsToFile($data);
+        try {
+            static::saveSettings($data);
 
-        // Apply immediately to current request
-        $this->applyMailConfig($data);
+            // Apply immediately to current request
+            $this->applyMailConfig($data);
 
-        Notification::make()
-            ->title('Email settings saved successfully')
-            ->success()
-            ->send();
+            Notification::make()
+                ->title('Email settings saved successfully')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Failed to save email settings')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     public function sendTestEmail(string $recipient): void
@@ -170,13 +184,13 @@ class EmailSettings extends Page implements HasForms
         try {
             // Save first, then apply
             $data = $this->form->getState();
-            static::saveSettingsToFile($data);
+            static::saveSettings($data);
             $this->applyMailConfig($data);
 
-            $subject = 'Test Email - ' . config('app.name');
-            $body = 'This is a test email from ' . config('app.name') . ".\n\n";
+            $subject = 'Test Email - '.config('app.name');
+            $body = 'This is a test email from '.config('app.name').".\n\n";
             $body .= "If you received this email, your email configuration is working correctly.\n\n";
-            $body .= 'Sent at: ' . now()->format('Y-m-d H:i:s');
+            $body .= 'Sent at: '.now()->format('Y-m-d H:i:s');
 
             Mail::raw($body, function ($message) use ($recipient, $subject) {
                 $message->to($recipient)

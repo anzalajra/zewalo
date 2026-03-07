@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\Filament\Central\Pages;
 
-use Filament\Pages\Page;
+use App\Models\CentralSetting;
+use App\Services\Storage\R2StorageService;
+use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use App\Services\Storage\R2StorageService;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Cache;
-use BackedEnum;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use UnitEnum;
 
 class R2StorageSettings extends Page implements HasForms
@@ -38,20 +37,17 @@ class R2StorageSettings extends Page implements HasForms
     public function mount(): void
     {
         $service = app(R2StorageService::class);
-        
+
         $this->isConfigured = $service->isConfigured();
-        
-        // Get current configuration for display
-        $config = $service->getConfiguration();
-        
+
         $this->form->fill([
-            'access_key_id' => env('CLOUDFLARE_R2_ACCESS_KEY_ID', ''),
+            'access_key_id' => CentralSetting::get('r2_access_key_id', env('CLOUDFLARE_R2_ACCESS_KEY_ID', '')),
             'secret_access_key' => '',
-            'bucket' => env('CLOUDFLARE_R2_BUCKET', ''),
-            'endpoint' => env('CLOUDFLARE_R2_ENDPOINT', ''),
-            'public_url' => env('CLOUDFLARE_R2_URL', ''),
-            'region' => env('CLOUDFLARE_R2_REGION', 'auto'),
-            'use_path_style_endpoint' => env('CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT', true),
+            'bucket' => CentralSetting::get('r2_bucket', env('CLOUDFLARE_R2_BUCKET', '')),
+            'endpoint' => CentralSetting::get('r2_endpoint', env('CLOUDFLARE_R2_ENDPOINT', '')),
+            'public_url' => CentralSetting::get('r2_url', env('CLOUDFLARE_R2_URL', '')),
+            'region' => CentralSetting::get('r2_region', env('CLOUDFLARE_R2_REGION', 'auto')),
+            'use_path_style_endpoint' => (bool) CentralSetting::get('r2_use_path_style_endpoint', env('CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT', true)),
         ]);
 
         $this->loadHealthAndStats();
@@ -60,7 +56,7 @@ class R2StorageSettings extends Page implements HasForms
     public function loadHealthAndStats(): void
     {
         $service = app(R2StorageService::class);
-        
+
         if ($this->isConfigured) {
             $this->healthInfo = $service->getHealthInfo();
             $this->storageStats = $service->getStorageStats();
@@ -134,39 +130,22 @@ class R2StorageSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         try {
-            $envPath = base_path('.env');
-            $envContent = File::get($envPath);
+            CentralSetting::set('r2_access_key_id', $data['access_key_id'], group: 'r2');
+            CentralSetting::set('r2_bucket', $data['bucket'], group: 'r2');
+            CentralSetting::set('r2_endpoint', $data['endpoint'], group: 'r2');
+            CentralSetting::set('r2_url', $data['public_url'] ?? '', group: 'r2');
+            CentralSetting::set('r2_region', $data['region'] ?? 'auto', group: 'r2');
+            CentralSetting::set('r2_use_path_style_endpoint', $data['use_path_style_endpoint'] ? '1' : '0', group: 'r2');
 
-            // Update or add env variables
-            $envVariables = [
-                'CLOUDFLARE_R2_ACCESS_KEY_ID' => $data['access_key_id'],
-                'CLOUDFLARE_R2_BUCKET' => $data['bucket'],
-                'CLOUDFLARE_R2_ENDPOINT' => $data['endpoint'],
-                'CLOUDFLARE_R2_URL' => $data['public_url'] ?? '',
-                'CLOUDFLARE_R2_REGION' => $data['region'] ?? 'auto',
-                'CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT' => $data['use_path_style_endpoint'] ? 'true' : 'false',
-            ];
-
-            // Only update secret if provided
-            if (!empty($data['secret_access_key'])) {
-                $envVariables['CLOUDFLARE_R2_SECRET_ACCESS_KEY'] = $data['secret_access_key'];
+            if (! empty($data['secret_access_key'])) {
+                CentralSetting::set('r2_secret_access_key', $data['secret_access_key'], encrypted: true, group: 'r2');
             }
 
-            foreach ($envVariables as $key => $value) {
-                $envContent = $this->setEnvValue($envContent, $key, $value);
-            }
-
-            File::put($envPath, $envContent);
-
-            // Clear config cache
-            Cache::forget('config');
-            if (function_exists('opcache_reset')) {
-                opcache_reset();
-            }
+            // Apply to runtime config immediately
+            $this->applyR2Config();
 
             Notification::make()
                 ->title('Konfigurasi R2 berhasil disimpan!')
-                ->body('Restart aplikasi mungkin diperlukan untuk menerapkan perubahan.')
                 ->success()
                 ->send();
 
@@ -180,6 +159,19 @@ class R2StorageSettings extends Page implements HasForms
                 ->danger()
                 ->send();
         }
+    }
+
+    protected function applyR2Config(): void
+    {
+        config([
+            'filesystems.disks.r2.key' => CentralSetting::get('r2_access_key_id'),
+            'filesystems.disks.r2.secret' => CentralSetting::get('r2_secret_access_key'),
+            'filesystems.disks.r2.bucket' => CentralSetting::get('r2_bucket'),
+            'filesystems.disks.r2.endpoint' => CentralSetting::get('r2_endpoint'),
+            'filesystems.disks.r2.url' => CentralSetting::get('r2_url'),
+            'filesystems.disks.r2.region' => CentralSetting::get('r2_region', 'auto'),
+            'filesystems.disks.r2.use_path_style_endpoint' => (bool) CentralSetting::get('r2_use_path_style_endpoint', true),
+        ]);
     }
 
     public function testConnection(): void
@@ -207,29 +199,11 @@ class R2StorageSettings extends Page implements HasForms
     public function refreshStats(): void
     {
         $this->loadHealthAndStats();
-        
+
         Notification::make()
             ->title('Statistik diperbarui')
             ->success()
             ->send();
-    }
-
-    protected function setEnvValue(string $envContent, string $key, string $value): string
-    {
-        $value = str_replace('"', '\\"', $value);
-        
-        // Check if key exists
-        if (preg_match("/^{$key}=.*/m", $envContent)) {
-            // Update existing key
-            return preg_replace(
-                "/^{$key}=.*/m",
-                "{$key}=\"{$value}\"",
-                $envContent
-            );
-        }
-        
-        // Add new key
-        return $envContent . "\n{$key}=\"{$value}\"";
     }
 
     public static function getNavigationBadge(): ?string
