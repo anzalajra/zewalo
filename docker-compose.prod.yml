@@ -29,14 +29,11 @@ services:
       timeout: 10s
       retries: 3
 
-  # Nginx Service
+  # Nginx Service (Coolify proxy handles external ports)
   nginx:
     image: nginx:alpine
     container_name: zewalo-nginx
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./public:/var/www/public:ro
       - app-storage:/var/www/storage:ro
