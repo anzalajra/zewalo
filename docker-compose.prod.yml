@@ -81,11 +81,8 @@ services:
       timeout: 5s
       retries: 5
 
-  # Queue Worker
+  # Queue Worker (reuses image from app service)
   queue:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
     image: zewalo-app
     container_name: zewalo-queue
     restart: always
@@ -96,10 +93,9 @@ services:
     networks:
       - zewalo-network
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - app
+      - db
+      - redis
     env_file:
       - .env
     deploy:
@@ -107,11 +103,8 @@ services:
         limits:
           memory: 256M
 
-  # Scheduler
+  # Scheduler (reuses image from app service)
   scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
     image: zewalo-app
     container_name: zewalo-scheduler
     restart: always
@@ -122,10 +115,9 @@ services:
     networks:
       - zewalo-network
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - app
+      - db
+      - redis
     env_file:
       - .env
     deploy:
