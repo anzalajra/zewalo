@@ -43,6 +43,9 @@ class RedirectCentralDomainToPanel
                 str_starts_with($path, 'js') ||
                 str_starts_with($path, 'fonts') ||
                 str_starts_with($path, 'icons') ||
+                str_starts_with($path, 'filament') ||
+                str_starts_with($path, 'masuk') ||
+                str_starts_with($path, 'api/payment') ||
                 $path === 'up') {
                 return $next($request);
             }

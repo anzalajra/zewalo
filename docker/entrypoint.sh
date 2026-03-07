@@ -23,8 +23,12 @@ touch storage/installed
 
 # Create storage link if not exists
 if [ ! -L public/storage ]; then
-    php artisan storage:link 2>/dev/null || true
+    php artisan storage:link || true
 fi
+
+# Publish Filament assets (must run at runtime since build has no .env)
+echo "Publishing Filament assets..."
+php artisan filament:assets
 
 # Optimize for production
 echo "Optimizing application..."
@@ -32,8 +36,7 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
-php artisan icons:cache 2>/dev/null || true
-php artisan filament:assets 2>/dev/null || true
+php artisan icons:cache || true
 
 echo "=== Application is ready! ==="
 
