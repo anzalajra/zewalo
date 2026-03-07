@@ -3,6 +3,10 @@ set -e
 
 echo "=== Zewalo Production Entrypoint ==="
 
+# Sync public files from build to volume (ensures fresh assets on every deploy)
+echo "Syncing public files..."
+rsync -a --delete /var/www/public-build/ /var/www/public/
+
 # Wait for database to be ready
 echo "Waiting for database..."
 until pg_isready -h ${DB_HOST:-db} -p ${DB_PORT:-5432} -U ${DB_USERNAME:-postgres} > /dev/null 2>&1; do
@@ -29,6 +33,7 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 php artisan icons:cache 2>/dev/null || true
+php artisan filament:assets 2>/dev/null || true
 
 echo "=== Application is ready! ==="
 

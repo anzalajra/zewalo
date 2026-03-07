@@ -51,6 +51,7 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     zip \
     unzip \
+    rsync \
     postgresql-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -78,12 +79,19 @@ COPY --from=composer-builder /app/vendor /var/www/vendor
 # Copy built frontend assets from builder stage
 COPY --from=frontend-builder /app/public/build /var/www/public/build
 
+# Run package discovery and publish Filament assets (needs vendor present)
+RUN php artisan package:discover --ansi 2>/dev/null || true \
+    && php artisan filament:assets 2>/dev/null || true
+
 # Copy PHP production config
 COPY docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
 
 # Copy entrypoint script
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Backup public directory for volume sync on each deploy
+RUN cp -r /var/www/public /var/www/public-build
 
 # Create necessary directories & set permissions
 RUN mkdir -p /var/www/storage/logs \
