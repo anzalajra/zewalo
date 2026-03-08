@@ -7,6 +7,7 @@ use App\Models\PaymentGateway;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -15,6 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class PaymentGatewayResource extends Resource
@@ -67,6 +69,28 @@ class PaymentGatewayResource extends Resource
                         ->placeholder('API Key / Secret Key'),
                 ])
                 ->columns(2),
+
+            Section::make('Callback URLs')
+                ->description('URL berikut perlu dikonfigurasi di dashboard payment gateway.')
+                ->schema([
+                    Placeholder::make('callback_url')
+                        ->label('Callback URL (Notification)')
+                        ->content(fn (?PaymentGateway $record): HtmlString => new HtmlString(
+                            $record
+                                ? '<code class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm select-all">'.e(route('payment.callback', ['gateway' => $record->code])).'</code>'
+                                : '<span class="text-gray-400">Simpan gateway terlebih dahulu untuk melihat URL</span>'
+                        ))
+                        ->helperText('Masukkan URL ini di dashboard Duitku sebagai Callback URL'),
+
+                    Placeholder::make('return_url')
+                        ->label('Return URL (Redirect setelah bayar)')
+                        ->content(fn (): HtmlString => new HtmlString(
+                            '<code class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-sm select-all">'.e(route('payment.return')).'</code>'
+                        ))
+                        ->helperText('URL redirect setelah customer selesai bayar'),
+                ])
+                ->columns(2)
+                ->hiddenOn('create'),
 
             Section::make('Settings')
                 ->schema([

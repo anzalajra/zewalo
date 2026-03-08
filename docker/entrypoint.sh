@@ -53,6 +53,11 @@ php artisan view:cache
 php artisan event:cache
 php artisan icons:cache || true
 
+# Fix storage & log permissions (entrypoint runs as root, PHP-FPM runs as www)
+echo "Fixing storage permissions..."
+chown -R www:www-data /var/www/storage /var/www/bootstrap/cache
+chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
 echo "=== Application is ready, starting services ==="
 
 exec "$@"
