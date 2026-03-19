@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Zewalo - Camera Kit Management Solution</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#14B8A6",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#11211f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+    <!-- BEGIN: MainHeader -->
+    @include('landing.partials.header')
+    <!-- END: MainHeader -->
+
+    <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+        <div class="layout-container flex h-full grow flex-col">
+            <div class="px-4 md:px-20 lg:px-40 flex flex-1 justify-center py-12">
+                <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+                    <div class="flex flex-wrap justify-between gap-6 p-4">
+                        <div class="flex min-w-72 flex-col gap-4">
+                            <span
+                                class="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-wider text-xs">
+                                <span class="material-symbols-outlined text-sm">inventory_2</span>
+                                Feature Spotlight: Kits
+                            </span>
+                            <h1
+                                class="text-slate-900 dark:text-slate-100 text-4xl md:text-5xl font-black leading-tight tracking-[-0.033em]">
+                                Streamline Your Camera Kit Management
+                            </h1>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg font-normal leading-relaxed max-w-2xl">
+                                Stop losing SD cards and batteries. Zewalo's 'Kit' feature ensures every piece of
+                                high-end gear—from bodies to the smallest lens caps—is accounted for at every stage.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 mt-8">
+                        <div
+                            class="flex flex-col gap-4 p-6 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                            <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700"
+                                data-alt="Messy photography equipment on a wooden table with loose cables"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC5tpsClIgsLaxBxcKi2Xq4x3ExKu3yRhr5r6rWDyEVQuBUjyyTgVtCdbLiXBUpB7-kJ0ua09lUKpO1b0vBfJxUGDj1NJaN-HBnLcFuHkm-e7sZlXY5qn6FR_05i0Q3vz_ogoFVwMMssdUp5tLAXG1V4E2uwdA4ot7YO1_qUdIHTAkoLKMyw6o8qybpMST9ozzT57r54wA5_CmoeSq8j9yLHDc2xHhROjHDkftgLuf4lDQbe3FuEDzLKy-GLkwn4mnpBaGOl3_WqWgZ");'>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-symbols-outlined text-red-500">error</span>
+                                    <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-normal">
+                                        Before: Manual Tracking</p>
+                                </div>
+                                <p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal">
+                                    Spreadsheets, sticky notes, and frequent loss of small parts like lens caps,
+                                    batteries, and SD cards. High friction during returns leads to missing inventory.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col gap-4 p-6 rounded-xl bg-white dark:bg-slate-800 border-2 border-primary/30 shadow-md">
+                            <div class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg overflow-hidden border border-slate-100 dark:border-slate-700"
+                                data-alt="Organized camera gear in a professional hard case with custom foam"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOb7JW5CioFighjKgd28pfFuXmvOpbU8KyZ6tCSMutBOIKW5KcFV7f1BKWOsC_icLyxyw4RWZFDgpgaTZSP8j41jNWmeOc_8DtLrgkqfyMcDys_AnNzrSD6e2L6KIEIEGtiXloHUvaylD6XYuQ4eXSbleEOWiAt3R_hbmF5V7wCbocy5BmuElHAKi-ctoj7zKgh5XpqcKl5uJtrPXHNzZslx0HQbrgfNiFKh-bkK1y1xxOPb6qruRyd7QUNYphfcIxnExK1mfwIpZk");'>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-symbols-outlined text-primary">check_circle</span>
+                                    <p class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-normal">
+                                        After: Systemized Inventory</p>
+                                </div>
+                                <p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal">
+                                    Every kit (Body, Lenses, SD Cards, Batteries) tracked as a single parent unit with
+                                    mandatory child-item verification. Zero loss, 100% accountability.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <h2
+                        class="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight tracking-[-0.015em] px-4 pb-4 pt-12">
+                        The Kit Feature in Action</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4">
+                        <div
+                            class="flex flex-1 gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex-col hover:border-primary transition-colors">
+                            <div
+                                class="text-primary bg-primary/10 w-12 h-12 flex items-center justify-center rounded-lg">
+                                <span class="material-symbols-outlined">package_2</span>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold leading-tight">Unified
+                                    Kits</h3>
+                                <p class="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed">Group
+                                    bodies, lenses, and accessories into one rental item.</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-1 gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex-col hover:border-primary transition-colors">
+                            <div
+                                class="text-primary bg-primary/10 w-12 h-12 flex items-center justify-center rounded-lg">
+                                <span class="material-symbols-outlined">checklist</span>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold leading-tight">
+                                    Auto-Checklist</h3>
+                                <p class="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed">System
+                                    prompts for every battery and SD card upon return.</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-1 gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex-col hover:border-primary transition-colors">
+                            <div
+                                class="text-primary bg-primary/10 w-12 h-12 flex items-center justify-center rounded-lg">
+                                <span class="material-symbols-outlined">schedule</span>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold leading-tight">
+                                    Real-time Status</h3>
+                                <p class="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed">Know
+                                    exactly which lens is with which client instantly.</p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-1 gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 flex-col hover:border-primary transition-colors">
+                            <div
+                                class="text-primary bg-primary/10 w-12 h-12 flex items-center justify-center rounded-lg">
+                                <span class="material-symbols-outlined">shield</span>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <h3 class="text-slate-900 dark:text-slate-100 text-base font-bold leading-tight">Loss
+                                    Prevention</h3>
+                                <p class="text-slate-600 dark:text-slate-400 text-sm font-normal leading-relaxed">
+                                    Identify missing small parts before the client leaves the counter.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 mt-12">
+                        <div class="bg-primary/5 dark:bg-primary/10 rounded-2xl p-8 border border-primary/20">
+                            <div class="flex flex-col md:flex-row gap-8 items-center">
+                                <div
+                                    class="w-24 h-24 rounded-full overflow-hidden border-4 border-white dark:border-slate-700 shadow-lg shrink-0">
+                                    <img alt="Profile" class="w-full h-full object-cover"
+                                        data-alt="Professional male photographer headshot"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGZSb6MTX04c9_-CcimmnHmkixyL8t_qL5ff1S2z9Y-8NXUl64uC262FM8ddCaIerOQwWvkCCPbj2m54evbd19tqlTuCmGypFcZAUu14cJkTZoHMYsidTea0aYHPTsMbQXzkZVyvGVA6px-6XaLZ295JU2isuQDGebWWGp4OAy6hn3McNhgf3F0dkpFkw_sru0eVEv2Pmz1Lh2PtaAhDIwAIfhNTG-uhUjYMSpUFahTF4Zj4Mbl4s6SPh6WpxIilYMLJDQsy5r2N8B" />
+                                </div>
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex gap-1 text-primary">
+                                        <span class="material-symbols-outlined">star</span>
+                                        <span class="material-symbols-outlined">star</span>
+                                        <span class="material-symbols-outlined">star</span>
+                                        <span class="material-symbols-outlined">star</span>
+                                        <span class="material-symbols-outlined">star</span>
+                                    </div>
+                                    <p
+                                        class="text-slate-800 dark:text-slate-200 text-xl font-medium italic leading-relaxed">
+                                        "Before Zewalo, we were losing roughly $400 a month in 'small' items—batteries,
+                                        caps, and cables. The Kit feature paid for itself in the first two weeks by
+                                        enforcing a strict check-in protocol that our staff actually follows."
+                                    </p>
+                                    <div>
+                                        <p class="text-slate-900 dark:text-slate-100 font-bold">Marcus Thorne</p>
+                                        <p class="text-slate-500 dark:text-slate-400 text-sm">Operations Manager,
+                                            CineRent Studios NYC</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h2
+                        class="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight tracking-[-0.015em] px-4 pb-4 pt-16 text-center">
+                        Frequently Asked Questions</h2>
+                    <div class="flex flex-col gap-3 p-4">
+                        <div
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                            <div class="flex justify-between items-center cursor-pointer">
+                                <p class="text-slate-900 dark:text-slate-100 font-bold">Can I customize what goes into a
+                                    'Kit'?</p>
+                                <span class="material-symbols-outlined text-primary">expand_more</span>
+                            </div>
+                            <p class="mt-4 text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Yes. You can add
+                                any number of inventory items, serial-tracked or not, to a Kit template. This includes
+                                expendables like tape or cleaning wipes.</p>
+                        </div>
+                        <div
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                            <div class="flex justify-between items-center cursor-pointer">
+                                <p class="text-slate-900 dark:text-slate-100 font-bold">What happens if a part of the
+                                    kit is missing during return?</p>
+                                <span class="material-symbols-outlined text-primary">expand_more</span>
+                            </div>
+                            <p class="mt-4 text-slate-600 dark:text-slate-400 text-sm leading-relaxed">The system will
+                                flag the kit as 'Incomplete'. You can choose to keep the rental active, bill the client
+                                immediately for the replacement, or mark it as a lost item with one click.</p>
+                        </div>
+                        <div
+                            class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5">
+                            <div class="flex justify-between items-center cursor-pointer">
+                                <p class="text-slate-900 dark:text-slate-100 font-bold">Does it support barcode
+                                    scanning?</p>
+                                <span class="material-symbols-outlined text-primary">expand_more</span>
+                            </div>
+                            <p class="mt-4 text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Absolutely. Scan
+                                the main kit barcode to pull up the checklist, then scan individual serial numbers for
+                                the body and lenses to confirm everything is back.</p>
+                        </div>
+                    </div>
+                    <div class="p-4 mt-16 mb-20">
+                        <div
+                            class="relative overflow-hidden rounded-3xl bg-slate-900 dark:bg-primary/20 p-8 md:p-12 text-center flex flex-col items-center gap-6">
+                            <div class="absolute inset-0 opacity-10 pointer-events-none"
+                                style="background-image: radial-gradient(circle at 2px 2px, #14B8A6 1px, transparent 0); background-size: 24px 24px;">
+                            </div>
+                            <h2 class="text-white text-3xl md:text-4xl font-black max-w-xl relative z-10">Ready to stop
+                                losing your gear?</h2>
+                            <p class="text-slate-300 text-lg max-w-2xl relative z-10">Join 500+ photography and film
+                                rental houses using Zewalo to protect their investment.</p>
+                            <div class="flex flex-wrap justify-center gap-4 relative z-10">
+                                <a href="/register-tenant"
+                                    class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-10 rounded-full transition-all transform hover:scale-105 shadow-xl">
+                                    Start Free Trial
+                                </a>
+                                <a href="/contact"
+                                    class="bg-white/10 hover:bg-white/20 text-white font-bold py-4 px-10 rounded-full border border-white/20 backdrop-blur-sm transition-all">
+                                    Book a Demo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BEGIN: MainFooter -->
+    @include('landing.partials.footer')
+    <!-- END: MainFooter -->
+</body>
+
+</html>

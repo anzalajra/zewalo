@@ -81,6 +81,13 @@ if (! $isInstalled) {
         'feature/live-stock' => ['view' => 'landing.features.live-stock', 'name' => 'landing.features.live-stock'],
         'feature/quotation-invoicing' => ['view' => 'landing.features.quotation-invoicing', 'name' => 'landing.features.quotation-invoicing'],
         'feature/reporting' => ['view' => 'landing.features.reporting', 'name' => 'landing.features.reporting'],
+        'solution/photography-film' => ['view' => 'landing.solutions.photography-film', 'name' => 'landing.solutions.photography-film'],
+        'solution/outdoor-camping' => ['view' => 'landing.solutions.outdoor-camping', 'name' => 'landing.solutions.outdoor-camping'],
+        'solution/party-event' => ['view' => 'landing.solutions.party-event', 'name' => 'landing.solutions.party-event'],
+        'solution/sound-system' => ['view' => 'landing.solutions.sound-system', 'name' => 'landing.solutions.sound-system'],
+        'solution/vehicle' => ['view' => 'landing.solutions.vehicle', 'name' => 'landing.solutions.vehicle'],
+        'solution/medical-equipment' => ['view' => 'landing.solutions.medical-equipment', 'name' => 'landing.solutions.medical-equipment'],
+        'solution/baby-mom-needs' => ['view' => 'landing.solutions.baby-mom-needs', 'name' => 'landing.solutions.baby-mom-needs'],
     ];
 
     foreach ($landingPages as $uri => $data) {

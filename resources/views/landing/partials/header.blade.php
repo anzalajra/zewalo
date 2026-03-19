@@ -141,8 +141,152 @@
                                         </div>
                                     </div>
                                 </div>
-                                <a class="text-sm font-medium hover:text-primary transition-colors"
-                                    href="{{ route('home') }}#solutions">Solutions</a>
+                                <div class="group h-full flex items-center">
+                                    <button
+                                        class="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors py-5">
+                                        Solutions
+                                        <span class="material-symbols-outlined text-sm">expand_more</span>
+                                    </button>
+                                    <div
+                                        class="mega-menu absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8 p-8">
+                                            <div class="col-span-8 grid grid-cols-2 gap-x-8 gap-y-6">
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/photography-film') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">photo_camera</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Photography &amp; Film</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Manage camera kits, lenses, and accessories with precision tracking.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/outdoor-camping') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">hiking</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Outdoor &amp; Camping</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Real-time tracking for high-volume camping gear operations.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/party-event') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">celebration</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Party &amp; Event</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Prevent double-booking across large-scale event inventories.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/sound-system') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">speaker</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Sound System</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Kit-based tracking for mixers, cables, and audio components.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/vehicle') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">directions_car</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Car &amp; Motorcycle</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Fleet maintenance, document tracking, and booking integration.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                                                    href="{{ url('/solution/medical-equipment') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">medical_services</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Medical Equipment</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Automated maintenance and compliance tracking for medical devices.</p>
+                                                    </div>
+                                                </a>
+                                                <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all col-span-2"
+                                                    href="{{ url('/solution/baby-mom-needs') }}">
+                                                    <div
+                                                        class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                                                        <span class="material-symbols-outlined">child_care</span>
+                                                    </div>
+                                                    <div>
+                                                        <h3
+                                                            class="font-bold text-slate-900 dark:text-white group-hover/item:text-primary transition-colors">
+                                                            Baby &amp; Mom Needs</h3>
+                                                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                            Hygiene-first rental management for baby gear and accessories.</p>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div
+                                                class="col-span-4 border-l border-slate-100 dark:border-slate-800 pl-8 flex flex-col justify-between">
+                                                <div>
+                                                    <div
+                                                        class="relative rounded-xl overflow-hidden aspect-video bg-slate-100 dark:bg-slate-800 mb-4 group/img">
+                                                        <div
+                                                            class="absolute inset-0 bg-gradient-to-tr from-primary/40 to-primary/10">
+                                                        </div>
+                                                        <img alt="Industry Solutions"
+                                                            class="w-full h-full object-cover mix-blend-overlay group-hover/img:scale-105 transition-transform duration-500"
+                                                            data-alt="Various rental business types showcasing industry solutions"
+                                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTWU39Dfm5N8WxRg8baNff83f4QI4-Xp9Ver0e3JbtoqWFTu91J1H2c2gXgFp-lQfXQ4Q3-owcQpg0vy1gHyuR6wt09wD1Kd0LzNdAh5mqVzXIk7DniTF7nWHiF2vgT2IgbYVsWFIvPa541mla8BKAuEjznjGGDUnahr-ju-HY3XOwtBFtB1ZZKH49N6KJX9ajKHVFHJdsK5edTvEwGddtutqu3QPzKiJpkT6t9yZAoHxqd-r6ppA4FSB6NKM6DZHA2NS-AP-uXw1c" />
+                                                        <div
+                                                            class="absolute bottom-3 left-3 bg-white/90 backdrop-blur dark:bg-slate-900/90 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
+                                                            Industry Solutions</div>
+                                                    </div>
+                                                    <h4 class="font-bold text-slate-900 dark:text-white">Tailored for
+                                                        Your Industry</h4>
+                                                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Discover
+                                                        how Zewalo adapts to your specific rental business needs.</p>
+                                                </div>
+                                                <a class="mt-6 flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 transition-colors"
+                                                    href="{{ route('home') }}#solutions">
+                                                    <div class="flex flex-col">
+                                                        <span class="font-bold text-slate-900 dark:text-white">Explore
+                                                            all solutions</span>
+                                                        <span
+                                                            class="text-xs text-slate-500 dark:text-slate-400">Find the
+                                                            perfect fit for your business</span>
+                                                    </div>
+                                                    <span
+                                                        class="material-symbols-outlined text-primary">arrow_forward</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <a class="text-sm font-medium {{ request()->routeIs('landing.pricing') ? 'text-primary' : 'hover:text-primary transition-colors' }}" href="{{ route('landing.pricing') }}">Pricing</a>
                                 <a class="text-sm font-medium hover:text-primary transition-colors"
                                     href="{{ route('home') }}#testimonials">Testimonials</a>

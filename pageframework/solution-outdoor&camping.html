@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#14B8A6",
+                        "background-light": "#f6f8f8",
+                        "background-dark": "#11211f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-4 md:px-20 lg:px-40 flex flex-1 justify-center py-10">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+<!-- Hero / Page Heading Section -->
+<div class="flex flex-wrap justify-between gap-3 p-4">
+<div class="flex min-w-72 flex-col gap-3">
+<h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em]">Scale Your Outdoor Rental Business</h1>
+<p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal">Real-time tracking and automated booking for high-volume camping gear shops. Stop overbooking and start growing.</p>
+</div>
+</div>
+<!-- Stats / Metrics -->
+<div class="flex flex-wrap gap-4 p-4">
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Booking Efficiency</p>
+<p class="text-primary tracking-light text-2xl font-bold leading-tight">+45%</p>
+<p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Increased turnover rate</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Turnaround Speed</p>
+<p class="text-primary tracking-light text-2xl font-bold leading-tight">2x Faster</p>
+<p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Ready for next rental</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Inventory Accuracy</p>
+<p class="text-primary tracking-light text-2xl font-bold leading-tight">100%</p>
+<p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Zero double-bookings</p>
+</div>
+</div>
+<!-- Inventory Table Section -->
+<h2 class="text-slate-900 dark:text-slate-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Live Availability &amp; Maintenance</h2>
+<div class="px-4 py-3 @container">
+<div class="flex overflow-hidden rounded-lg border border-primary/20 bg-white dark:bg-slate-800">
+<table class="flex-1 text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-700/50">
+<th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Equipment</th>
+<th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Status</th>
+<th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Last Service</th>
+<th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Stock</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-t border-slate-100 dark:border-slate-700">
+<td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Alpine 4-Person Tent</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Available</span>
+</td>
+<td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">2 days ago</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="bg-primary h-full" style="width: 85%;"></div>
+</div>
+<span class="text-sm font-medium">42/50</span>
+</div>
+</td>
+</tr>
+<tr class="border-t border-slate-100 dark:border-slate-700">
+<td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Pro-Guide Stove System</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Cleaning</span>
+</td>
+<td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">1 week ago</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="bg-primary h-full" style="width: 20%;"></div>
+</div>
+<span class="text-sm font-medium">12/60</span>
+</div>
+</td>
+</tr>
+<tr class="border-t border-slate-100 dark:border-slate-700">
+<td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Zero-Degree Sleeping Bag</td>
+<td class="px-4 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Out on Rent</span>
+</td>
+<td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">Today</td>
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+<div class="bg-primary h-full" style="width: 5%;"></div>
+</div>
+<span class="text-sm font-medium">4/80</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Features Grid -->
+<div class="flex flex-col gap-10 px-4 py-12">
+<div class="flex flex-col gap-4">
+<h2 class="text-slate-900 dark:text-slate-100 tracking-light text-3xl font-bold leading-tight">Engineered for High-Volume Peaks</h2>
+<p class="text-slate-600 dark:text-slate-400 text-base max-w-[720px]">Never lose track of a single piece of gear. Our platform handles the complexity so you can focus on the adventure.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
+<span class="material-symbols-outlined text-primary text-3xl">sync</span>
+<div class="flex flex-col gap-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Real-Time Booking Sync</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm">Connect your website, walk-ins, and 3rd party marketplaces to one central inventory source.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
+<span class="material-symbols-outlined text-primary text-3xl">build_circle</span>
+<div class="flex flex-col gap-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Maintenance Alerts</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm">Automatic checklists for tents and stoves ensuring every rental is safe and clean.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
+<span class="material-symbols-outlined text-primary text-3xl">event_available</span>
+<div class="flex flex-col gap-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Seasonal Forecasting</h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm">Predict demand for summer peaks and ensure you have enough sleeping bags for the rush.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonial Section -->
+<div class="px-4 py-12">
+<div class="rounded-2xl bg-primary/10 p-8 flex flex-col md:flex-row gap-8 items-center">
+<div class="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 border-4 border-white dark:border-slate-800 shadow-lg">
+<img alt="Shop Owner" class="w-full h-full object-cover" data-alt="Portrait of a smiling outdoor shop owner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJIpsEpn1_hBwqADguADsTuU2SUj5iMjmUAXEUyjM4v_t6SwhY8dzmXZwn9yza3znV0Uys9NZkG9XWO6-BRp2D9_q91xTGunLMitpvyDjZXFALfN6shM8V5YvXrC3l0CcPOj7eAd1oWUYaQl89jPr7xfxqjK43mNlGZKsPQOwtx46Qz5fsf6TFTvguhaXg_q4bckslD-UIy1q-ElSdWTNjIAVChenAZgQQUgI2IuFZJppwsL9vifBZYjzmfb0UixrGrTEBVs844Uz"/>
+</div>
+<div class="flex flex-col gap-4">
+<div class="flex text-primary">
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+<span class="material-symbols-outlined fill-1">star</span>
+</div>
+<blockquote class="text-xl font-medium italic text-slate-800 dark:text-slate-200">
+                                    "During the mid-July rush, we used to lose track of nearly 15% of our tent inventory. Since switching to this system, we've had zero double-bookings and our maintenance team is 50% faster at prepping stoves for the next guest."
+                                </blockquote>
+<div>
+<p class="font-bold text-slate-900 dark:text-slate-100">Marcus Sterling</p>
+<p class="text-sm text-slate-600 dark:text-slate-400">Founder, Peak Adventures Rental Co.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- FAQ Section (Accordion Style) -->
+<div class="px-4 py-12">
+<h2 class="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+<div class="space-y-4 max-w-2xl mx-auto">
+<div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
+<div class="px-6 py-4 flex justify-between items-center cursor-pointer">
+<span class="font-semibold">How does the automatic sync work?</span>
+<span class="material-symbols-outlined text-primary">expand_more</span>
+</div>
+<div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
+                                    Our API connects directly to your Shopify, WooCommerce, or custom booking engine. When a customer rents a tent online, it is instantly removed from your physical store's available stock.
+                                </div>
+</div>
+<div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
+<div class="px-6 py-4 flex justify-between items-center cursor-pointer">
+<span class="font-semibold">Can we track specific gear maintenance?</span>
+<span class="material-symbols-outlined text-primary">expand_more</span>
+</div>
+<div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
+                                    Yes. Each item can have a unique serial number or QR code. After each rental, the system flags the item for a "Maintenance Check" where staff must complete a digital checklist before it returns to "Available" status.
+                                </div>
+</div>
+<div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
+<div class="px-6 py-4 flex justify-between items-center cursor-pointer">
+<span class="font-semibold">What happens if gear is returned damaged?</span>
+<span class="material-symbols-outlined text-primary">expand_more</span>
+</div>
+<div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
+                                    You can instantly mark an item as "Damaged/Repairing." This triggers an automatic email to the customer regarding deposit charges and removes the item from inventory until a technician clears it.
+                                </div>
+</div>
+</div>
+</div>
+<!-- CTA Section -->
+<div class="px-4 py-12">
+<div class="bg-primary rounded-2xl p-10 text-center flex flex-col items-center gap-6">
+<h2 class="text-white text-3xl md:text-4xl font-black leading-tight">Ready for your busiest season yet?</h2>
+<p class="text-white/90 text-lg max-w-xl">Join 500+ outdoor retailers who have automated their rental operations and scaled their revenue.</p>
+<div class="flex flex-wrap justify-center gap-4">
+<button class="px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-lg hover:bg-slate-50 transition-colors">Start Free Trial</button>
+<button class="px-8 py-4 bg-primary/20 text-white border border-white/40 font-bold rounded-xl hover:bg-white/10 transition-colors">Book a Demo</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>
