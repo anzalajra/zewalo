@@ -10,7 +10,7 @@
                 class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center justify-between h-16">
-                        <a href="{{ route('home') }}" class="flex items-center gap-2">
+                        <a href="<?php echo e(route('home')); ?>" class="flex items-center gap-2">
                             <div class="text-primary">
                                 <svg class="size-8" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                                     <path
@@ -33,7 +33,7 @@
                                         <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8 p-8">
                                             <div class="col-span-8 grid grid-cols-2 gap-x-8 gap-y-6">
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/live-stock') }}\">
+                                                    href=\"<?php echo e(url('/feature/live-stock')); ?>\">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">show_chart</span>
@@ -47,7 +47,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/inventory-management') }}\">
+                                                    href=\"<?php echo e(url('/feature/inventory-management')); ?>\">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">inventory_2</span>
@@ -61,7 +61,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/booking-online') }}\">
+                                                    href=\"<?php echo e(url('/feature/booking-online')); ?>\">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">calendar_today</span>
@@ -75,7 +75,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/quotation-invoicing') }}\">
+                                                    href=\"<?php echo e(url('/feature/quotation-invoicing')); ?>\">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">description</span>
@@ -89,7 +89,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all col-span-2"
-                                                    href=\"{{ url('/feature/reporting') }}\">
+                                                    href=\"<?php echo e(url('/feature/reporting')); ?>\">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">bar_chart</span>
@@ -126,7 +126,7 @@
                                                         your business from anywhere with our iOS &amp; Android app.</p>
                                                 </div>
                                                 <a class="mt-6 flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 transition-colors"
-                                                    href="{{ url('/') }}">
+                                                    href="<?php echo e(url('/')); ?>">
                                                     <div class="flex flex-col">
                                                         <span class="font-bold text-slate-900 dark:text-white">Explore
                                                             all features</span>
@@ -142,10 +142,10 @@
                                     </div>
                                 </div>
                                 <a class="text-sm font-medium hover:text-primary transition-colors"
-                                    href="{{ route('home') }}#solutions">Solutions</a>
-                                <a class="text-sm font-medium {{ request()->routeIs('landing.pricing') ? 'text-primary' : 'hover:text-primary transition-colors' }}" href="{{ route('landing.pricing') }}">Pricing</a>
+                                    href="<?php echo e(route('home')); ?>#solutions">Solutions</a>
+                                <a class="text-sm font-medium <?php echo e(request()->routeIs('landing.pricing') ? 'text-primary' : 'hover:text-primary transition-colors'); ?>" href="<?php echo e(route('landing.pricing')); ?>">Pricing</a>
                                 <a class="text-sm font-medium hover:text-primary transition-colors"
-                                    href="{{ route('home') }}#testimonials">Testimonials</a>
+                                    href="<?php echo e(route('home')); ?>#testimonials">Testimonials</a>
                             </div>
                         </nav>
                         <div class="flex items-center gap-3">
@@ -156,4 +156,4 @@
                         </div>
                     </div>
                 </div>
-            </header>
+            </header><?php /**PATH /var/www/resources/views/landing/partials/header.blade.php ENDPATH**/ ?>

@@ -147,7 +147,7 @@
                             </button>
                             <p class="text-center text-slate-500 text-sm mt-6">
                                 Sudah memiliki akun?
-                                <a href="/central" class="font-semibold hover:underline" style="color: #14B8A6;">Masuk di sini</a>
+                                <a href="/login-tenant" class="font-semibold hover:underline" style="color: #14B8A6;">Masuk di sini</a>
                             </p>
                         </div>
                     </form>

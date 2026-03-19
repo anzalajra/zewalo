@@ -389,4 +389,4 @@
 <!-- Footer -->
 <?php echo $__env->make('landing.partials.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </body></html>
-<?php /**PATH /var/www/resources/views/landing/index.blade.php ENDPATH**/ ?>
+<?php /**PATH D:\6. Kints\Projects\Zewalo\resources\views/landing/index.blade.php ENDPATH**/ ?>

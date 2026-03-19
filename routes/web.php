@@ -54,7 +54,7 @@ if (! $isInstalled) {
         ->name('subscription.expired');
 
     // Central Admin: Impersonate Tenant (opens in new tab, redirects to tenant domain)
-    Route::get('/central/impersonate/{tenant}', \App\Http\Controllers\Central\ImpersonationController::class)
+    Route::get('/admin/impersonate/{tenant}', \App\Http\Controllers\Central\ImpersonationController::class)
         ->middleware('auth')
         ->name('central.impersonate');
 
@@ -64,19 +64,34 @@ if (! $isInstalled) {
         ->name('register-tenant');
 
     // Central Tenant Login Portal
-    Route::get('/masuk', \App\Livewire\TenantLogin::class)->name('tenant.login');
+    Route::get('/login-tenant', \App\Livewire\TenantLogin::class)->name('tenant.login');
 
     // Public Routes
     Route::get('/', [HomeController::class, 'index'])->name('home');
 
     // Landing Pages (Central domain only)
-    Route::get('/pricing', function () {
-        $centralDomains = config('tenancy.central_domains', []);
-        if (in_array(request()->getHost(), $centralDomains, true)) {
-            return view('landing.pricing');
-        }
-        abort(404);
-    })->name('landing.pricing');
+    $landingPages = [
+        'pricing' => ['view' => 'landing.pricing', 'name' => 'landing.pricing'],
+        'feature' => ['view' => 'landing.feature', 'name' => 'landing.feature'],
+        'contact' => ['view' => 'landing.contact', 'name' => 'landing.contact'],
+        'careers' => ['view' => 'landing.careers', 'name' => 'landing.careers'],
+        'about-us' => ['view' => 'landing.about-us', 'name' => 'landing.about-us'],
+        'feature/booking-online' => ['view' => 'landing.features.booking-online', 'name' => 'landing.features.booking-online'],
+        'feature/inventory-management' => ['view' => 'landing.features.inventory-management', 'name' => 'landing.features.inventory-management'],
+        'feature/live-stock' => ['view' => 'landing.features.live-stock', 'name' => 'landing.features.live-stock'],
+        'feature/quotation-invoicing' => ['view' => 'landing.features.quotation-invoicing', 'name' => 'landing.features.quotation-invoicing'],
+        'feature/reporting' => ['view' => 'landing.features.reporting', 'name' => 'landing.features.reporting'],
+    ];
+
+    foreach ($landingPages as $uri => $data) {
+        Route::get('/' . $uri, function () use ($data) {
+            $centralDomains = config('tenancy.central_domains', []);
+            if (in_array(request()->getHost(), $centralDomains, true)) {
+                return view($data['view']);
+            }
+            abort(404);
+        })->name($data['name']);
+    }
 
     // Storefront Routes (gated by CheckStorefrontEnabled middleware)
     Route::middleware(\App\Http\Middleware\CheckStorefrontEnabled::class)->group(function () {

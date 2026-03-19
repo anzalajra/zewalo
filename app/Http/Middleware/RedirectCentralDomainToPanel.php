@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Middleware to redirect central domain requests to the central panel.
- * 
+ *
  * For multi-tenancy setup:
  * - Central domains (localhost, zewalo.com) → Redirect to /central
  * - Tenant domains (tenant.localhost) → Allow normal access
@@ -22,18 +22,24 @@ class RedirectCentralDomainToPanel
     {
         $host = $request->getHost();
         $centralDomains = config('tenancy.central_domains', []);
-        
+
         // Check if current host is a central domain
         $isCentralDomain = in_array($host, $centralDomains, true);
-        
+
         if ($isCentralDomain) {
             $path = $request->path();
-            
-            // Allow access to central panel routes, registration, landing page, and assets
+
+            // Allow access to public routes, registration, login, landing page, and assets
             if ($path === '/' ||
-                str_starts_with($path, 'central') || 
+                str_starts_with($path, 'admin') ||
                 str_starts_with($path, 'register-tenant') ||
+                str_starts_with($path, 'login-tenant') ||
                 str_starts_with($path, 'pricing') ||
+                str_starts_with($path, 'feature') ||
+                str_starts_with($path, 'contact') ||
+                str_starts_with($path, 'careers') ||
+                str_starts_with($path, 'about-us') ||
+                str_starts_with($path, 'blog') ||
                 str_starts_with($path, 'livewire') ||
                 str_starts_with($path, '_debugbar') ||
                 str_starts_with($path, 'storage') ||
@@ -46,14 +52,15 @@ class RedirectCentralDomainToPanel
                 str_starts_with($path, 'filament') ||
                 str_starts_with($path, 'masuk') ||
                 str_starts_with($path, 'api/payment') ||
+                str_starts_with($path, 'impersonate') ||
                 $path === 'up') {
                 return $next($request);
             }
-            
-            // Redirect everything else to central panel
-            return redirect('/central');
+
+            // Redirect unknown routes on central domain to home
+            return redirect('/');
         }
-        
+
         return $next($request);
     }
 }

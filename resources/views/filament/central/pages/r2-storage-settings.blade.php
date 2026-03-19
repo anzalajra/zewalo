@@ -127,7 +127,7 @@
             </x-slot>
             
             <div class="flex gap-3">
-                <x-filament::button tag="a" href="{{ url('/central/r2-file-browser') }}" color="gray">
+                <x-filament::button tag="a" href="{{ url('/admin/r2-file-browser') }}" color="gray">
                     <x-heroicon-m-folder-open class="w-4 h-4 mr-1" />
                     File Browser
                 </x-filament::button>

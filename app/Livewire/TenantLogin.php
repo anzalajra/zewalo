@@ -2,8 +2,9 @@
 
 namespace App\Livewire;
 
-use App\Models\Domain;
 use App\Models\Tenant;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -11,34 +12,30 @@ use Livewire\Component;
 #[Layout('livewire.layouts.guest')]
 class TenantLogin extends Component
 {
-    public string $input = '';
+    public string $email = '';
 
-    /** @var array{name: string, id: string, status: string}|null */
-    public ?array $foundTenant = null;
-
-    public string $foundDomain = '';
+    public string $password = '';
 
     public string $errorMessage = '';
-
-    public bool $isSearching = false;
-
-    public bool $isSuspended = false;
 
     public int $rateLimitSeconds = 0;
 
     /**
-     * Search for a tenant by subdomain or admin email.
+     * Authenticate and redirect to tenant admin panel.
      */
-    public function searchTenant(): void
+    public function login(): void
     {
         $this->validate([
-            'input' => 'required|string|min:2|max:150',
+            'email' => 'required|email|max:150',
+            'password' => 'required|string|min:6',
         ], [
-            'input.required' => 'Masukkan subdomain atau email toko Anda.',
-            'input.min' => 'Minimal 2 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
         ]);
 
-        // Rate limiting: max 5 searches per 5 minutes per IP
+        // Rate limiting: max 5 attempts per 5 minutes per IP
         $rateLimitKey = 'tenant-login:'.request()->ip();
         if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
             $this->rateLimitSeconds = RateLimiter::availableIn($rateLimitKey);
@@ -48,79 +45,80 @@ class TenantLogin extends Component
         }
         RateLimiter::hit($rateLimitKey, 300);
 
-        $this->isSearching = true;
         $this->errorMessage = '';
-        $this->foundTenant = null;
-        $this->isSuspended = false;
 
-        $input = trim($this->input);
-        $tenant = null;
-        $domainStr = null;
-        $baseDomain = config('app.domain', 'zewalo.com');
+        // Search across all tenants for a user with this email who has admin role
+        $tenants = Tenant::with('domains')->get();
+        $matchedTenant = null;
+        $matchedUser = null;
 
-        if (str_contains($input, '@')) {
-            // Search by admin email
-            $tenant = Tenant::where('email', $input)->with('domains')->first();
-            if ($tenant) {
-                $domainStr = $tenant->domains()->value('domain');
+        foreach ($tenants as $tenant) {
+            if ($tenant->domains->isEmpty()) {
+                continue;
             }
-        } else {
-            // Search by subdomain (with or without the base domain)
-            $full = str_contains($input, '.') ? $input : ($input.'.'.$baseDomain);
-            $domainModel = Domain::where('domain', $full)->with('tenant')->first();
-            if ($domainModel) {
-                $tenant = $domainModel->tenant;
-                $domainStr = $domainModel->domain;
+
+            if ($tenant->status === 'suspended') {
+                // Check if user exists in this suspended tenant
+                $userExists = false;
+                $tenant->run(function () use (&$userExists) {
+                    $userExists = User::where('email', $this->email)
+                        ->whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'admin', 'staff']))
+                        ->exists();
+                });
+
+                if ($userExists) {
+                    $this->errorMessage = 'Toko terkait akun Anda sedang dinonaktifkan. Hubungi support@zewalo.com untuk bantuan.';
+
+                    return;
+                }
+
+                continue;
+            }
+
+            $user = null;
+            $tenant->run(function () use (&$user) {
+                $user = User::where('email', $this->email)
+                    ->where('is_system_admin', false)
+                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'admin', 'staff']))
+                    ->first();
+            });
+
+            if ($user) {
+                $matchedTenant = $tenant;
+                $matchedUser = $user;
+                break;
             }
         }
 
-        $this->isSearching = false;
-
-        if (! $tenant) {
-            $this->errorMessage = 'Toko tidak ditemukan. Periksa kembali subdomain atau email Anda.';
+        if (! $matchedTenant || ! $matchedUser) {
+            $this->errorMessage = 'Email atau password salah.';
 
             return;
         }
 
-        if ($tenant->status === 'suspended') {
-            $this->isSuspended = true;
-            $this->foundTenant = ['name' => $tenant->name, 'id' => $tenant->id, 'status' => 'suspended'];
+        // Verify password
+        if (! Hash::check($this->password, $matchedUser->password)) {
+            $this->errorMessage = 'Email atau password salah.';
 
             return;
         }
 
-        $this->foundTenant = [
-            'name' => $tenant->name,
-            'id' => $tenant->id,
-            'status' => $tenant->status,
-        ];
-        $this->foundDomain = $domainStr ?? ($tenant->id.'.'.$baseDomain);
-    }
+        // Clear rate limiter on success
+        RateLimiter::clear($rateLimitKey);
 
-    /**
-     * Redirect user to the tenant's admin login page.
-     */
-    public function redirectToTenant(): void
-    {
-        if (! $this->foundDomain) {
-            return;
-        }
+        // Generate impersonation token and redirect
+        $token = tenancy()->impersonate(
+            $matchedTenant,
+            (string) $matchedUser->id,
+            '/admin',
+            'web'
+        );
 
-        $this->redirect('http://'.$this->foundDomain.'/admin/login');
-    }
+        $domain = $matchedTenant->domains->first()->domain;
+        $scheme = app()->environment('production') ? 'https' : 'http';
+        $url = "{$scheme}://{$domain}/impersonate/{$token->token}";
 
-    /**
-     * Reset search state.
-     */
-    public function reset(...$properties): void
-    {
-        $this->foundTenant = null;
-        $this->foundDomain = '';
-        $this->errorMessage = '';
-        $this->isSuspended = false;
-        $this->isSearching = false;
-        $this->rateLimitSeconds = 0;
-        $this->input = '';
+        $this->redirect($url);
     }
 
     public function render()

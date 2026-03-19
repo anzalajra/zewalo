@@ -40,7 +40,7 @@
 </head>
 <body class="font-sans text-slate-900 bg-white">
 <!-- BEGIN: MainHeader -->
-@include('landing.partials.header')
+<?php echo $__env->make('landing.partials.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <!-- END: MainHeader -->
 <main>
 <!-- BEGIN: PricingHero -->
@@ -254,7 +254,7 @@
 <!-- END: CTA Section -->
 </main>
 <!-- BEGIN: MainFooter -->
-@include('landing.partials.footer')
+<?php echo $__env->make('landing.partials.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <!-- END: MainFooter -->
 <!-- BEGIN: InteractiveScripts -->
 <script data-purpose="pricing-logic">
@@ -289,3 +289,4 @@
   </script>
 <!-- END: InteractiveScripts -->
 </body></html>
+<?php /**PATH /var/www/resources/views/landing/pricing.blade.php ENDPATH**/ ?>

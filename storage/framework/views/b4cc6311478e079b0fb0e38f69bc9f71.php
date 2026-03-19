@@ -1,7 +1,7 @@
 <div class="min-h-screen flex items-center justify-center p-4 font-[Inter]"
      style="background-color: #f6f8f8;">
 
-    {{-- Decorative Background --}}
+    
     <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl" style="background: rgba(20,184,166,0.06);"></div>
         <div class="absolute bottom-0 right-0 w-80 h-80 rounded-full blur-3xl" style="background: rgba(20,184,166,0.1);"></div>
@@ -15,7 +15,7 @@
          x-init="$nextTick(() => { $el.classList.add('opacity-100', 'translate-y-0'); })"
          class="opacity-0 translate-y-4 transition-all duration-700 ease-out">
 
-        {{-- Logo --}}
+        
         <div class="text-center mb-8">
             <a href="/" class="inline-flex items-center gap-2.5">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl text-white" style="background-color: #14B8A6;">
@@ -25,10 +25,10 @@
             </a>
         </div>
 
-        {{-- Main Card --}}
+        
         <div class="bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-200">
 
-            {{-- Header --}}
+            
             <div class="px-8 pt-8 pb-6 border-b border-slate-100">
                 <h1 class="text-slate-900 text-2xl font-extrabold tracking-tight">Masuk ke Toko Anda</h1>
                 <p class="text-slate-500 text-sm mt-1.5">Login dengan akun admin toko Anda.</p>
@@ -36,10 +36,10 @@
 
             <div class="px-8 py-6">
                 <form wire:submit="login" class="space-y-4">
-                    {{-- Email Field --}}
+                    
                     <div>
                         <label class="text-slate-700 text-sm font-semibold mb-1.5 block">Email</label>
-                        <div class="flex items-stretch rounded-lg shadow-sm border border-slate-200 bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#14B8A6]/20 focus-within:border-[#14B8A6] {{ $errors->has('email') ? 'border-red-400' : '' }}">
+                        <div class="flex items-stretch rounded-lg shadow-sm border border-slate-200 bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#14B8A6]/20 focus-within:border-[#14B8A6] <?php echo e($errors->has('email') ? 'border-red-400' : ''); ?>">
                             <div class="flex items-center justify-center w-12 bg-slate-50 border-r border-slate-200 text-slate-400 pointer-events-none">
                                 <span class="material-symbols-outlined text-xl">mail</span>
                             </div>
@@ -51,15 +51,22 @@
                                 autofocus
                             >
                         </div>
-                        @error('email')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-500"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
 
-                    {{-- Password Field --}}
+                    
                     <div>
                         <label class="text-slate-700 text-sm font-semibold mb-1.5 block">Password</label>
-                        <div class="flex items-stretch rounded-lg shadow-sm border border-slate-200 bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#14B8A6]/20 focus-within:border-[#14B8A6] {{ $errors->has('password') ? 'border-red-400' : '' }}">
+                        <div class="flex items-stretch rounded-lg shadow-sm border border-slate-200 bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#14B8A6]/20 focus-within:border-[#14B8A6] <?php echo e($errors->has('password') ? 'border-red-400' : ''); ?>">
                             <div class="flex items-center justify-center w-12 bg-slate-50 border-r border-slate-200 text-slate-400 pointer-events-none">
                                 <span class="material-symbols-outlined text-xl">lock</span>
                             </div>
@@ -70,18 +77,25 @@
                                 class="flex-1 w-full bg-transparent px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 border-none"
                             >
                         </div>
-                        @error('password')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__errorArgs = ['password'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-500"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     </div>
 
-                    {{-- Error Message --}}
-                    @if ($errorMessage)
+                    
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($errorMessage): ?>
                         <div class="flex items-start gap-3 rounded-lg bg-red-50 border border-red-100 px-4 py-3">
                             <span class="material-symbols-outlined text-red-400 text-xl mt-0.5">error</span>
-                            <p class="text-sm text-red-600">{{ $errorMessage }}</p>
+                            <p class="text-sm text-red-600"><?php echo e($errorMessage); ?></p>
                         </div>
-                    @endif
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                     <button
                         type="submit"
@@ -104,7 +118,7 @@
                 </form>
             </div>
 
-            {{-- Footer --}}
+            
             <div class="px-8 py-4 bg-slate-50 border-t border-slate-100">
                 <a href="/register-tenant" class="text-xs font-semibold hover:underline" style="color: #14B8A6;">
                     Belum punya toko? Daftar gratis
@@ -112,7 +126,8 @@
             </div>
         </div>
 
-        {{-- Copyright --}}
-        <p class="text-center text-xs text-slate-400 mt-6">&copy; {{ date('Y') }} Zewalo. All rights reserved.</p>
+        
+        <p class="text-center text-xs text-slate-400 mt-6">&copy; <?php echo e(date('Y')); ?> Zewalo. All rights reserved.</p>
     </div>
 </div>
+<?php /**PATH /var/www/resources/views/livewire/tenant-login.blade.php ENDPATH**/ ?>

@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\PreventTenancyInitialization;
+use BezhanSalleh\GoogleAnalytics\GoogleAnalyticsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -13,7 +14,6 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Width;
 use Filament\Widgets\AccountWidget;
-use BezhanSalleh\GoogleAnalytics\GoogleAnalyticsPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -27,7 +27,8 @@ class CentralPanelProvider extends PanelProvider
     {
         return $panel
             ->id('central')
-            ->path('central')
+            ->domain('sa.'.env('APP_DOMAIN', 'localhost'))
+            ->path('admin')
             ->login()
             ->maxContentWidth(Width::Full)
             ->brandName('Zewalo Central')

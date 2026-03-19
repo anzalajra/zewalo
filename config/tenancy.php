@@ -21,6 +21,7 @@ return [
         'localhost',
         'zewalo.test',
         env('APP_DOMAIN', 'localhost'),
+        'sa.' . env('APP_DOMAIN', 'localhost'),
     ],
 
     /**
