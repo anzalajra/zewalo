@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\CustomerCategories\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -20,6 +20,17 @@ class CustomerCategoriesTable
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
+
+                TextColumn::make('parent.name')
+                    ->label('Parent')
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('sort_order')
+                    ->label('Order')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('slug')
                     ->searchable()

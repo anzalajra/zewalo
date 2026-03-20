@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Zewalo - Outdoor & Camping Rental Solution</title>
+    <title>{{ __('landing.sol_outdoor.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link
@@ -44,48 +46,48 @@
                     <!-- Hero / Page Heading Section -->
                     <div class="flex flex-wrap justify-between gap-3 p-4">
                         <div class="flex min-w-72 flex-col gap-3">
-                            <h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em]">Scale Your Outdoor Rental Business</h1>
-                            <p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal">Real-time tracking and automated booking for high-volume camping gear shops. Stop overbooking and start growing.</p>
+                            <h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em]">{{ __('landing.sol_outdoor.hero_title') }}</h1>
+                            <p class="text-slate-600 dark:text-slate-400 text-base font-normal leading-normal">{{ __('landing.sol_outdoor.hero_description') }}</p>
                         </div>
                     </div>
                     <!-- Stats / Metrics -->
                     <div class="flex flex-wrap gap-4 p-4">
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Booking Efficiency</p>
-                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">+45%</p>
-                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Increased turnover rate</p>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">{{ __('landing.sol_outdoor.stat1_label') }}</p>
+                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">{{ __('landing.sol_outdoor.stat1_value') }}</p>
+                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">{{ __('landing.sol_outdoor.stat1_note') }}</p>
                         </div>
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Turnaround Speed</p>
-                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">2x Faster</p>
-                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Ready for next rental</p>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">{{ __('landing.sol_outdoor.stat2_label') }}</p>
+                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">{{ __('landing.sol_outdoor.stat2_value') }}</p>
+                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">{{ __('landing.sol_outdoor.stat2_note') }}</p>
                         </div>
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-primary/20 bg-white dark:bg-slate-800">
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">Inventory Accuracy</p>
-                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">100%</p>
-                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">Zero double-bookings</p>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal">{{ __('landing.sol_outdoor.stat3_label') }}</p>
+                            <p class="text-primary tracking-light text-2xl font-bold leading-tight">{{ __('landing.sol_outdoor.stat3_value') }}</p>
+                            <p class="text-emerald-600 dark:text-emerald-400 text-xs font-medium leading-normal">{{ __('landing.sol_outdoor.stat3_note') }}</p>
                         </div>
                     </div>
                     <!-- Inventory Table Section -->
-                    <h2 class="text-slate-900 dark:text-slate-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Live Availability &amp; Maintenance</h2>
+                    <h2 class="text-slate-900 dark:text-slate-100 text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">{{ __('landing.sol_outdoor.table_title') }}</h2>
                     <div class="px-4 py-3 @container">
                         <div class="flex overflow-hidden rounded-lg border border-primary/20 bg-white dark:bg-slate-800">
                             <table class="flex-1 text-left border-collapse">
                                 <thead>
                                     <tr class="bg-slate-50 dark:bg-slate-700/50">
-                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Equipment</th>
-                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Status</th>
-                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Last Service</th>
-                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">Stock</th>
+                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">{{ __('landing.sol_outdoor.table_col_equipment') }}</th>
+                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">{{ __('landing.sol_outdoor.table_col_status') }}</th>
+                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">{{ __('landing.sol_outdoor.table_col_last_service') }}</th>
+                                        <th class="px-4 py-3 text-slate-900 dark:text-slate-100 text-sm font-semibold">{{ __('landing.sol_outdoor.table_col_stock') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="border-t border-slate-100 dark:border-slate-700">
-                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Alpine 4-Person Tent</td>
+                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">{{ __('landing.sol_outdoor.table_row1_name') }}</td>
                                         <td class="px-4 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">Available</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">{{ __('landing.sol_outdoor.status_available') }}</span>
                                         </td>
-                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">2 days ago</td>
+                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.table_row1_service') }}</td>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
@@ -96,11 +98,11 @@
                                         </td>
                                     </tr>
                                     <tr class="border-t border-slate-100 dark:border-slate-700">
-                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Pro-Guide Stove System</td>
+                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">{{ __('landing.sol_outdoor.table_row2_name') }}</td>
                                         <td class="px-4 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">Cleaning</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">{{ __('landing.sol_outdoor.status_cleaning') }}</span>
                                         </td>
-                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">1 week ago</td>
+                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.table_row2_service') }}</td>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
@@ -111,11 +113,11 @@
                                         </td>
                                     </tr>
                                     <tr class="border-t border-slate-100 dark:border-slate-700">
-                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">Zero-Degree Sleeping Bag</td>
+                                        <td class="px-4 py-4 text-slate-700 dark:text-slate-300 text-sm">{{ __('landing.sol_outdoor.table_row3_name') }}</td>
                                         <td class="px-4 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Out on Rent</span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">{{ __('landing.sol_outdoor.status_out_on_rent') }}</span>
                                         </td>
-                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">Today</td>
+                                        <td class="px-4 py-4 text-slate-500 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.table_row3_service') }}</td>
                                         <td class="px-4 py-4">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-20 h-1.5 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
@@ -132,29 +134,29 @@
                     <!-- Features Grid -->
                     <div class="flex flex-col gap-10 px-4 py-12">
                         <div class="flex flex-col gap-4">
-                            <h2 class="text-slate-900 dark:text-slate-100 tracking-light text-3xl font-bold leading-tight">Engineered for High-Volume Peaks</h2>
-                            <p class="text-slate-600 dark:text-slate-400 text-base max-w-[720px]">Never lose track of a single piece of gear. Our platform handles the complexity so you can focus on the adventure.</p>
+                            <h2 class="text-slate-900 dark:text-slate-100 tracking-light text-3xl font-bold leading-tight">{{ __('landing.sol_outdoor.features_title') }}</h2>
+                            <p class="text-slate-600 dark:text-slate-400 text-base max-w-[720px]">{{ __('landing.sol_outdoor.features_description') }}</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
                                 <span class="material-symbols-outlined text-primary text-3xl">sync</span>
                                 <div class="flex flex-col gap-1">
-                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Real-Time Booking Sync</h3>
-                                    <p class="text-slate-600 dark:text-slate-400 text-sm">Connect your website, walk-ins, and 3rd party marketplaces to one central inventory source.</p>
+                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">{{ __('landing.sol_outdoor.feature1_title') }}</h3>
+                                    <p class="text-slate-600 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.feature1_description') }}</p>
                                 </div>
                             </div>
                             <div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
                                 <span class="material-symbols-outlined text-primary text-3xl">build_circle</span>
                                 <div class="flex flex-col gap-1">
-                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Maintenance Alerts</h3>
-                                    <p class="text-slate-600 dark:text-slate-400 text-sm">Automatic checklists for tents and stoves ensuring every rental is safe and clean.</p>
+                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">{{ __('landing.sol_outdoor.feature2_title') }}</h3>
+                                    <p class="text-slate-600 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.feature2_description') }}</p>
                                 </div>
                             </div>
                             <div class="flex flex-col gap-4 rounded-xl border border-primary/10 bg-white dark:bg-slate-800/50 p-6">
                                 <span class="material-symbols-outlined text-primary text-3xl">event_available</span>
                                 <div class="flex flex-col gap-1">
-                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">Seasonal Forecasting</h3>
-                                    <p class="text-slate-600 dark:text-slate-400 text-sm">Predict demand for summer peaks and ensure you have enough sleeping bags for the rush.</p>
+                                    <h3 class="text-slate-900 dark:text-slate-100 text-lg font-bold">{{ __('landing.sol_outdoor.feature3_title') }}</h3>
+                                    <p class="text-slate-600 dark:text-slate-400 text-sm">{{ __('landing.sol_outdoor.feature3_description') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -163,7 +165,7 @@
                     <div class="px-4 py-12">
                         <div class="rounded-2xl bg-primary/10 p-8 flex flex-col md:flex-row gap-8 items-center">
                             <div class="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 border-4 border-white dark:border-slate-800 shadow-lg">
-                                <img alt="Shop Owner" class="w-full h-full object-cover" data-alt="Portrait of a smiling outdoor shop owner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJIpsEpn1_hBwqADguADsTuU2SUj5iMjmUAXEUyjM4v_t6SwhY8dzmXZwn9yza3znV0Uys9NZkG9XWO6-BRp2D9_q91xTGunLMitpvyDjZXFALfN6shM8V5YvXrC3l0CcPOj7eAd1oWUYaQl89jPr7xfxqjK43mNlGZKsPQOwtx46Qz5fsf6TFTvguhaXg_q4bckslD-UIy1q-ElSdWTNjIAVChenAZgQQUgI2IuFZJppwsL9vifBZYjzmfb0UixrGrTEBVs844Uz" />
+                                <img alt="{{ __('landing.sol_outdoor.testimonial_image_alt') }}" class="w-full h-full object-cover" data-alt="{{ __('landing.sol_outdoor.testimonial_image_alt') }}" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJIpsEpn1_hBwqADguADsTuU2SUj5iMjmUAXEUyjM4v_t6SwhY8dzmXZwn9yza3znV0Uys9NZkG9XWO6-BRp2D9_q91xTGunLMitpvyDjZXFALfN6shM8V5YvXrC3l0CcPOj7eAd1oWUYaQl89jPr7xfxqjK43mNlGZKsPQOwtx46Qz5fsf6TFTvguhaXg_q4bckslD-UIy1q-ElSdWTNjIAVChenAZgQQUgI2IuFZJppwsL9vifBZYjzmfb0UixrGrTEBVs844Uz" />
                             </div>
                             <div class="flex flex-col gap-4">
                                 <div class="flex text-primary">
@@ -174,44 +176,44 @@
                                     <span class="material-symbols-outlined fill-1">star</span>
                                 </div>
                                 <blockquote class="text-xl font-medium italic text-slate-800 dark:text-slate-200">
-                                    "During the mid-July rush, we used to lose track of nearly 15% of our tent inventory. Since switching to this system, we've had zero double-bookings and our maintenance team is 50% faster at prepping stoves for the next guest."
+                                    "{{ __('landing.sol_outdoor.testimonial_quote') }}"
                                 </blockquote>
                                 <div>
-                                    <p class="font-bold text-slate-900 dark:text-slate-100">Marcus Sterling</p>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400">Founder, Peak Adventures Rental Co.</p>
+                                    <p class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.sol_outdoor.testimonial_name') }}</p>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ __('landing.sol_outdoor.testimonial_role') }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <!-- FAQ Section -->
                     <div class="px-4 py-12">
-                        <h2 class="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+                        <h2 class="text-2xl font-bold mb-8 text-center">{{ __('landing.sol_outdoor.faq_title') }}</h2>
                         <div class="space-y-4 max-w-2xl mx-auto">
                             <div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
                                 <div class="px-6 py-4 flex justify-between items-center cursor-pointer">
-                                    <span class="font-semibold">How does the automatic sync work?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_outdoor.faq1_question') }}</span>
                                     <span class="material-symbols-outlined text-primary">expand_more</span>
                                 </div>
                                 <div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
-                                    Our API connects directly to your Shopify, WooCommerce, or custom booking engine. When a customer rents a tent online, it is instantly removed from your physical store's available stock.
+                                    {{ __('landing.sol_outdoor.faq1_answer') }}
                                 </div>
                             </div>
                             <div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
                                 <div class="px-6 py-4 flex justify-between items-center cursor-pointer">
-                                    <span class="font-semibold">Can we track specific gear maintenance?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_outdoor.faq2_question') }}</span>
                                     <span class="material-symbols-outlined text-primary">expand_more</span>
                                 </div>
                                 <div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
-                                    Yes. Each item can have a unique serial number or QR code. After each rental, the system flags the item for a "Maintenance Check" where staff must complete a digital checklist before it returns to "Available" status.
+                                    {{ __('landing.sol_outdoor.faq2_answer') }}
                                 </div>
                             </div>
                             <div class="border border-primary/20 rounded-lg bg-white dark:bg-slate-800 overflow-hidden">
                                 <div class="px-6 py-4 flex justify-between items-center cursor-pointer">
-                                    <span class="font-semibold">What happens if gear is returned damaged?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_outdoor.faq3_question') }}</span>
                                     <span class="material-symbols-outlined text-primary">expand_more</span>
                                 </div>
                                 <div class="px-6 pb-4 text-slate-600 dark:text-slate-400 text-sm">
-                                    You can instantly mark an item as "Damaged/Repairing." This triggers an automatic email to the customer regarding deposit charges and removes the item from inventory until a technician clears it.
+                                    {{ __('landing.sol_outdoor.faq3_answer') }}
                                 </div>
                             </div>
                         </div>
@@ -219,11 +221,11 @@
                     <!-- CTA Section -->
                     <div class="px-4 py-12">
                         <div class="bg-primary rounded-2xl p-10 text-center flex flex-col items-center gap-6">
-                            <h2 class="text-white text-3xl md:text-4xl font-black leading-tight">Ready for your busiest season yet?</h2>
-                            <p class="text-white/90 text-lg max-w-xl">Join 500+ outdoor retailers who have automated their rental operations and scaled their revenue.</p>
+                            <h2 class="text-white text-3xl md:text-4xl font-black leading-tight">{{ __('landing.sol_outdoor.cta_title') }}</h2>
+                            <p class="text-white/90 text-lg max-w-xl">{{ __('landing.sol_outdoor.cta_description') }}</p>
                             <div class="flex flex-wrap justify-center gap-4">
-                                <a href="/register-tenant" class="px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-lg hover:bg-slate-50 transition-colors">Start Free Trial</a>
-                                <a href="/contact" class="px-8 py-4 bg-primary/20 text-white border border-white/40 font-bold rounded-xl hover:bg-white/10 transition-colors">Book a Demo</a>
+                                <a href="/register-tenant" class="px-8 py-4 bg-white text-primary font-bold rounded-xl shadow-lg hover:bg-slate-50 transition-colors">{{ __('landing.sol_outdoor.cta_trial') }}</a>
+                                <a href="/contact" class="px-8 py-4 bg-primary/20 text-white border border-white/40 font-bold rounded-xl hover:bg-white/10 transition-colors">{{ __('landing.sol_outdoor.cta_demo') }}</a>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 @extends('layouts.frontend')
 
-@section('title', 'Catalog')
+@section('title', __('storefront.catalog.title'))
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -32,7 +32,7 @@
         <aside class="lg:w-64 flex-shrink-0" x-data="{ filtersOpen: false }">
             <div class="lg:hidden mb-4">
                 <button @click="filtersOpen = !filtersOpen" type="button" class="w-full flex justify-between items-center bg-white p-4 rounded-lg shadow text-gray-700 hover:bg-gray-50">
-                    <span class="font-semibold">Filters</span>
+                    <span class="font-semibold">{{ __('storefront.catalog.filters') }}</span>
                     <svg class="w-5 h-5 transition-transform duration-200" :class="{'rotate-180': filtersOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
@@ -42,13 +42,13 @@
             <div class="space-y-6 hidden lg:block" :class="{'hidden': !filtersOpen, 'block': filtersOpen}">
                 <!-- Search -->
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="font-semibold mb-4">Search</h3>
+                    <h3 class="font-semibold mb-4">{{ __('storefront.catalog.search') }}</h3>
                     <form action="{{ route('catalog.index') }}" method="GET">
                         @foreach(request()->except(['search', 'page']) as $key => $value)
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endforeach
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="w-full border rounded-lg pl-3 pr-10 py-2 text-sm">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('storefront.catalog.search_placeholder') }}" class="w-full border rounded-lg pl-3 pr-10 py-2 text-sm">
                             <button type="submit" class="absolute right-2 top-2 text-gray-400 hover:text-primary-600">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -60,12 +60,12 @@
 
                 <!-- Categories -->
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="font-semibold mb-4">Categories</h3>
+                    <h3 class="font-semibold mb-4">{{ __('storefront.catalog.categories') }}</h3>
                     <ul class="space-y-2">
                         <li>
                             <a href="{{ route('catalog.index', request()->except(['category', 'page'])) }}" 
                                class="block px-2 py-1.5 rounded text-sm {{ !request('category') ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-600 hover:bg-gray-50' }}">
-                                All Categories
+                                {{ __('storefront.catalog.all_categories') }}
                             </a>
                         </li>
                         @foreach($categories as $category)
@@ -81,7 +81,7 @@
 
                 <!-- Filters -->
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="font-semibold mb-4">Filters</h3>
+                    <h3 class="font-semibold mb-4">{{ __('storefront.catalog.filters') }}</h3>
                     <form action="{{ route('catalog.index') }}" method="GET">
                         @if(request('category'))
                             <input type="hidden" name="category" value="{{ request('category') }}">
@@ -92,9 +92,9 @@
 
                         <!-- Date Range -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Rental Dates</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.rental_dates') }}</label>
                             <div class="relative">
-                                <input type="text" id="date_range" placeholder="Select dates..." 
+                                <input type="text" id="date_range" placeholder="{{ __('storefront.catalog.select_dates') }}"
                                     class="w-full border rounded-lg px-3 py-2 text-sm bg-white cursor-pointer" readonly>
                                 <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
                                 <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
@@ -104,12 +104,12 @@
                         <!-- Time -->
                         <div class="grid grid-cols-2 gap-2 mb-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pickup</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.pickup') }}</label>
                                 <input type="time" name="pickup_time" value="{{ request('pickup_time', '09:00') }}" 
                                     class="w-full border rounded-lg px-2 py-2 text-sm bg-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Return</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.return') }}</label>
                                 <input type="time" name="return_time" value="{{ request('return_time', '09:00') }}" 
                                     class="w-full border rounded-lg px-2 py-2 text-sm bg-white">
                             </div>
@@ -117,20 +117,20 @@
 
                         <!-- Sort -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.sort_by') }}</label>
                             <select name="sort" class="w-full border rounded-lg px-3 py-2 text-sm">
-                                <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Name</option>
-                                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
-                                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
-                                <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
+                                <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>{{ __('storefront.catalog.sort_name') }}</option>
+                                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>{{ __('storefront.catalog.sort_price_low') }}</option>
+                                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>{{ __('storefront.catalog.sort_price_high') }}</option>
+                                <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>{{ __('storefront.catalog.sort_newest') }}</option>
                             </select>
                         </div>
 
                         <button type="submit" class="w-full bg-primary-600 text-white py-2 rounded-lg hover:bg-primary-700">
-                            Apply Filters
+                            {{ __('storefront.catalog.apply_filters') }}
                         </button>
                         <a href="{{ route('catalog.index', request()->only('category')) }}" class="block w-full text-center mt-3 text-sm text-gray-500 hover:text-gray-700">
-                            Reset Filters
+                            {{ __('storefront.catalog.reset_filters') }}
                         </a>
                     </form>
                 </div>
@@ -140,8 +140,8 @@
         <!-- Products Grid -->
         <div class="flex-1">
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold">Equipment Catalog</h1>
-                <p class="text-gray-600">{{ $products->total() }} products found</p>
+                <h1 class="text-2xl font-bold">{{ __('storefront.catalog.equipment_catalog') }}</h1>
+                <p class="text-gray-600">{{ $products->total() }} {{ __('storefront.catalog.products_found') }}</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -159,17 +159,17 @@
                             <h3 class="font-semibold mb-2">{{ $product->name }}</h3>
                             <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $product->description }}</p>
                             <div class="flex justify-between items-center">
-                                <p class="text-primary-600 font-bold">Rp {{ number_format($product->daily_rate, 0, ',', '.') }}/day</p>
-                                <span class="text-xs text-gray-500">{{ $product->units->whereNotIn('status', ['maintenance', 'retired'])->count() }} available</span>
+                                <p class="text-primary-600 font-bold">Rp {{ number_format($product->daily_rate, 0, ',', '.') }}/{{ __('storefront.day') }}</p>
+                                <span class="text-xs text-gray-500">{{ $product->units->whereNotIn('status', ['maintenance', 'retired'])->count() }} {{ __('storefront.catalog.available') }}</span>
                             </div>
                             <a href="{{ route('catalog.show', array_merge(['product' => $product], request()->only(['start_date', 'end_date', 'pickup_time', 'return_time']))) }}" class="mt-3 block text-center bg-primary-600 text-white py-2 rounded hover:bg-primary-700 transition">
-                                View Details
+                                {{ __('storefront.view_details') }}
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="col-span-full text-center py-12">
-                        <p class="text-gray-500">No products found.</p>
+                        <p class="text-gray-500">{{ __('storefront.catalog.no_products') }}</p>
                     </div>
                 @endforelse
             </div>

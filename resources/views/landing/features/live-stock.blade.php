@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Live Inventory Stock | StockFlow</title>
+    <title>{{ __('landing.feat_live_stock.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
@@ -51,21 +53,21 @@
                             fill="currentColor"></path>
                     </svg>
                 </div>
-                <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">StockFlow</h2>
+                <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">{{ __('landing.feat_live_stock.brand_name') }}</h2>
             </div>
             <div class="flex flex-1 justify-end gap-8">
                 <div class="flex items-center gap-9">
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Dashboard</a>
-                    <a class="text-sm font-medium leading-normal text-primary" href="#">Inventory</a>
+                        href="#">{{ __('landing.feat_live_stock.nav_dashboard') }}</a>
+                    <a class="text-sm font-medium leading-normal text-primary" href="#">{{ __('landing.feat_live_stock.nav_inventory') }}</a>
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Orders</a>
+                        href="#">{{ __('landing.feat_live_stock.nav_orders') }}</a>
                     <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Reports</a>
+                        href="#">{{ __('landing.feat_live_stock.nav_reports') }}</a>
                 </div>
                 <button
                     class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
-                    <span class="truncate">Get Started</span>
+                    <span class="truncate">{{ __('landing.feat_live_stock.get_started') }}</span>
                 </button>
                 <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-primary/20"
                     data-alt="User profile avatar placeholder"
@@ -81,23 +83,22 @@
                         <div
                             class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider w-fit">
                             <span class="material-symbols-outlined text-sm">bolt</span>
-                            Real-Time Sync
+                            {{ __('landing.feat_live_stock.hero_badge') }}
                         </div>
                         <h1 class="text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-6xl">
-                            Live Inventory <span class="text-primary">Management</span>
+                            {{ __('landing.feat_live_stock.hero_title_prefix') }} <span class="text-primary">{{ __('landing.feat_live_stock.hero_title_highlight') }}</span>
                         </h1>
                         <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-                            Stop overbooking and start scaling. Our intelligent tracking system syncs every rental
-                            booking with your physical stock instantly.
+                            {{ __('landing.feat_live_stock.hero_description') }}
                         </p>
                         <div class="flex flex-wrap gap-4">
                             <button
                                 class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold transition-all hover:opacity-90">
-                                Start Free Trial
+                                {{ __('landing.feat_live_stock.start_free_trial') }}
                             </button>
                             <button
                                 class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 border border-primary/30 bg-transparent text-primary text-base font-bold hover:bg-primary/5 transition-all">
-                                Watch Demo
+                                {{ __('landing.feat_live_stock.watch_demo') }}
                             </button>
                         </div>
                     </div>
@@ -131,9 +132,8 @@
             <section class="bg-white dark:bg-background-dark py-20 border-y border-primary/10">
                 <div class="max-w-[1200px] mx-auto px-4">
                     <div class="text-center max-w-2xl mx-auto mb-16">
-                        <h2 class="text-3xl font-bold mb-4">Never Miss a Rental Opportunity</h2>
-                        <p class="text-slate-600 dark:text-slate-400">Our system works around the clock to ensure your
-                            inventory data is the single source of truth for your business.</p>
+                        <h2 class="text-3xl font-bold mb-4">{{ __('landing.feat_live_stock.features_title') }}</h2>
+                        <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_live_stock.features_subtitle') }}</p>
                     </div>
                     <div class="grid md:grid-cols-3 gap-8">
                         <div
@@ -142,10 +142,9 @@
                                 class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <span class="material-symbols-outlined text-3xl">sync_alt</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3">Automatic Deductions</h3>
+                            <h3 class="text-xl font-bold mb-3">{{ __('landing.feat_live_stock.feature1_title') }}</h3>
                             <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                Every time a rental agreement is signed, the system instantly deducts items from
-                                available stock. No manual entry, no errors.
+                                {{ __('landing.feat_live_stock.feature1_desc') }}
                             </p>
                         </div>
                         <div
@@ -154,10 +153,9 @@
                                 class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <span class="material-symbols-outlined text-3xl">history_toggle_off</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3">Late Return Buffer</h3>
+                            <h3 class="text-xl font-bold mb-3">{{ __('landing.feat_live_stock.feature2_title') }}</h3>
                             <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                Smart algorithms calculate risk for late returns and apply configurable buffers,
-                                ensuring you never over-commit during peak seasons.
+                                {{ __('landing.feat_live_stock.feature2_desc') }}
                             </p>
                         </div>
                         <div
@@ -166,10 +164,9 @@
                                 class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <span class="material-symbols-outlined text-3xl">visibility</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3">Total Visibility</h3>
+                            <h3 class="text-xl font-bold mb-3">{{ __('landing.feat_live_stock.feature3_title') }}</h3>
                             <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                Track items by status: In Stock, Out on Rental, In Maintenance, or Reserved. One
-                                dashboard for everything you own.
+                                {{ __('landing.feat_live_stock.feature3_desc') }}
                             </p>
                         </div>
                     </div>
@@ -180,49 +177,47 @@
                 <div class="flex flex-col gap-16">
                     <div class="flex flex-col md:flex-row items-center gap-12">
                         <div class="w-full md:w-1/2">
-                            <h2 class="text-3xl font-bold mb-6">Intelligent Overbooking Prevention</h2>
+                            <h2 class="text-3xl font-bold mb-6">{{ __('landing.feat_live_stock.detail_title') }}</h2>
                             <p class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                                Overbooking is the fastest way to lose customer trust. Our system uses "Expected Return
-                                Analysis" to flag potential conflicts before they happen.
+                                {{ __('landing.feat_live_stock.detail_desc') }}
                             </p>
                             <ul class="flex flex-col gap-4">
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span>Real-time availability checks during checkout</span>
+                                    <span>{{ __('landing.feat_live_stock.detail_check1') }}</span>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span>Automated alerts for low-stock items</span>
+                                    <span>{{ __('landing.feat_live_stock.detail_check2') }}</span>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span>Conflict resolution suggestions for staff</span>
+                                    <span>{{ __('landing.feat_live_stock.detail_check3') }}</span>
                                 </li>
                             </ul>
                         </div>
                         <div
                             class="w-full md:w-1/2 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-primary/10">
                             <div class="flex items-center justify-between mb-6">
-                                <span class="font-bold">Booking Timeline</span>
-                                <span class="text-xs text-slate-400">Today: June 24, 2024</span>
+                                <span class="font-bold">{{ __('landing.feat_live_stock.timeline_title') }}</span>
+                                <span class="text-xs text-slate-400">{{ __('landing.feat_live_stock.timeline_date') }}</span>
                             </div>
                             <div class="space-y-4">
                                 <div
                                     class="h-12 bg-primary/5 rounded border-l-4 border-primary p-2 flex justify-between items-center">
-                                    <span class="text-xs font-medium">Rental #1204 - Active</span>
-                                    <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">Ends
-                                        Today</span>
+                                    <span class="text-xs font-medium">{{ __('landing.feat_live_stock.timeline_rental_active') }}</span>
+                                    <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded">{{ __('landing.feat_live_stock.timeline_ends_today') }}</span>
                                 </div>
                                 <div
                                     class="h-12 bg-slate-100 dark:bg-slate-700/50 rounded border-l-4 border-slate-300 p-2 flex justify-between items-center">
-                                    <span class="text-xs font-medium">Maintenance Window</span>
+                                    <span class="text-xs font-medium">{{ __('landing.feat_live_stock.timeline_maintenance') }}</span>
                                     <span
-                                        class="text-[10px] bg-slate-200 dark:bg-slate-600 px-2 py-0.5 rounded">Scheduled</span>
+                                        class="text-[10px] bg-slate-200 dark:bg-slate-600 px-2 py-0.5 rounded">{{ __('landing.feat_live_stock.timeline_scheduled') }}</span>
                                 </div>
                                 <div
                                     class="h-12 bg-primary/20 rounded border-l-4 border-primary p-2 flex justify-between items-center opacity-50">
-                                    <span class="text-xs font-medium">Rental #1210 - Next</span>
-                                    <span class="text-[10px] text-primary italic font-bold">Buffer Applied</span>
+                                    <span class="text-xs font-medium">{{ __('landing.feat_live_stock.timeline_rental_next') }}</span>
+                                    <span class="text-[10px] text-primary italic font-bold">{{ __('landing.feat_live_stock.timeline_buffer') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -237,18 +232,18 @@
                             <path d="M0 100 C 20 0 50 0 100 100 Z" fill="currentColor"></path>
                         </svg>
                     </div>
-                    <h2 class="text-3xl md:text-5xl font-black mb-6 relative z-10">Ready to automate your stock?</h2>
+                    <h2 class="text-3xl md:text-5xl font-black mb-6 relative z-10">{{ __('landing.feat_live_stock.cta_title') }}</h2>
                     <p class="text-white/80 text-lg mb-10 max-w-xl mx-auto relative z-10">
-                        Join over 2,000+ rental businesses using StockFlow to manage their inventory with 100% accuracy.
+                        {{ __('landing.feat_live_stock.cta_description') }}
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                         <button
                             class="bg-white text-primary px-8 py-4 rounded-xl font-bold hover:bg-slate-50 transition-colors">
-                            Get Started for Free
+                            {{ __('landing.feat_live_stock.cta_get_started') }}
                         </button>
                         <button
                             class="bg-primary/20 border border-white/30 text-white px-8 py-4 rounded-xl font-bold hover:bg-primary/30 transition-colors">
-                            Talk to Sales
+                            {{ __('landing.feat_live_stock.cta_talk_sales') }}
                         </button>
                     </div>
                 </div>
@@ -267,47 +262,47 @@
                                         fill="currentColor"></path>
                                 </svg>
                             </div>
-                            <span class="font-bold text-xl">StockFlow</span>
+                            <span class="font-bold text-xl">{{ __('landing.feat_live_stock.brand_name') }}</span>
                         </div>
                         <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                            The intelligent operating system for modern rental businesses.
+                            {{ __('landing.feat_live_stock.footer_tagline') }}
                         </p>
                     </div>
                     <div>
-                        <h4 class="font-bold mb-4">Product</h4>
+                        <h4 class="font-bold mb-4">{{ __('landing.feat_live_stock.footer_product') }}</h4>
                         <ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary transition-colors" href="#">Features</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Pricing</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Integrations</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">API</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.nav_features') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_pricing') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_integrations') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_api') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold mb-4">Support</h4>
+                        <h4 class="font-bold mb-4">{{ __('landing.feat_live_stock.footer_support') }}</h4>
                         <ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary transition-colors" href="#">Documentation</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Community</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Status</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_documentation') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_help_center') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_community') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_status') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-bold mb-4">Company</h4>
+                        <h4 class="font-bold mb-4">{{ __('landing.feat_live_stock.footer_company') }}</h4>
                         <ul class="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary transition-colors" href="#">About Us</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
-                            <li><a class="hover:text-primary transition-colors" href="#">Privacy</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_about_us') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_careers') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_contact') }}</a></li>
+                            <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_privacy') }}</a></li>
                         </ul>
                     </div>
                 </div>
                 <div
                     class="border-t border-primary/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400">
-                    <p>© 2024 StockFlow Inc. All rights reserved.</p>
+                    <p>{{ __('landing.feat_live_stock.footer_copyright') }}</p>
                     <div class="flex gap-6">
-                        <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
-                        <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
-                        <a class="hover:text-primary transition-colors" href="#">Cookie Settings</a>
+                        <a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_terms_of_service') }}</a>
+                        <a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_privacy_policy') }}</a>
+                        <a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_live_stock.footer_cookie_settings') }}</a>
                     </div>
                 </div>
             </div>

@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Enums\TenantFeature;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\PricingService;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(PricingService $pricingService)
     {
         // Show landing page on central domain
         $centralDomains = config('tenancy.central_domains', []);
         if (in_array(request()->getHost(), $centralDomains, true)) {
-            return view('landing.index');
+            $plans = $pricingService->getAllPlansWithPricing(request());
+
+            return view('landing.index', compact('plans'));
         }
 
         // Check if storefront is enabled for this tenant

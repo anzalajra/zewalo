@@ -15,33 +15,33 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
                 </span>
-                Platform Rental Management #1
+                {{ __('landing.hero.eyebrow') }}
             </span>
         </div>
 
         {{-- Heading --}}
         <h1 class="mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight animate-appear opacity-0 [animation-delay:100ms]">
-            <span class="text-gray-900">Kelola Bisnis Rental</span>
+            <span class="text-gray-900">{{ __('landing.hero.title_line1') }}</span>
             <br>
             <span class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                Lebih Mudah & Cepat
+                {{ __('landing.hero.title_line2') }}
             </span>
         </h1>
 
         {{-- Subtitle --}}
         <p class="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-600 leading-relaxed animate-appear opacity-0 [animation-delay:300ms]">
-            Platform all-in-one untuk mengelola penyewaan, inventaris, pelanggan, dan keuangan bisnis rental Anda. Mulai dalam hitungan menit.
+            {{ __('landing.hero.subtitle') }}
         </p>
 
         {{-- CTA Buttons --}}
         <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-appear opacity-0 [animation-delay:500ms]">
             <a href="/register-tenant" class="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-indigo-600 px-8 py-4 text-base font-semibold text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/25 hover:shadow-xl hover:shadow-indigo-600/30 hover:-translate-y-0.5">
-                Mulai Gratis 14 Hari
+                {{ __('landing.hero.cta_start_trial') }}
                 <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </a>
             <a href="#features" class="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-8 py-4 text-base font-semibold text-gray-700 hover:bg-gray-50 transition-all hover:-translate-y-0.5">
                 <svg class="mr-2 w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Lihat Demo
+                {{ __('landing.hero.cta_view_demo') }}
             </a>
         </div>
 
@@ -60,7 +60,7 @@
                     <svg class="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     @endforeach
                 </div>
-                <p class="text-sm text-gray-500">Dipercaya <strong class="text-gray-700">200+</strong> bisnis rental</p>
+                <p class="text-sm text-gray-500">{!! __('landing.hero.trusted_by', ['count' => '<strong class="text-gray-700">200+</strong>']) !!}</p>
             </div>
         </div>
 
@@ -89,10 +89,10 @@
                             {{-- Stats Row --}}
                             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                 @foreach([
-                                    ['Total Rental', '1,234', 'text-indigo-600', 'bg-indigo-50'],
-                                    ['Pendapatan', 'Rp 45.6M', 'text-emerald-600', 'bg-emerald-50'],
-                                    ['Pelanggan', '567', 'text-purple-600', 'bg-purple-50'],
-                                    ['Unit Tersedia', '89', 'text-amber-600', 'bg-amber-50'],
+                                    [__('landing.hero.stat_total_rental'), '1,234', 'text-indigo-600', 'bg-indigo-50'],
+                                    [__('landing.hero.stat_revenue'), 'Rp 45.6M', 'text-emerald-600', 'bg-emerald-50'],
+                                    [__('landing.hero.stat_customers'), '567', 'text-purple-600', 'bg-purple-50'],
+                                    [__('landing.hero.stat_available_units'), '89', 'text-amber-600', 'bg-amber-50'],
                                 ] as [$label, $value, $textColor, $bgColor])
                                 <div class="rounded-lg {{ $bgColor }} p-4">
                                     <p class="text-xs text-gray-500 mb-1">{{ $label }}</p>
@@ -103,8 +103,8 @@
                             {{-- Chart Placeholder --}}
                             <div class="rounded-lg border border-gray-200 bg-white p-4">
                                 <div class="flex items-center justify-between mb-4">
-                                    <p class="text-sm font-medium text-gray-700">Grafik Pendapatan</p>
-                                    <span class="text-xs text-gray-400">7 hari terakhir</span>
+                                    <p class="text-sm font-medium text-gray-700">{{ __('landing.hero.revenue_chart') }}</p>
+                                    <span class="text-xs text-gray-400">{{ __('landing.hero.last_7_days') }}</span>
                                 </div>
                                 <div class="flex items-end gap-2 h-24">
                                     @foreach([40, 65, 45, 80, 55, 90, 70] as $h)

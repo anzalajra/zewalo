@@ -1,14 +1,14 @@
 @extends('layouts.frontend')
 
-@section('title', 'Login')
+@section('title', __('auth.login'))
 
 @section('content')
 <div class="min-h-[60vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div>
-            <h2 class="text-center text-3xl font-bold text-gray-900">Sign in to your account</h2>
+            <h2 class="text-center text-3xl font-bold text-gray-900">{{ __('auth.sign_in_title') }}</h2>
             <p class="mt-2 text-center text-sm text-gray-600">
-                Or <a href="{{ route('customer.register') }}" class="text-primary-600 hover:underline">create a new account</a>
+                {{ __('auth.or') }} <a href="{{ route('customer.register') }}" class="text-primary-600 hover:underline">{{ __('auth.create_new_account') }}</a>
             </p>
         </div>
 
@@ -31,26 +31,26 @@
 
             <div class="space-y-4">
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                    <label for="email" class="block text-sm font-medium text-gray-700">{{ __('auth.email') }}</label>
                     <input id="email" name="email" type="email" required value="{{ old('email') }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700">{{ __('auth.password') }}</label>
                     <input id="password" name="password" type="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500">
                 </div>
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                        <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                        <label for="remember" class="ml-2 block text-sm text-gray-900">{{ __('auth.remember_me') }}</label>
                     </div>
-                    <a href="{{ route('customer.password.request') }}" class="text-sm text-primary-600 hover:underline">Forgot password?</a>
+                    <a href="{{ route('customer.password.request') }}" class="text-sm text-primary-600 hover:underline">{{ __('auth.forgot_password') }}</a>
                 </div>
             </div>
 
             <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                Sign in
+                {{ __('auth.sign_in') }}
             </button>
         </form>
     </div>

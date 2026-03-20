@@ -7,12 +7,14 @@ namespace App\Services\Payment;
 use App\Contracts\PaymentGatewayInterface;
 use App\Models\PaymentGateway;
 use App\Services\Payment\Drivers\DuitkuDriver;
+use App\Services\Payment\Drivers\LemonSqueezyDriver;
 use InvalidArgumentException;
 
 class GatewayManager
 {
     protected static array $drivers = [
         'duitku' => DuitkuDriver::class,
+        'lemonsqueezy' => LemonSqueezyDriver::class,
     ];
 
     public static function resolve(string $gatewayCode): PaymentGatewayInterface

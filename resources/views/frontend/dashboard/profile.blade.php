@@ -1,10 +1,10 @@
 @extends('layouts.frontend')
 
-@section('title', 'Profile')
+@section('title', __('portal.profile'))
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeTab: 'profile' }">
-    <h1 class="text-2xl font-bold mb-8">Profile & Verification</h1>
+    <h1 class="text-2xl font-bold mb-8">{{ __('portal.profile_verification') }}</h1>
 
     <!-- Account Status & Verification Card -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -15,13 +15,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
-            
+
             <div class="relative z-10">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    Status Verifikasi
+                    {{ __('portal.verification_status') }}
                 </h2>
 
                 <div class="mb-4">
@@ -29,7 +29,7 @@
                         @if($verificationStatus === 'verified') bg-green-100 text-green-800
                         @elseif($verificationStatus === 'pending') bg-yellow-100 text-yellow-800
                         @else bg-red-100 text-red-800 @endif">
-                        <span class="w-2 h-2 mr-2 rounded-full 
+                        <span class="w-2 h-2 mr-2 rounded-full
                             @if($verificationStatus === 'verified') bg-green-500
                             @elseif($verificationStatus === 'pending') bg-yellow-500
                             @else bg-red-500 @endif"></span>
@@ -39,17 +39,17 @@
 
                 <p class="text-sm text-gray-600 leading-relaxed">
                     @if($verificationStatus === 'verified')
-                        Selamat! Akun Anda telah terverifikasi. Anda dapat menikmati layanan rental kami sepenuhnya.
+                        {{ __('portal.verified_desc') }}
                     @elseif($verificationStatus === 'pending')
-                        Dokumen Anda sedang dalam proses peninjauan oleh tim kami. Mohon menunggu 1x24 jam.
+                        {{ __('portal.pending_desc') }}
                     @else
-                        Untuk dapat melakukan transaksi rental, mohon lengkapi dokumen verifikasi identitas Anda.
+                        {{ __('portal.unverified_desc') }}
                     @endif
                 </p>
 
                 @if($verificationStatus !== 'verified' && $verificationStatus !== 'pending')
                     <button @click="activeTab = 'documents'" class="mt-4 text-sm text-primary-600 font-medium hover:text-primary-700 flex items-center gap-1">
-                        Upload Dokumen
+                        {{ __('portal.upload_documents') }}
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                         </svg>
@@ -72,7 +72,7 @@
                         <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
                         </svg>
-                        Status Akun
+                        {{ __('portal.account_status') }}
                     </h2>
                 </div>
 
@@ -81,17 +81,17 @@
                         <div class="text-3xl font-bold mb-1" style="color: {{ $customer->category->badge_color ?? '#fbbf24' }}">
                             {{ $customer->category->name }}
                         </div>
-                        <p class="text-gray-500 text-sm">Level Keanggotaan Anda saat ini</p>
+                        <p class="text-gray-500 text-sm">{{ __('portal.current_membership_level') }}</p>
                     @else
                         <div class="text-3xl font-bold mb-1 text-gray-400">
-                            Regular Member
+                            {{ __('portal.regular_member') }}
                         </div>
-                        <p class="text-gray-500 text-sm">Tingkatkan transaksi untuk naik level</p>
+                        <p class="text-gray-500 text-sm">{{ __('portal.increase_transactions') }}</p>
                     @endif
                 </div>
 
                 <div class="border-t border-gray-100 pt-4">
-                    <p class="text-sm font-medium text-gray-700 mb-3">Keuntungan:</p>
+                    <p class="text-sm font-medium text-gray-700 mb-3">{{ __('portal.benefits') }}</p>
                     @if($customer->category && !empty($customer->category->benefits))
                         <div class="flex flex-wrap gap-2">
                             @foreach($customer->category->benefits as $benefit)
@@ -101,7 +101,7 @@
                             @endforeach
                         </div>
                     @else
-                        <p class="text-sm text-gray-500 italic">Belum ada keuntungan khusus.</p>
+                        <p class="text-sm text-gray-500 italic">{{ __('portal.no_benefits_yet') }}</p>
                     @endif
                 </div>
             </div>
@@ -114,54 +114,54 @@
             <button @click="activeTab = 'profile'"
                 :class="{ 'border-primary-500 text-primary-600': activeTab === 'profile', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'profile' }"
                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Informasi Pribadi
+                {{ __('portal.personal_info') }}
             </button>
             <button @click="activeTab = 'documents'"
                 :class="{ 'border-primary-500 text-primary-600': activeTab === 'documents', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'documents' }"
                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Dokumen Verifikasi
+                {{ __('portal.verification_documents') }}
             </button>
             <button @click="activeTab = 'password'"
                 :class="{ 'border-primary-500 text-primary-600': activeTab === 'password', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'password' }"
                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Ubah Password
+                {{ __('portal.change_password') }}
             </button>
         </nav>
     </div>
 
     <!-- Profile Form -->
     <div x-show="activeTab === 'profile'" class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-4">Informasi Pribadi</h2>
-        
+        <h2 class="text-lg font-semibold mb-4">{{ __('portal.personal_info') }}</h2>
+
         <form action="{{ route('customer.profile.update') }}" method="POST">
             @csrf
             @method('PUT')
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.full_name') }} <span class="text-red-500">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $customer->name) }}" required class="w-full border rounded-lg px-3 py-2">
                     @error('name') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.email') }}</label>
                     <input type="email" value="{{ $customer->email }}" disabled class="w-full border rounded-lg px-3 py-2 bg-gray-100">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">No. Telepon <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.phone_number') }} <span class="text-red-500">*</span></label>
                     <input type="text" name="phone" value="{{ old('phone', $customer->phone) }}" required class="w-full border rounded-lg px-3 py-2">
                     @error('phone') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">NIK (No. KTP) <span class="text-red-500">*</span></label>
-                    <input type="text" name="nik" value="{{ old('nik', $customer->nik) }}" required maxlength="16" minlength="16" placeholder="16 digit NIK" class="w-full border rounded-lg px-3 py-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.nik') }} <span class="text-red-500">*</span></label>
+                    <input type="text" name="nik" value="{{ old('nik', $customer->nik) }}" required maxlength="16" minlength="16" placeholder="{{ __('portal.nik_placeholder') }}" class="w-full border rounded-lg px-3 py-2">
                     @error('nik') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             @if(isset($customFields) && count($customFields) > 0)
                 <div class="mb-4 pt-4 border-t border-gray-100">
-                    <h3 class="text-sm font-medium text-gray-900 mb-4">Informasi Tambahan</h3>
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('portal.additional_info') }}</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($customFields as $field)
                             @php
@@ -169,13 +169,13 @@
                                 $visibleCats = $field['visible_for_categories'] ?? [];
                                 $isRequired = $field['required'] ?? false;
                                 $currentValue = $customer->custom_fields[$field['name']] ?? '';
-                                
+
                                 // Check visibility
                                 if (!empty($visibleCats) && !in_array($customer->customer_category_id, $visibleCats)) {
                                     continue;
                                 }
                             @endphp
-                            
+
                             <div class="col-span-1">
                                 @if($field['type'] !== 'checkbox')
                                     <label for="{{ $fieldName }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -186,7 +186,7 @@
 
                                 @if($field['type'] === 'select')
                                     <select id="{{ $fieldName }}" name="{{ $fieldName }}" class="w-full border rounded-lg px-3 py-2 bg-white focus:ring-primary-500 focus:border-primary-500">
-                                        <option value="">Pilih {{ $field['label'] }}</option>
+                                        <option value="">{{ __('portal.select_option', ['label' => $field['label']]) }}</option>
                                         @foreach($field['options'] ?? [] as $option)
                                             <option value="{{ $option['value'] }}" {{ $currentValue == $option['value'] ? 'selected' : '' }}>
                                                 {{ $option['label'] }}
@@ -198,7 +198,7 @@
                                     <div class="mt-2 space-y-2">
                                         @foreach($field['options'] ?? [] as $option)
                                             <div class="flex items-center">
-                                                <input id="{{ $fieldName }}_{{ $loop->index }}" name="{{ $fieldName }}" type="radio" value="{{ $option['value'] }}" 
+                                                <input id="{{ $fieldName }}_{{ $loop->index }}" name="{{ $fieldName }}" type="radio" value="{{ $option['value'] }}"
                                                     {{ $currentValue == $option['value'] ? 'checked' : '' }}
                                                     class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300">
                                                 <label for="{{ $fieldName }}_{{ $loop->index }}" class="ml-3 block text-sm font-medium text-gray-700">
@@ -211,7 +211,7 @@
                                 @elseif($field['type'] === 'checkbox')
                                     <div class="flex items-start mt-2">
                                         <div class="flex items-center h-5">
-                                            <input id="{{ $fieldName }}" name="{{ $fieldName }}" type="checkbox" value="1" 
+                                            <input id="{{ $fieldName }}" name="{{ $fieldName }}" type="checkbox" value="1"
                                                 {{ $currentValue ? 'checked' : '' }}
                                                 class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded">
                                         </div>
@@ -224,15 +224,15 @@
                                     </div>
 
                                 @elseif($field['type'] === 'textarea')
-                                    <textarea id="{{ $fieldName }}" name="{{ $fieldName }}" rows="3" 
+                                    <textarea id="{{ $fieldName }}" name="{{ $fieldName }}" rows="3"
                                         class="w-full border rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500">{{ $currentValue }}</textarea>
 
                                 @else
-                                    <input id="{{ $fieldName }}" name="{{ $fieldName }}" type="{{ $field['type'] === 'number' ? 'number' : 'text' }}" 
+                                    <input id="{{ $fieldName }}" name="{{ $fieldName }}" type="{{ $field['type'] === 'number' ? 'number' : 'text' }}"
                                         value="{{ $currentValue }}"
                                         class="w-full border rounded-lg px-3 py-2 focus:ring-primary-500 focus:border-primary-500">
                                 @endif
-                                
+
                                 @error($fieldName)
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -243,20 +243,20 @@
             @endif
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.address') }}</label>
                 <textarea name="address" rows="3" class="w-full border rounded-lg px-3 py-2">{{ old('address', $customer->address) }}</textarea>
             </div>
 
             <button type="submit" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700">
-                Simpan Perubahan
+                {{ __('portal.save_changes') }}
             </button>
         </form>
     </div>
 
     <!-- Document Upload -->
     <div x-show="activeTab === 'documents'" class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-4">Dokumen Verifikasi</h2>
-        <p class="text-sm text-gray-600 mb-6">Upload dokumen yang diperlukan untuk verifikasi akun. Format: JPG, PNG, PDF. Maksimal 500KB.</p>
+        <h2 class="text-lg font-semibold mb-4">{{ __('portal.verification_documents') }}</h2>
+        <p class="text-sm text-gray-600 mb-6">{{ __('portal.upload_documents_desc') }}</p>
 
         <form action="{{ route('customer.documents.upload') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -271,7 +271,7 @@
                                 <div class="flex items-center gap-2">
                                     <h3 class="font-medium">{{ $type->name }}</h3>
                                     @if($type->is_required)
-                                        <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded">Wajib</span>
+                                        <span class="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs rounded">{{ __('portal.required') }}</span>
                                     @endif
                                 </div>
                                 @if($type->description)
@@ -291,14 +291,14 @@
                                             @if($uploadedDoc->status === 'approved') bg-green-100 text-green-700
                                             @elseif($uploadedDoc->status === 'rejected') bg-red-100 text-red-700
                                             @else bg-yellow-100 text-yellow-700 @endif">
-                                            @if($uploadedDoc->status === 'approved') ✓ Disetujui
-                                            @elseif($uploadedDoc->status === 'rejected') ✗ Ditolak
-                                            @else ⏳ Menunggu Review @endif
+                                            @if($uploadedDoc->status === 'approved') {{ __('portal.doc_approved') }}
+                                            @elseif($uploadedDoc->status === 'rejected') {{ __('portal.doc_rejected') }}
+                                            @else {{ __('portal.doc_pending') }} @endif
                                         </span>
                                     </div>
 
                                     @if($uploadedDoc->status === 'rejected' && $uploadedDoc->rejection_reason)
-                                        <p class="mt-2 text-sm text-red-600">Alasan: {{ $uploadedDoc->rejection_reason }}</p>
+                                        <p class="mt-2 text-sm text-red-600">{{ __('portal.rejection_reason') }}: {{ $uploadedDoc->rejection_reason }}</p>
                                     @endif
                                 @endif
                             </div>
@@ -306,9 +306,9 @@
                             <div class="ml-4">
                                 @if($uploadedDoc)
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ Storage::url($uploadedDoc->file_path) }}" target="_blank" class="text-primary-600 hover:underline text-sm">Lihat</a>
+                                        <a href="{{ Storage::url($uploadedDoc->file_path) }}" target="_blank" class="text-primary-600 hover:underline text-sm">{{ __('portal.view') }}</a>
                                         @if($uploadedDoc->status !== 'approved')
-                                            <button type="button" onclick="deleteDocument('{{ route('customer.documents.delete', $uploadedDoc) }}')" class="text-red-600 hover:underline text-sm">Hapus</button>
+                                            <button type="button" onclick="deleteDocument('{{ route('customer.documents.delete', $uploadedDoc) }}')" class="text-red-600 hover:underline text-sm">{{ __('portal.delete') }}</button>
                                         @endif
                                     </div>
                                 @endif
@@ -318,8 +318,8 @@
                         @if(!$uploadedDoc || $uploadedDoc->status === 'rejected')
                             <div class="mt-4">
                                 <label class="block">
-                                    <span class="sr-only">Choose profile photo</span>
-                                    <input type="file" name="files[{{ $type->id }}]" accept=".jpg,.jpeg,.png,.pdf" 
+                                    <span class="sr-only">{{ __('portal.choose_file') }}</span>
+                                    <input type="file" name="files[{{ $type->id }}]" accept=".jpg,.jpeg,.png,.pdf"
                                         class="block w-full text-sm text-gray-500
                                         file:mr-4 file:py-2 file:px-4
                                         file:rounded-lg file:border-0
@@ -328,7 +328,7 @@
                                         hover:file:bg-primary-700
                                     "/>
                                 </label>
-                                <p class="text-xs text-gray-400 mt-1">JPG, PNG, PDF - Max 500KB</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ __('portal.file_format_notice') }}</p>
                             </div>
                         @endif
                     </div>
@@ -337,7 +337,7 @@
 
             <div class="mt-6">
                 <button type="submit" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700">
-                    Upload Dokumen
+                    {{ __('portal.upload_documents') }}
                 </button>
             </div>
         </form>
@@ -345,30 +345,30 @@
 
     <!-- Password Form -->
     <div x-show="activeTab === 'password'" class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">Ubah Password</h2>
-        
+        <h2 class="text-lg font-semibold mb-4">{{ __('portal.change_password') }}</h2>
+
         <form action="{{ route('customer.password.change') }}" method="POST">
             @csrf
             @method('PUT')
 
             <div class="space-y-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password Saat Ini</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.current_password') }}</label>
                     <input type="password" name="current_password" required class="w-full border rounded-lg px-3 py-2">
                     @error('current_password') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password Baru</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.new_password') }}</label>
                     <input type="password" name="password" required class="w-full border rounded-lg px-3 py-2">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password Baru</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('portal.confirm_new_password') }}</label>
                     <input type="password" name="password_confirmation" required class="w-full border rounded-lg px-3 py-2">
                 </div>
             </div>
 
             <button type="submit" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700">
-                Ubah Password
+                {{ __('portal.change_password') }}
             </button>
         </form>
     </div>
@@ -381,7 +381,7 @@
 
 <script>
     function deleteDocument(url) {
-        if (confirm('Hapus dokumen ini?')) {
+        if (confirm('{{ __('portal.delete_document_confirm') }}')) {
             const form = document.getElementById('delete-doc-form');
             form.action = url;
             form.submit();

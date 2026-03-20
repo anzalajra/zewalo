@@ -1,11 +1,11 @@
 @extends('layouts.frontend')
 
-@section('title', 'Rental Detail')
+@section('title', __('portal.rental_detail'))
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <nav class="text-sm mb-6">
-        <a href="{{ route('customer.rentals') }}" class="text-gray-500 hover:text-primary-600">My Rentals</a>
+        <a href="{{ route('customer.rentals') }}" class="text-gray-500 hover:text-primary-600">{{ __('portal.my_rentals') }}</a>
         <span class="mx-2 text-gray-400">/</span>
         <span class="text-gray-900">{{ $rental->rental_code }}</span>
     </nav>
@@ -14,7 +14,7 @@
         <div class="flex justify-between items-start mb-6">
             <div>
                 <h1 class="text-2xl font-bold">{{ $rental->rental_code }}</h1>
-                <p class="text-gray-600">Created on {{ $rental->created_at->format('d M Y H:i') }}</p>
+                <p class="text-gray-600">{{ __('portal.created_on') }} {{ $rental->created_at->format('d M Y H:i') }}</p>
             </div>
             <span class="px-4 py-2 rounded-full text-sm font-medium
                 @if($rental->status == 'quotation') bg-orange-100 text-orange-800
@@ -31,34 +31,34 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div>
-                <label class="block text-sm text-gray-500">Start Date</label>
+                <label class="block text-sm text-gray-500">{{ __('portal.start_date') }}</label>
                 <p class="font-semibold">{{ $rental->start_date->format('d M Y H:i') }}</p>
             </div>
             <div>
-                <label class="block text-sm text-gray-500">End Date</label>
+                <label class="block text-sm text-gray-500">{{ __('portal.end_date') }}</label>
                 <p class="font-semibold">{{ $rental->end_date->format('d M Y H:i') }}</p>
             </div>
             <div>
-                <label class="block text-sm text-gray-500">Total</label>
+                <label class="block text-sm text-gray-500">{{ __('portal.total') }}</label>
                 <p class="font-semibold text-primary-600">Rp {{ number_format($rental->total, 0, ',', '.') }}</p>
             </div>
             <div>
-                <label class="block text-sm text-gray-500">Deposit</label>
+                <label class="block text-sm text-gray-500">{{ __('portal.deposit') }}</label>
                 <p class="font-semibold">Rp {{ number_format($rental->deposit, 0, ',', '.') }}</p>
             </div>
         </div>
 
         @if($rental->notes)
             <div class="mb-6">
-                <label class="block text-sm text-gray-500">Notes</label>
+                <label class="block text-sm text-gray-500">{{ __('portal.notes') }}</label>
                 <p>{{ $rental->notes }}</p>
             </div>
         @endif
     </div>
 
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-lg font-semibold mb-4">Rental Items</h2>
-        
+        <h2 class="text-lg font-semibold mb-4">{{ __('portal.rental_items') }}</h2>
+
         <div class="space-y-4">
             @php
                 $groupedItems = $rental->items->groupBy(function($item) {
@@ -86,8 +86,8 @@
                             </div>
                             <div>
                                 <p class="font-semibold">{{ $product->name }}</p>
-                                <p class="text-sm text-gray-500">{{ $firstItem->days }} days × Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}</p>
-                                <p class="text-sm font-medium mt-1">Quantity: {{ $quantity }}</p>
+                                <p class="text-sm text-gray-500">{{ $firstItem->days }} {{ __('portal.days') }} × Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}</p>
+                                <p class="text-sm font-medium mt-1">{{ __('portal.quantity') }}: {{ $quantity }}</p>
                             </div>
                         </div>
                         <p class="font-semibold text-right sm:text-left">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
@@ -95,7 +95,7 @@
 
                     @if($allKits->count() > 0)
                         <div class="mt-3 pt-3 border-t">
-                            <p class="text-sm font-medium text-gray-700 mb-2">Included Kits (Total):</p>
+                            <p class="text-sm font-medium text-gray-700 mb-2">{{ __('portal.included_kits') }}</p>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($allKits as $kit)
                                     <span class="px-2 py-1 bg-gray-100 rounded text-sm">{{ $kit->unitKit->name }}</span>

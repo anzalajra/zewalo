@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Quotation &amp; Invoicing - SaaS Pro</title>
+    <title>{{ __('landing.feat_quotation.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
@@ -48,20 +50,20 @@
                         <span class="material-symbols-outlined text-4xl">receipt_long</span>
                     </div>
                     <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">
-                        SaaS Pro</h2>
+                        {{ __('landing.feat_quotation.brand_name') }}</h2>
                 </div>
                 <div class="flex flex-1 justify-end gap-8">
                     <div class="flex items-center gap-9">
                         <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">Features</a>
+                            href="#">{{ __('landing.feat_quotation.nav_features') }}</a>
                         <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">Pricing</a>
+                            href="#">{{ __('landing.feat_quotation.nav_pricing') }}</a>
                         <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">About</a>
+                            href="#">{{ __('landing.feat_quotation.nav_about') }}</a>
                     </div>
                     <button
                         class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
-                        <span class="truncate">Get Started</span>
+                        <span class="truncate">{{ __('landing.feat_quotation.get_started') }}</span>
                     </button>
                     <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700"
                         data-alt="Professional user profile avatar"
@@ -75,25 +77,24 @@
                         <div class="flex-1 flex flex-col gap-6">
                             <div
                                 class="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-                                Core Feature
+                                {{ __('landing.feat_quotation.hero_badge') }}
                             </div>
                             <h1
                                 class="text-slate-900 dark:text-slate-100 text-4xl md:text-6xl font-black leading-tight tracking-[-0.033em]">
-                                Automated Quotation &amp; Invoicing
+                                {{ __('landing.feat_quotation.hero_title') }}
                             </h1>
                             <p
                                 class="text-slate-600 dark:text-slate-400 text-lg md:text-xl font-normal leading-relaxed">
-                                Streamline your sales workflow from the first pitch to the final payment with our
-                                integrated document management system. Stop wasting time on manual data entry.
+                                {{ __('landing.feat_quotation.hero_description') }}
                             </p>
                             <div class="flex flex-wrap gap-4 pt-4">
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-6 bg-primary text-white text-base font-bold transition-transform hover:scale-105">
-                                    Start Free Trial
+                                    {{ __('landing.feat_quotation.start_free_trial') }}
                                 </button>
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-6 border-2 border-primary text-primary text-base font-bold hover:bg-primary/5">
-                                    View Demo
+                                    {{ __('landing.feat_quotation.view_demo') }}
                                 </button>
                             </div>
                         </div>
@@ -103,7 +104,7 @@
                                 <div
                                     class="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent pointer-events-none">
                                 </div>
-                                <img alt="Dashboard interface showing invoice creation"
+                                <img alt="{{ __('landing.feat_quotation.hero_image_alt') }}"
                                     class="w-full h-full object-cover aspect-video"
                                     data-alt="Modern software dashboard with financial charts"
                                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuB290Avc9FYfp6DHvzpw_lmo4-86oKm5NQwdz2TgMxREm8q1OWBD-J6VZdvqLgaXwITquocmJvX31OBNGia2AnP7OQSJLmjl7QhyLKYSmnN9Jj5MmdPlTVmNy_av9R7GjCxhUh0XhCEFoCVEQ02Bra1OSYlW9RsNnKp7uRlQdggjqWe6qAEec0lp_k3LavmSPR9iBhdGaAdEGWKcFMjCwze2aOzW3oXFSFH10WwjuiTpxloCkjGlUBpOydX-CFBMzhV9VEODuwvdjNz" />
@@ -114,11 +115,8 @@
                 <section class="px-4 md:px-20 lg:px-40 py-20 bg-background-light dark:bg-background-dark">
                     <div class="max-w-[1200px] mx-auto">
                         <div class="text-center mb-16">
-                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4">From
-                                Quote to Cash in Seconds</h2>
-                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">Our platform
-                                automates the repetitive tasks, allowing you to focus on growing your business and
-                                closing more deals.</p>
+                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4">{{ __('landing.feat_quotation.features_title') }}</h2>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">{{ __('landing.feat_quotation.features_subtitle') }}</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div
@@ -128,10 +126,9 @@
                                     <span class="material-symbols-outlined">description</span>
                                 </div>
                                 <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">
-                                    Auto-Generation</h3>
+                                    {{ __('landing.feat_quotation.feature1_title') }}</h3>
                                 <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    Generate professional quotes instantly using pre-defined templates and intelligent
-                                    product lists that sync with your inventory.
+                                    {{ __('landing.feat_quotation.feature1_desc') }}
                                 </p>
                             </div>
                             <div
@@ -140,11 +137,9 @@
                                     class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                     <span class="material-symbols-outlined">sync_alt</span>
                                 </div>
-                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">Smart
-                                    Conversion</h3>
+                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">{{ __('landing.feat_quotation.feature2_title') }}</h3>
                                 <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    Convert accepted quotes into tax-compliant invoices with a single click,
-                                    automatically carrying over all line items and terms.
+                                    {{ __('landing.feat_quotation.feature2_desc') }}
                                 </p>
                             </div>
                             <div
@@ -153,11 +148,9 @@
                                     class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                     <span class="material-symbols-outlined">mail</span>
                                 </div>
-                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">Direct
-                                    Emailing</h3>
+                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">{{ __('landing.feat_quotation.feature3_title') }}</h3>
                                 <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    Send documents directly to your customers' inboxes with trackable delivery status
-                                    and read notifications for peace of mind.
+                                    {{ __('landing.feat_quotation.feature3_desc') }}
                                 </p>
                             </div>
                             <div
@@ -166,11 +159,9 @@
                                     class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                     <span class="material-symbols-outlined">download</span>
                                 </div>
-                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">Flexible
-                                    Downloads</h3>
+                                <h3 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">{{ __('landing.feat_quotation.feature4_title') }}</h3>
                                 <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
-                                    Download your invoices and quotes as high-quality PDFs for your offline records,
-                                    accounting audits, or client portals.
+                                    {{ __('landing.feat_quotation.feature4_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -204,8 +195,7 @@
                                 </div>
                             </div>
                             <div class="w-full lg:w-1/2 flex flex-col gap-8">
-                                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">Why choose
-                                    our invoicing solution?</h2>
+                                <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_quotation.why_title') }}</h2>
                                 <div class="space-y-6">
                                     <div class="flex gap-4">
                                         <div
@@ -213,10 +203,9 @@
                                             <span class="material-symbols-outlined text-sm">check</span>
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">Get Paid 2x Faster
+                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_quotation.why_check1_title') }}
                                             </h4>
-                                            <p class="text-slate-600 dark:text-slate-400">Integrated online payment
-                                                links allow clients to pay instantly via credit card or bank transfer.
+                                            <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_quotation.why_check1_desc') }}
                                             </p>
                                         </div>
                                     </div>
@@ -226,10 +215,8 @@
                                             <span class="material-symbols-outlined text-sm">check</span>
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">Multi-Currency
-                                                Support</h4>
-                                            <p class="text-slate-600 dark:text-slate-400">Bill international clients in
-                                                their local currency with automatic exchange rate calculations.</p>
+                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_quotation.why_check2_title') }}</h4>
+                                            <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_quotation.why_check2_desc') }}</p>
                                         </div>
                                     </div>
                                     <div class="flex gap-4">
@@ -238,10 +225,9 @@
                                             <span class="material-symbols-outlined text-sm">check</span>
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">Custom Brand Kits
+                                            <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_quotation.why_check3_title') }}
                                             </h4>
-                                            <p class="text-slate-600 dark:text-slate-400">Apply your logo, brand colors,
-                                                and custom fonts to every document you send.</p>
+                                            <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_quotation.why_check3_desc') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -256,12 +242,11 @@
                             <div class="absolute top-0 right-0 p-4 opacity-10">
                                 <span class="material-symbols-outlined text-[200px]">payments</span>
                             </div>
-                            <h2 class="text-3xl md:text-5xl font-black max-w-2xl">Ready to automate your billing?</h2>
-                            <p class="text-lg opacity-90 max-w-xl">Join 10,000+ businesses saving time every week. Start
-                                your 14-day free trial today, no credit card required.</p>
+                            <h2 class="text-3xl md:text-5xl font-black max-w-2xl">{{ __('landing.feat_quotation.cta_title') }}</h2>
+                            <p class="text-lg opacity-90 max-w-xl">{{ __('landing.feat_quotation.cta_description') }}</p>
                             <button
                                 class="bg-white text-primary px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-colors shadow-lg mt-4">
-                                Get Started for Free
+                                {{ __('landing.feat_quotation.cta_get_started') }}
                             </button>
                         </div>
                     </div>
@@ -273,45 +258,44 @@
                     <div class="col-span-2">
                         <div class="flex items-center gap-3 text-white mb-6">
                             <span class="material-symbols-outlined text-primary text-3xl">receipt_long</span>
-                            <span class="text-xl font-bold tracking-tight">SaaS Pro</span>
+                            <span class="text-xl font-bold tracking-tight">{{ __('landing.feat_quotation.brand_name') }}</span>
                         </div>
-                        <p class="max-w-xs leading-relaxed">The all-in-one financial operating system for modern
-                            businesses. Manage quotes, invoices, and payments in one place.</p>
+                        <p class="max-w-xs leading-relaxed">{{ __('landing.feat_quotation.footer_tagline') }}</p>
                     </div>
                     <div>
-                        <h5 class="text-white font-bold mb-6">Product</h5>
+                        <h5 class="text-white font-bold mb-6">{{ __('landing.feat_quotation.footer_product') }}</h5>
                         <ul class="space-y-4 text-sm">
-                            <li><a class="hover:text-primary" href="#">Features</a></li>
-                            <li><a class="hover:text-primary" href="#">Integrations</a></li>
-                            <li><a class="hover:text-primary" href="#">Pricing</a></li>
-                            <li><a class="hover:text-primary" href="#">Roadmap</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.nav_features') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_integrations') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.nav_pricing') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_roadmap') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h5 class="text-white font-bold mb-6">Company</h5>
+                        <h5 class="text-white font-bold mb-6">{{ __('landing.feat_quotation.footer_company') }}</h5>
                         <ul class="space-y-4 text-sm">
-                            <li><a class="hover:text-primary" href="#">About Us</a></li>
-                            <li><a class="hover:text-primary" href="#">Careers</a></li>
-                            <li><a class="hover:text-primary" href="#">Blog</a></li>
-                            <li><a class="hover:text-primary" href="#">Contact</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_about_us') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_careers') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_blog') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_contact') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h5 class="text-white font-bold mb-6">Support</h5>
+                        <h5 class="text-white font-bold mb-6">{{ __('landing.feat_quotation.footer_support') }}</h5>
                         <ul class="space-y-4 text-sm">
-                            <li><a class="hover:text-primary" href="#">Help Center</a></li>
-                            <li><a class="hover:text-primary" href="#">API Docs</a></li>
-                            <li><a class="hover:text-primary" href="#">Community</a></li>
-                            <li><a class="hover:text-primary" href="#">Security</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_help_center') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_api_docs') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_community') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_quotation.footer_security') }}</a></li>
                         </ul>
                     </div>
                 </div>
                 <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p class="text-sm">© 2024 SaaS Pro Inc. All rights reserved.</p>
+                    <p class="text-sm">{{ __('landing.feat_quotation.footer_copyright') }}</p>
                     <div class="flex gap-8 text-sm">
-                        <a class="hover:text-white" href="#">Privacy Policy</a>
-                        <a class="hover:text-white" href="#">Terms of Service</a>
-                        <a class="hover:text-white" href="#">Cookie Settings</a>
+                        <a class="hover:text-white" href="#">{{ __('landing.feat_quotation.footer_privacy_policy') }}</a>
+                        <a class="hover:text-white" href="#">{{ __('landing.feat_quotation.footer_terms_of_service') }}</a>
+                        <a class="hover:text-white" href="#">{{ __('landing.feat_quotation.footer_cookie_settings') }}</a>
                     </div>
                 </div>
             </footer>

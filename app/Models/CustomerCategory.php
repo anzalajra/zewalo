@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class CustomerCategory extends Model
@@ -12,6 +14,10 @@ class CustomerCategory extends Model
     protected $fillable = [
         'name',
         'slug',
+        'parent_id',
+        'description',
+        'icon',
+        'sort_order',
         'badge_color',
         'discount_percentage',
         'benefits',
@@ -57,11 +63,27 @@ class CustomerCategory extends Model
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 return $decoded;
             }
+
             // Fallback to legacy pipe separator
             return explode('|', $value);
         }
 
         return is_array($value) ? $value : [];
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
+    }
+
+    public function scopeTopLevel(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
     }
 
     public function users(): HasMany

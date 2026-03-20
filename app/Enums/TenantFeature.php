@@ -15,6 +15,7 @@ enum TenantFeature: string
     case Storefront = 'storefront';
     case PagePost = 'page_post';
     case EmailNotification = 'email_notification';
+    case ComplexRegistration = 'complex_registration';
 
     public function getLabel(): string
     {
@@ -30,6 +31,7 @@ enum TenantFeature: string
             self::Storefront => 'Storefront (Etalase Toko)',
             self::PagePost => 'Page & Post (CMS)',
             self::EmailNotification => 'Email Notification (Notifikasi Email)',
+            self::ComplexRegistration => 'Complex Registration (Registrasi Multi-Tahap)',
         };
     }
 

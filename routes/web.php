@@ -94,7 +94,15 @@ if (! $isInstalled) {
         Route::get('/' . $uri, function () use ($data) {
             $centralDomains = config('tenancy.central_domains', []);
             if (in_array(request()->getHost(), $centralDomains, true)) {
-                return view($data['view']);
+                $viewData = [];
+
+                // Pass pricing data to pricing page
+                if ($data['name'] === 'landing.pricing') {
+                    $pricingService = app(\App\Services\PricingService::class);
+                    $viewData['plans'] = $pricingService->getAllPlansWithPricing(request());
+                }
+
+                return view($data['view'], $viewData);
             }
             abort(404);
         })->name($data['name']);

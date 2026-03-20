@@ -11,6 +11,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -83,6 +84,45 @@ class SubscriptionPlanResource extends Resource
                             ->required(),
                     ])
                     ->columns(3),
+
+                Section::make('Multi-Currency Pricing')
+                    ->description('Add regional pricing for different currencies and payment gateways.')
+                    ->schema([
+                        Repeater::make('prices')
+                            ->relationship()
+                            ->schema([
+                                Select::make('currency')
+                                    ->options([
+                                        'IDR' => 'IDR - Indonesian Rupiah',
+                                        'USD' => 'USD - US Dollar',
+                                    ])
+                                    ->required(),
+
+                                TextInput::make('amount_monthly')
+                                    ->label('Monthly')
+                                    ->numeric()
+                                    ->required()
+                                    ->default(0),
+
+                                TextInput::make('amount_yearly')
+                                    ->label('Yearly')
+                                    ->numeric()
+                                    ->required()
+                                    ->default(0),
+
+                                Select::make('payment_gateway_code')
+                                    ->label('Gateway')
+                                    ->options([
+                                        'duitku' => 'Duitku (IDR)',
+                                        'lemonsqueezy' => 'LemonSqueezy (USD)',
+                                    ])
+                                    ->placeholder('Auto-detect'),
+                            ])
+                            ->columns(4)
+                            ->defaultItems(0)
+                            ->addActionLabel('Add Currency Price')
+                            ->columnSpanFull(),
+                    ]),
 
                 Section::make('Limits')
                     ->schema([

@@ -40,7 +40,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <nav class="text-sm mb-6">
-        <a href="{{ route('catalog.index') }}" class="text-gray-500 hover:text-primary-600">Catalog</a>
+        <a href="{{ route('catalog.index') }}" class="text-gray-500 hover:text-primary-600">{{ __('storefront.catalog.title') }}</a>
         <span class="mx-2 text-gray-400">/</span>
         <span class="text-gray-900">{{ $product->name }}</span>
     </nav>
@@ -64,12 +64,12 @@
             <p class="text-gray-600 mb-6">{{ $product->description }}</p>
 
             <div class="text-3xl font-bold text-primary-600 mb-6">
-                Rp {{ number_format($product->daily_rate, 0, ',', '.') }} <span class="text-base font-normal text-gray-500">/ day</span>
+                Rp {{ number_format($product->daily_rate, 0, ',', '.') }} <span class="text-base font-normal text-gray-500">/ {{ __('storefront.day') }}</span>
             </div>
 
             <!-- Availability -->
             <div class="mb-6">
-                <p class="font-semibold mb-2">Available Units: {{ $availableUnits->count() }}</p>
+                <p class="font-semibold mb-2">{{ __('storefront.catalog.available_units') }}: {{ $availableUnits->count() }}</p>
             </div>
 
             @auth('customer')
@@ -90,17 +90,17 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 <div>
-                                    <p class="text-sm font-medium text-yellow-800">Verifikasi Sedang Diproses</p>
-                                    <p class="text-sm text-yellow-700">Anda dapat melakukan rental setelah verifikasi disetujui.</p>
+                                    <p class="text-sm font-medium text-yellow-800">{{ __('storefront.catalog.verification_pending') }}</p>
+                                    <p class="text-sm text-yellow-700">{{ __('storefront.catalog.verification_pending_desc') }}</p>
                                 </div>
                             @else
                                 <svg class="h-5 w-5 text-red-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
                                 <div>
-                                    <p class="text-sm font-medium text-red-800">Verifikasi Diperlukan</p>
+                                    <p class="text-sm font-medium text-red-800">{{ __('storefront.catalog.verification_required') }}</p>
                                     <p class="text-sm text-red-700">
-                                        <a href="{{ route('customer.profile') }}" class="underline font-semibold">Lengkapi verifikasi</a> untuk dapat melakukan rental.
+                                        <a href="{{ route('customer.profile') }}" class="underline font-semibold">{{ __('storefront.catalog.complete_verification') }}</a> {{ __('storefront.catalog.to_rent') }}.
                                     </p>
                                 </div>
                             @endif
@@ -116,7 +116,7 @@
                         
                         @if($product->variations->isNotEmpty())
                             <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Variasi</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.select_variation') }}</label>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     @foreach($product->variations as $variation)
                                         @php
@@ -136,20 +136,20 @@
                                                 Rp {{ number_format($price, 0, ',', '.') }}
                                             </span>
                                             <span class="block text-xs mt-1 {{ $isAvailable ? 'text-green-600' : 'text-red-500' }}">
-                                                {{ $isAvailable ? $varAvailableCount . ' unit' : 'Habis' }}
+                                                {{ $isAvailable ? $varAvailableCount . ' ' . __('storefront.catalog.unit') : __('storefront.catalog.sold_out') }}
                                             </span>
                                         </button>
                                     @endforeach
                                 </div>
                                 <input type="hidden" name="variation_id" id="variation_id" required>
-                                <p id="variation-error" class="text-red-500 text-sm mt-1 hidden">Silakan pilih variasi produk.</p>
+                                <p id="variation-error" class="text-red-500 text-sm mt-1 hidden">{{ __('storefront.catalog.select_variation_error') }}</p>
                             </div>
                         @endif
 
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Rentang Tanggal Sewa</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.select_rental_dates') }}</label>
                             <div class="relative">
-                                <input type="text" id="date_range" required placeholder="Pilih tanggal sewa..." 
+                                <input type="text" id="date_range" required placeholder="{{ __('storefront.catalog.select_dates_placeholder') }}"
                                     class="w-full border rounded-lg px-3 py-2 bg-white cursor-pointer" readonly>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,22 +161,22 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Jam Pickup</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.pickup_time') }}</label>
                                 <input type="time" name="pickup_time" id="pickup_time" required value="09:00"
                                     class="w-full border rounded-lg px-3 py-2 bg-white">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Jam Return</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.return_time') }}</label>
                                 <input type="time" name="return_time" id="return_time" required value="09:00"
                                     class="w-full border rounded-lg px-3 py-2 bg-white">
                             </div>
                         </div>
 
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.catalog.quantity') }}</label>
                             <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ $availableUnits->count() }}" required 
                                 class="w-full border rounded-lg px-3 py-2 bg-white">
-                            <p class="text-xs text-gray-500 mt-1">Maksimal: {{ $availableUnits->count() }} unit</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ __('storefront.catalog.max') }}: {{ $availableUnits->count() }} {{ __('storefront.catalog.unit') }}</p>
                         </div>
 
                         <input type="hidden" name="start_date" id="start_date">
@@ -185,28 +185,28 @@
                 @if($canRent)
                     @if($product->isFullyUnderMaintenance())
                         <button type="button" disabled class="w-full bg-red-500 text-white py-3 rounded-lg font-semibold cursor-not-allowed">
-                            Under Maintenance
+                            {{ __('storefront.catalog.under_maintenance') }}
                         </button>
                     @else
                         <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition">
-                            Add to Cart
+                            {{ __('storefront.catalog.add_to_cart') }}
                         </button>
                     @endif
                 @else
                     <button type="button" disabled class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed">
-                        Verifikasi Diperlukan
+                        {{ __('storefront.catalog.verification_required') }}
                     </button>
                 @endif
                     </form>
                 @else
                     <div class="bg-yellow-50 text-yellow-700 p-4 rounded-lg">
-                        No units available at the moment.
+                        {{ __('storefront.catalog.no_units_available') }}
                     </div>
                 @endif
             @else
                 <div class="bg-gray-50 rounded-lg p-6 text-center">
-                    <p class="mb-4">Please login to book this equipment</p>
-                    <a href="{{ route('customer.login') }}" class="bg-primary-600 text-white px-6 py-2 rounded-lg inline-block hover:bg-primary-700">Login to Book</a>
+                    <p class="mb-4">{{ __('storefront.catalog.login_to_book') }}</p>
+                    <a href="{{ route('customer.login') }}" class="bg-primary-600 text-white px-6 py-2 rounded-lg inline-block hover:bg-primary-700">{{ __('storefront.catalog.login_to_book_btn') }}</a>
                 </div>
             @endauth
         </div>
@@ -215,7 +215,7 @@
     <!-- Related Products -->
     @if($relatedProducts->count() > 0)
         <section class="mt-16">
-            <h2 class="text-2xl font-bold mb-6">Related Products</h2>
+            <h2 class="text-2xl font-bold mb-6">{{ __('storefront.catalog.related_products') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($relatedProducts as $related)
                     <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition">
@@ -228,8 +228,8 @@
                         </div>
                         <div class="p-4 border-t border-gray-100">
                             <h3 class="font-semibold mb-2">{{ $related->name }}</h3>
-                            <p class="text-primary-600 font-bold">Rp {{ number_format($related->daily_rate, 0, ',', '.') }}/day</p>
-                            <a href="{{ route('catalog.show', $related) }}" class="mt-2 block text-center text-primary-600 text-sm hover:underline">View Details</a>
+                            <p class="text-primary-600 font-bold">Rp {{ number_format($related->daily_rate, 0, ',', '.') }}/{{ __('storefront.day') }}</p>
+                            <a href="{{ route('catalog.show', $related) }}" class="mt-2 block text-center text-primary-600 text-sm hover:underline">{{ __('storefront.view_details') }}</a>
                         </div>
                     </div>
                 @endforeach

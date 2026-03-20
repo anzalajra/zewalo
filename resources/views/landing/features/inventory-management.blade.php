@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link
@@ -32,7 +34,7 @@
             },
         }
     </script>
-    <title>Advanced Inventory Management - InventoryPro</title>
+    <title>{{ __('landing.feat_inventory.page_title') }}</title>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
@@ -49,16 +51,16 @@
                         <span class="material-symbols-outlined text-3xl">inventory_2</span>
                     </div>
                     <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">
-                        InventoryPro</h2>
+                        {{ __('landing.feat_inventory.brand_name') }}</h2>
                 </div>
                 <nav class="hidden md:flex items-center gap-9">
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Dashboard</a>
-                    <a class="text-primary text-sm font-bold leading-normal" href="#">Inventory</a>
+                        href="#">{{ __('landing.feat_inventory.nav_dashboard') }}</a>
+                    <a class="text-primary text-sm font-bold leading-normal" href="#">{{ __('landing.feat_inventory.nav_inventory') }}</a>
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Orders</a>
+                        href="#">{{ __('landing.feat_inventory.nav_orders') }}</a>
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">Reports</a>
+                        href="#">{{ __('landing.feat_inventory.nav_reports') }}</a>
                 </nav>
             </div>
             <div class="flex flex-1 justify-end gap-4 md:gap-8 items-center">
@@ -69,12 +71,12 @@
                         </div>
                         <input
                             class="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 h-full placeholder:text-slate-500 px-4 pl-2 text-base font-normal"
-                            placeholder="Search feature" value="" />
+                            placeholder="{{ __('landing.feat_inventory.search_placeholder') }}" value="" />
                     </div>
                 </label>
                 <button
                     class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
-                    <span class="truncate">Get Started</span>
+                    <span class="truncate">{{ __('landing.feat_inventory.get_started') }}</span>
                 </button>
                 <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700"
                     data-alt="User profile avatar placeholder"
@@ -89,24 +91,23 @@
                         <div
                             class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
                             <span class="material-symbols-outlined text-sm">auto_awesome</span>
-                            <span>Premium Feature</span>
+                            <span>{{ __('landing.feat_inventory.hero_badge') }}</span>
                         </div>
                         <h1
                             class="text-slate-900 dark:text-slate-100 text-4xl md:text-6xl font-black leading-tight tracking-tight">
-                            Advanced Inventory Management
+                            {{ __('landing.feat_inventory.hero_title') }}
                         </h1>
                         <p class="text-slate-600 dark:text-slate-400 text-lg md:text-xl leading-relaxed">
-                            A high-performance engine for modern supply chains. Track every movement, manage complex
-                            kits, and forecast depreciation with enterprise-grade accuracy.
+                            {{ __('landing.feat_inventory.hero_description') }}
                         </p>
                         <div class="flex flex-wrap gap-4 mt-4">
                             <button
                                 class="px-8 py-4 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                                Start 14-Day Free Trial
+                                {{ __('landing.feat_inventory.start_trial') }}
                             </button>
                             <button
                                 class="px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                                Watch Demo
+                                {{ __('landing.feat_inventory.watch_demo') }}
                             </button>
                         </div>
                     </div>
@@ -124,10 +125,8 @@
             <section class="px-6 md:px-20 lg:px-40 py-20 bg-background-light dark:bg-background-dark/50">
                 <div class="max-w-[1200px] mx-auto">
                     <div class="text-center mb-16">
-                        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4">Precision
-                            Product Control</h2>
-                        <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">Master every SKU with
-                            granularity that scales with your business complexity.</p>
+                        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-4">{{ __('landing.feat_inventory.features_title') }}</h2>
+                        <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{{ __('landing.feat_inventory.features_subtitle') }}</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <div
@@ -136,11 +135,10 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">layers</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Variation Tracking
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature1_title') }}
                             </h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Manage infinite combinations of sizes, colors, and materials. Each variant gets its own
-                                SKU, stock levels, and pricing logic.
+                                {{ __('landing.feat_inventory.feature1_desc') }}
                             </p>
                         </div>
                         <div
@@ -149,10 +147,9 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">inventory</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Kit &amp; Bundles</h3>
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature2_title') }}</h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Create sellable kits from individual items. InventoryPro automatically adjusts component
-                                levels when a bundle is sold.
+                                {{ __('landing.feat_inventory.feature2_desc') }}
                             </p>
                         </div>
                         <div
@@ -161,11 +158,10 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">square_foot</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Multi-Unit Conversion
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature3_title') }}
                             </h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Buy in pallets, store in boxes, and sell in units. Seamless conversion across metric,
-                                imperial, and custom unit systems.
+                                {{ __('landing.feat_inventory.feature3_desc') }}
                             </p>
                         </div>
                         <div
@@ -174,11 +170,10 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">calendar_today</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Lifecycle Management
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature4_title') }}
                             </h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Precise purchase date logging and automatic depreciation calculations based on
-                                standardized accounting methods (FIFO, LIFO).
+                                {{ __('landing.feat_inventory.feature4_desc') }}
                             </p>
                         </div>
                         <div
@@ -187,10 +182,9 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">domain</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Warehouse Network</h3>
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature5_title') }}</h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Synchronize stock across global locations. Manage transfers, bin locations, and
-                                site-specific reorder points.
+                                {{ __('landing.feat_inventory.feature5_desc') }}
                             </p>
                         </div>
                         <div
@@ -199,11 +193,10 @@
                                 class="w-12 h-12 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined">monitoring</span>
                             </div>
-                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Real-time Analytics
+                            <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_inventory.feature6_title') }}
                             </h3>
                             <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                Instant visibility into total asset value, stock turnover ratios, and predictive
-                                replenishment alerts.
+                                {{ __('landing.feat_inventory.feature6_desc') }}
                             </p>
                         </div>
                     </div>
@@ -214,32 +207,32 @@
                     <div class="w-full md:w-1/2">
                         <div class="rounded-2xl bg-slate-900 p-6 shadow-xl text-white">
                             <div class="flex items-center justify-between mb-8">
-                                <h4 class="font-bold">Inventory Valuation Report</h4>
-                                <span class="text-primary text-sm font-mono">Live Sync</span>
+                                <h4 class="font-bold">{{ __('landing.feat_inventory.valuation_title') }}</h4>
+                                <span class="text-primary text-sm font-mono">{{ __('landing.feat_inventory.valuation_live') }}</span>
                             </div>
                             <div class="space-y-4">
                                 <div class="h-4 bg-slate-800 rounded-full overflow-hidden">
                                     <div class="h-full bg-primary w-3/4"></div>
                                 </div>
                                 <div class="flex justify-between text-sm text-slate-400">
-                                    <span>Main Warehouse</span>
+                                    <span>{{ __('landing.feat_inventory.valuation_main_warehouse') }}</span>
                                     <span>$452,000.00</span>
                                 </div>
                                 <div class="h-4 bg-slate-800 rounded-full overflow-hidden">
                                     <div class="h-full bg-primary w-1/4"></div>
                                 </div>
                                 <div class="flex justify-between text-sm text-slate-400">
-                                    <span>Satellite Hub</span>
+                                    <span>{{ __('landing.feat_inventory.valuation_satellite') }}</span>
                                     <span>$128,500.00</span>
                                 </div>
                                 <div class="pt-6 border-t border-slate-800">
                                     <div class="flex justify-between items-end">
                                         <div>
-                                            <p class="text-xs text-slate-500 uppercase">Estimated Depreciation (Q3)</p>
+                                            <p class="text-xs text-slate-500 uppercase">{{ __('landing.feat_inventory.valuation_depreciation') }}</p>
                                             <p class="text-2xl font-bold text-red-400">-$12,403.20</p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="text-xs text-slate-500 uppercase">Total Asset Value</p>
+                                            <p class="text-xs text-slate-500 uppercase">{{ __('landing.feat_inventory.valuation_total') }}</p>
                                             <p class="text-3xl font-black text-primary">$568,096.80</p>
                                         </div>
                                     </div>
@@ -248,24 +241,22 @@
                         </div>
                     </div>
                     <div class="w-full md:w-1/2 flex flex-col gap-6">
-                        <h2 class="text-3xl md:text-4xl font-bold">Smart Financial Integration</h2>
+                        <h2 class="text-3xl md:text-4xl font-bold">{{ __('landing.feat_inventory.detail_title') }}</h2>
                         <p class="text-slate-600 dark:text-slate-400 text-lg">
-                            We don't just count boxes. Our system tracks the financial heartbeat of your inventory. Log
-                            purchase dates for tax compliance and watch as our AI forecasts the depreciated value of
-                            your assets over time.
+                            {{ __('landing.feat_inventory.detail_desc') }}
                         </p>
                         <ul class="space-y-4">
                             <li class="flex gap-3 items-start">
                                 <span class="material-symbols-outlined text-primary">check_circle</span>
-                                <span>Automatic FIFO/LIFO tracking for accurate costing</span>
+                                <span>{{ __('landing.feat_inventory.detail_check1') }}</span>
                             </li>
                             <li class="flex gap-3 items-start">
                                 <span class="material-symbols-outlined text-primary">check_circle</span>
-                                <span>Multi-currency support for international acquisitions</span>
+                                <span>{{ __('landing.feat_inventory.detail_check2') }}</span>
                             </li>
                             <li class="flex gap-3 items-start">
                                 <span class="material-symbols-outlined text-primary">check_circle</span>
-                                <span>Detailed audit trails for every stock movement</span>
+                                <span>{{ __('landing.feat_inventory.detail_check3') }}</span>
                             </li>
                         </ul>
                     </div>
@@ -273,23 +264,21 @@
             </section>
             <section class="px-6 md:px-20 lg:px-40 py-24 bg-primary text-white">
                 <div class="max-w-[1200px] mx-auto text-center flex flex-col items-center gap-8">
-                    <h2 class="text-4xl md:text-5xl font-black tracking-tight max-w-3xl">Ready to take control of your
-                        supply chain?</h2>
+                    <h2 class="text-4xl md:text-5xl font-black tracking-tight max-w-3xl">{{ __('landing.feat_inventory.cta_title') }}</h2>
                     <p class="text-white/80 text-lg md:text-xl max-w-2xl">
-                        Join over 5,000 businesses that trust InventoryPro to manage their $2B+ in annual stock
-                        movements.
+                        {{ __('landing.feat_inventory.cta_description') }}
                     </p>
                     <div class="flex flex-col sm:flex-row gap-4 mt-4 w-full justify-center">
                         <button
                             class="bg-white text-primary px-10 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition-all">
-                            Get Started Now
+                            {{ __('landing.feat_inventory.cta_get_started') }}
                         </button>
                         <button
                             class="bg-primary-dark/20 border border-white/30 backdrop-blur-sm px-10 py-4 rounded-lg font-bold text-lg hover:bg-white/10 transition-all">
-                            Contact Sales
+                            {{ __('landing.feat_inventory.cta_contact_sales') }}
                         </button>
                     </div>
-                    <p class="text-sm text-white/60">No credit card required. Cancel anytime.</p>
+                    <p class="text-sm text-white/60">{{ __('landing.feat_inventory.cta_no_credit_card') }}</p>
                 </div>
             </section>
         </main>
@@ -299,11 +288,10 @@
                 <div class="col-span-2">
                     <div class="flex items-center gap-4 text-slate-900 dark:text-slate-100 mb-6">
                         <span class="material-symbols-outlined text-primary text-3xl">inventory_2</span>
-                        <h2 class="text-lg font-bold">InventoryPro</h2>
+                        <h2 class="text-lg font-bold">{{ __('landing.feat_inventory.brand_name') }}</h2>
                     </div>
                     <p class="text-slate-600 dark:text-slate-400 mb-6 max-w-xs">
-                        The ultimate solution for scaling e-commerce and logistics operations. Managed by experts, for
-                        professionals.
+                        {{ __('landing.feat_inventory.footer_tagline') }}
                     </p>
                     <div class="flex gap-4">
                         <a class="text-slate-400 hover:text-primary transition-colors" href="#"><span
@@ -315,35 +303,35 @@
                     </div>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-6">Product</h4>
+                    <h4 class="font-bold mb-6">{{ __('landing.feat_inventory.footer_product') }}</h4>
                     <ul class="space-y-4 text-slate-600 dark:text-slate-400 text-sm">
-                        <li><a class="hover:text-primary transition-colors" href="#">Features</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Pricing</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Integrations</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Changelog</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.nav_features') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_pricing') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_integrations') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_changelog') }}</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-6">Company</h4>
+                    <h4 class="font-bold mb-6">{{ __('landing.feat_inventory.footer_company') }}</h4>
                     <ul class="space-y-4 text-slate-600 dark:text-slate-400 text-sm">
-                        <li><a class="hover:text-primary transition-colors" href="#">About</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Customers</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_about') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_customers') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_careers') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_contact') }}</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-bold mb-6">Legal</h4>
+                    <h4 class="font-bold mb-6">{{ __('landing.feat_inventory.footer_legal') }}</h4>
                     <ul class="space-y-4 text-slate-600 dark:text-slate-400 text-sm">
-                        <li><a class="hover:text-primary transition-colors" href="#">Privacy</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Terms</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Security</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_privacy') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_terms') }}</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">{{ __('landing.feat_inventory.footer_security') }}</a></li>
                     </ul>
                 </div>
             </div>
             <div
                 class="max-w-[1200px] mx-auto mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 text-center text-slate-500 text-xs">
-                © 2024 InventoryPro Systems Inc. All rights reserved.
+                {{ __('landing.feat_inventory.footer_copyright') }}
             </div>
         </footer>
     </div>

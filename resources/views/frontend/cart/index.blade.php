@@ -1,6 +1,6 @@
 @extends('layouts.frontend')
 
-@section('title', 'Shopping Cart')
+@section('title', __('storefront.cart.title'))
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -8,7 +8,7 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-2xl font-bold mb-8">Shopping Cart</h1>
+    <h1 class="text-2xl font-bold mb-8">{{ __('storefront.cart.title') }}</h1>
 
     <!-- Verification Warning -->
     @if(!$canCheckout)
@@ -18,10 +18,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
                 <div>
-                    <h3 class="text-sm font-medium text-red-800">Akun Belum Terverifikasi</h3>
+                    <h3 class="text-sm font-medium text-red-800">{{ __('storefront.cart.account_not_verified') }}</h3>
                     <p class="mt-1 text-sm text-red-700">
-                        Anda harus menyelesaikan verifikasi akun sebelum dapat melakukan checkout. 
-                        <a href="{{ route('customer.profile') }}" class="font-semibold underline">Lengkapi verifikasi sekarang →</a>
+                        {{ __('storefront.cart.verify_before_checkout') }}
+                        <a href="{{ route('customer.profile') }}" class="font-semibold underline">{{ __('storefront.cart.complete_verification_now') }} →</a>
                     </p>
                 </div>
             </div>
@@ -31,13 +31,13 @@
     @if($cartItems->count() > 0)
         <!-- Global Rental Settings -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4">Rental Period (Applies to all items)</h2>
+            <h2 class="text-lg font-semibold mb-4">{{ __('storefront.cart.rental_period') }}</h2>
             <form action="{{ route('cart.update-all') }}" method="POST" id="global-date-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 @csrf
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.cart.date_range') }}</label>
                     <div class="relative">
-                        <input type="text" id="global_date_range" class="w-full border rounded-lg px-3 py-2 bg-white cursor-pointer" placeholder="Select dates..." readonly>
+                        <input type="text" id="global_date_range" class="w-full border rounded-lg px-3 py-2 bg-white cursor-pointer" placeholder="{{ __('storefront.catalog.select_dates') }}" readonly>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -46,11 +46,11 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Pickup Time</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.cart.pickup_time') }}</label>
                     <input type="time" id="global_pickup_time" class="w-full border rounded-lg px-3 py-2 bg-white" value="{{ $cartItems->first()->start_date->format('H:i') }}">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Return Time</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('storefront.cart.return_time') }}</label>
                     <input type="time" id="global_return_time" class="w-full border rounded-lg px-3 py-2 bg-white" value="{{ $cartItems->first()->end_date->format('H:i') }}">
                 </div>
                 
@@ -59,7 +59,7 @@
                 
                 <div class="md:col-span-4 flex justify-end">
                     <button type="submit" class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition">
-                        Update All Dates
+                        {{ __('storefront.cart.update_all_dates') }}
                     </button>
                 </div>
             </form>
@@ -101,7 +101,7 @@
                                             <span class="text-gray-500 font-normal">({{ $variation->name }})</span>
                                         @endif
                                     </p>
-                                    <p class="text-sm text-primary-600">Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}/day</p>
+                                    <p class="text-sm text-primary-600">Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}/{{ __('storefront.day') }}</p>
                                     <p class="text-xs text-gray-500 mt-1">
                                         {{ $firstItem->start_date->format('d M H:i') }} - {{ $firstItem->end_date->format('d M H:i') }}
                                     </p>
@@ -123,7 +123,7 @@
                             </div>
                             <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
                                 <div>
-                                    <span class="text-sm font-semibold">{{ $firstItem->days }}</span> <span class="text-xs text-gray-500">days</span>
+                                    <span class="text-sm font-semibold">{{ $firstItem->days }}</span> <span class="text-xs text-gray-500">{{ __('storefront.days') }}</span>
                                     <p class="font-bold text-gray-900">Rp {{ number_format($subtotal, 0, ',', '.') }}</p>
                                 </div>
                                 <form action="{{ route('cart.remove-product') }}" method="POST" class="inline">
@@ -131,7 +131,7 @@
                                     @method('DELETE')
                                     <input type="hidden" name="product_id" value="{{ $product->id }}">
                                     <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
-                                        Remove All
+                                        {{ __('storefront.cart.remove_all') }}
                                     </button>
                                 </form>
                             </div>
@@ -144,11 +144,11 @@
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('storefront.cart.product') }}</th>
                                 <!-- Removed individual dates column as it's now global -->
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Qty</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('storefront.cart.qty') }}</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('storefront.cart.days') }}</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('storefront.cart.subtotal') }}</th>
                                 <th class="px-6 py-3"></th>
                             </tr>
                         </thead>
@@ -178,7 +178,7 @@
                                                         <span class="text-gray-500 font-normal">({{ $variation->name }})</span>
                                                     @endif
                                                 </p>
-                                                <p class="text-sm text-primary-600">Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}/day</p>
+                                                <p class="text-sm text-primary-600">Rp {{ number_format($firstItem->daily_rate, 0, ',', '.') }}/{{ __('storefront.day') }}</p>
                                                 <p class="text-xs text-gray-500 mt-1">
                                                     {{ $firstItem->start_date->format('d M H:i') }} - {{ $firstItem->end_date->format('d M H:i') }}
                                                 </p>
@@ -199,7 +199,7 @@
                                         </form>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <span class="font-semibold">{{ $firstItem->days }}</span> days
+                                        <span class="font-semibold">{{ $firstItem->days }}</span> {{ __('storefront.days') }}
                                     </td>
                                     <td class="px-6 py-4 text-right font-semibold">
                                         Rp {{ number_format($subtotal, 0, ',', '.') }}
@@ -223,11 +223,11 @@
                 </div>
 
                 <div class="mt-4 flex justify-between">
-                    <a href="{{ route('catalog.index') }}" class="text-primary-600 hover:underline">← Continue Shopping</a>
+                    <a href="{{ route('catalog.index') }}" class="text-primary-600 hover:underline">← {{ __('storefront.cart.continue_shopping') }}</a>
                     <form action="{{ route('cart.clear') }}" method="POST">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="text-red-600 hover:underline">Clear Cart</button>
+                        <button type="submit" class="text-red-600 hover:underline">{{ __('storefront.cart.clear_cart') }}</button>
                     </form>
                 </div>
             </div>
@@ -235,44 +235,44 @@
             <!-- Order Summary -->
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h2 class="text-lg font-semibold mb-4">Order Summary</h2>
+                    <h2 class="text-lg font-semibold mb-4">{{ __('storefront.cart.order_summary') }}</h2>
                     
                     <div class="space-y-3 mb-6">
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal</span>
+                            <span class="text-gray-600">{{ __('storefront.cart.subtotal') }}</span>
                             <span>Rp {{ number_format($grossTotal, 0, ',', '.') }}</span>
                         </div>
 
                         @if($discountAmount > 0)
                             <div class="flex justify-between text-green-600">
-                                <span>Discount ({{ $categoryName }})</span>
+                                <span>{{ __('storefront.cart.discount') }} ({{ $categoryName }})</span>
                                 <span>- Rp {{ number_format($discountAmount, 0, ',', '.') }}</span>
                             </div>
                         @endif
 
                         @if($deposit > 0)
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Deposit</span>
+                            <span class="text-gray-600">{{ __('storefront.cart.deposit') }}</span>
                             <span>Rp {{ number_format($deposit, 0, ',', '.') }}</span>
                         </div>
                         @endif
                         <hr>
                         <div class="flex justify-between font-bold text-lg">
-                            <span>Total</span>
+                            <span>{{ __('storefront.cart.total') }}</span>
                             <span class="text-primary-600">Rp {{ number_format($netTotal, 0, ',', '.') }}</span>
                         </div>
                     </div>
 
                     @if($canCheckout)
                         <a href="{{ route('checkout.index') }}" class="w-full block text-center bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition">
-                            Proceed to Checkout
+                            {{ __('storefront.cart.proceed_to_checkout') }}
                         </a>
                     @else
                         <button disabled class="w-full bg-gray-400 text-white py-3 rounded-lg font-semibold cursor-not-allowed">
-                            Verifikasi Diperlukan
+                            {{ __('storefront.catalog.verification_required') }}
                         </button>
                         <p class="text-xs text-center text-gray-500 mt-2">
-                            <a href="{{ route('customer.profile') }}" class="text-primary-600 hover:underline">Lengkapi verifikasi</a> untuk checkout
+                            <a href="{{ route('customer.profile') }}" class="text-primary-600 hover:underline">{{ __('storefront.catalog.complete_verification') }}</a> {{ __('storefront.cart.to_checkout') }}
                         </p>
                     @endif
                 </div>
@@ -281,10 +281,10 @@
     @else
         <div class="text-center py-16">
             <div class="text-6xl mb-4">🛒</div>
-            <h2 class="text-xl font-semibold mb-2">Your cart is empty</h2>
-            <p class="text-gray-600 mb-6">Looks like you haven't added any items yet.</p>
+            <h2 class="text-xl font-semibold mb-2">{{ __('storefront.cart.empty_title') }}</h2>
+            <p class="text-gray-600 mb-6">{{ __('storefront.cart.empty_desc') }}</p>
             <a href="{{ route('catalog.index') }}" class="bg-primary-600 text-white px-6 py-3 rounded-lg inline-block hover:bg-primary-700">
-                Browse Catalog
+                {{ __('storefront.browse_catalog') }}
             </a>
         </div>
     @endif

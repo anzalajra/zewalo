@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Zewalo - Event Equipment Management Solution</title>
+    <title>{{ __('landing.sol_party.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link
@@ -45,38 +47,36 @@
                     <div class="flex flex-wrap justify-between gap-3 p-4">
                         <div class="flex min-w-72 flex-col gap-3">
                             <h1 class="text-slate-900 dark:text-slate-100 text-4xl font-black leading-tight tracking-[-0.033em]">
-                                Streamline Your Event Inventory</h1>
-                            <p class="text-slate-600 dark:text-slate-400 text-lg font-normal leading-normal">The
-                                ultimate solution for managing large-scale decor, furniture, and rental logistics
-                                without the risk of double-booking.</p>
+                                {{ __('landing.sol_party.hero_title') }}</h1>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg font-normal leading-normal">{{ __('landing.sol_party.hero_description') }}</p>
                         </div>
                     </div>
                     <!-- Stats Overview -->
                     <div class="flex flex-wrap gap-4 p-4">
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Total Inventory</p>
-                            <p class="text-slate-900 dark:text-slate-100 tracking-tight text-3xl font-bold">12,840 units</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">{{ __('landing.sol_party.stat1_label') }}</p>
+                            <p class="text-slate-900 dark:text-slate-100 tracking-tight text-3xl font-bold">{{ __('landing.sol_party.stat1_value') }}</p>
                         </div>
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Availability Rate</p>
-                            <p class="text-primary tracking-tight text-3xl font-bold">94.2%</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">{{ __('landing.sol_party.stat2_label') }}</p>
+                            <p class="text-primary tracking-tight text-3xl font-bold">{{ __('landing.sol_party.stat2_value') }}</p>
                         </div>
                         <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Active Bookings</p>
-                            <p class="text-slate-900 dark:text-slate-100 tracking-tight text-3xl font-bold">412 Events</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">{{ __('landing.sol_party.stat3_label') }}</p>
+                            <p class="text-slate-900 dark:text-slate-100 tracking-tight text-3xl font-bold">{{ __('landing.sol_party.stat3_value') }}</p>
                         </div>
                     </div>
                     <!-- Feature Tabs -->
                     <div class="pb-3 px-4">
                         <div class="flex border-b border-slate-200 dark:border-slate-800 gap-8 overflow-x-auto">
                             <a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-[13px] pt-4 whitespace-nowrap" href="#">
-                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">Availability Calendar</p>
+                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">{{ __('landing.sol_party.tab1') }}</p>
                             </a>
                             <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 whitespace-nowrap" href="#">
-                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">Batch Inventory Editor</p>
+                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">{{ __('landing.sol_party.tab2') }}</p>
                             </a>
                             <a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 dark:text-slate-400 pb-[13px] pt-4 whitespace-nowrap" href="#">
-                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">Logistics &amp; Maintenance</p>
+                                <p class="text-sm font-bold leading-normal tracking-[0.015em]">{{ __('landing.sol_party.tab3') }}</p>
                             </a>
                         </div>
                     </div>
@@ -85,18 +85,16 @@
                         <div class="flex-1">
                             <h2 class="text-slate-900 dark:text-slate-100 text-2xl font-bold mb-4 flex items-center gap-2">
                                 <span class="material-symbols-outlined text-primary">calendar_month</span>
-                                Prevent Double-Booking
+                                {{ __('landing.sol_party.feature_main_title') }}
                             </h2>
-                            <p class="text-slate-600 dark:text-slate-400 mb-6">Our intelligent availability engine
-                                tracks every individual chair, table, and linen. Real-time conflict detection ensures
-                                you never over-commit your stock across multiple venues.</p>
+                            <p class="text-slate-600 dark:text-slate-400 mb-6">{{ __('landing.sol_party.feature_main_description') }}</p>
                             <!-- Mini Calendar UI -->
                             <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                                 <div class="flex items-center justify-between mb-4">
                                     <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                                         <span class="material-symbols-outlined">chevron_left</span>
                                     </button>
-                                    <p class="text-slate-900 dark:text-slate-100 font-bold">June 2024</p>
+                                    <p class="text-slate-900 dark:text-slate-100 font-bold">{{ __('landing.sol_party.calendar_month') }}</p>
                                     <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                                         <span class="material-symbols-outlined">chevron_right</span>
                                     </button>
@@ -122,7 +120,7 @@
                                     <div class="h-10 flex items-center justify-center rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">9</div>
                                     <div class="h-10 flex items-center justify-center bg-red-100 text-red-600 font-bold rounded-lg relative group">
                                         10
-                                        <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">Booking Conflict!</span>
+                                        <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none">{{ __('landing.sol_party.calendar_conflict') }}</span>
                                     </div>
                                     <div class="h-10 flex items-center justify-center rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">11</div>
                                     <div class="h-10 flex items-center justify-center rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">12</div>
@@ -136,31 +134,31 @@
                         <div class="lg:w-1/3 bg-primary/5 rounded-xl p-6 border border-primary/20">
                             <div class="flex items-center gap-2 mb-4 text-primary">
                                 <span class="material-symbols-outlined">edit_square</span>
-                                <h3 class="font-bold">Batch Inventory Editor</h3>
+                                <h3 class="font-bold">{{ __('landing.sol_party.sidebar_title') }}</h3>
                             </div>
                             <ul class="space-y-4">
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-sm mt-1">check_circle</span>
-                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Update status for 500+ items in one click.</p>
+                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.sol_party.sidebar_item1') }}</p>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-sm mt-1">check_circle</span>
-                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Assign warehouse locations in bulk.</p>
+                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.sol_party.sidebar_item2') }}</p>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-sm mt-1">check_circle</span>
-                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Mass-edit pricing for peak seasons.</p>
+                                    <p class="text-sm text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.sol_party.sidebar_item3') }}</p>
                                 </li>
                             </ul>
                             <a href="/register-tenant" class="block w-full mt-6 bg-primary text-white font-bold py-3 rounded-lg hover:bg-primary/90 transition-colors text-center">
-                                Try Batch Editor
+                                {{ __('landing.sol_party.sidebar_cta') }}
                             </a>
                         </div>
                     </div>
                     <!-- Case Study Section -->
                     <div class="px-4 py-8 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex flex-col md:flex-row gap-8 items-center border border-slate-200 dark:border-slate-700">
                         <div class="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden flex-shrink-0 border-4 border-white dark:border-slate-700">
-                            <img class="w-full h-full object-cover" data-alt="Professional event organizer portrait"
+                            <img class="w-full h-full object-cover" data-alt="{{ __('landing.sol_party.testimonial_image_alt') }}"
                                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhZXaxbVE3xbPv7-vIuCoMDOZ_IQBvothO5XETDwSLpSYrZCpLCOTmzburrBhn7TqyfTj6q74Y4reV-kzK5xL_AMw14DT9Au56kb2Jhbx2f4gDiVdclJumD08L-9EiszE4enJWPDmOEUNC8fiixEyuLUSzoeHOK4so1oTxULrMXQVk38IBd8j0yaBc7F66XQjrzblCv3oazCAJWQ5A4MKX-Ui2IqskTVbt1Z-oziNG0nh6VGxlasw_FP2to6fhMs1qeCFVeJ0D1YwC" />
                         </div>
                         <div>
@@ -171,48 +169,42 @@
                                 <span class="material-symbols-outlined fill-1">star</span>
                                 <span class="material-symbols-outlined fill-1">star</span>
                             </div>
-                            <p class="italic text-lg text-slate-800 dark:text-slate-200 mb-4">"Managing 5,000 chairs and
-                                200 bespoke tables for gala season used to be a nightmare of spreadsheets. This
-                                platform's batch editing saved us 15 hours of admin work every week."</p>
+                            <p class="italic text-lg text-slate-800 dark:text-slate-200 mb-4">"{{ __('landing.sol_party.testimonial_quote') }}"</p>
                             <div>
-                                <p class="font-bold text-slate-900 dark:text-slate-100">Sarah Jenkins</p>
-                                <p class="text-sm text-slate-500">Director, Elite Event Logistics</p>
+                                <p class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.sol_party.testimonial_name') }}</p>
+                                <p class="text-sm text-slate-500">{{ __('landing.sol_party.testimonial_role') }}</p>
                             </div>
                         </div>
                     </div>
                     <!-- FAQ Section -->
                     <div class="p-4">
-                        <h2 class="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+                        <h2 class="text-2xl font-bold mb-6">{{ __('landing.sol_party.faq_title') }}</h2>
                         <div class="space-y-3">
                             <div class="group border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
                                 <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="font-semibold">How does conflict detection work?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_party.faq1_question') }}</span>
                                     <span class="material-symbols-outlined text-slate-400 group-hover:rotate-180 transition-transform">expand_more</span>
                                 </div>
                                 <div class="hidden group-hover:block p-4 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                                    Our system cross-references the rental dates, setup/teardown buffers, and
-                                    maintenance windows for every single item ID. If you try to book more units than are
-                                    physically available, the system alerts you immediately.
+                                    {{ __('landing.sol_party.faq1_answer') }}
                                 </div>
                             </div>
                             <div class="group border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
                                 <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="font-semibold">Can we manage sub-rentals from other vendors?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_party.faq2_question') }}</span>
                                     <span class="material-symbols-outlined text-slate-400 group-hover:rotate-180 transition-transform">expand_more</span>
                                 </div>
                                 <div class="hidden group-hover:block p-4 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                                    Yes! You can mark inventory items as "Sub-rented" and track their external sources,
-                                    ensuring you know exactly which vendor to return them to after the event.
+                                    {{ __('landing.sol_party.faq2_answer') }}
                                 </div>
                             </div>
                             <div class="group border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
                                 <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="font-semibold">Does it support QR code scanning for logistics?</span>
+                                    <span class="font-semibold">{{ __('landing.sol_party.faq3_question') }}</span>
                                     <span class="material-symbols-outlined text-slate-400 group-hover:rotate-180 transition-transform">expand_more</span>
                                 </div>
                                 <div class="hidden group-hover:block p-4 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
-                                    Absolutely. Every piece of equipment can have a unique QR code. Staff can scan items
-                                    on/off trucks using the mobile app to verify manifest accuracy.
+                                    {{ __('landing.sol_party.faq3_answer') }}
                                 </div>
                             </div>
                         </div>
@@ -220,17 +212,17 @@
                     <!-- Call to Action -->
                     <div class="m-4 p-8 bg-background-dark text-white rounded-3xl flex flex-col items-center text-center gap-6 overflow-hidden relative border border-slate-800">
                         <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full -mr-32 -mt-32"></div>
-                        <h2 class="text-3xl font-black max-w-lg relative z-10">Ready to take control of your event inventory?</h2>
-                        <p class="text-slate-300 max-w-md relative z-10">Join 500+ event companies who have eliminated overbooking and logistical chaos.</p>
+                        <h2 class="text-3xl font-black max-w-lg relative z-10">{{ __('landing.sol_party.cta_title') }}</h2>
+                        <p class="text-slate-300 max-w-md relative z-10">{{ __('landing.sol_party.cta_description') }}</p>
                         <div class="flex flex-wrap gap-4 relative z-10">
                             <a href="/register-tenant" class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-primary/20">
-                                Start Free Trial
+                                {{ __('landing.sol_party.cta_trial') }}
                             </a>
                             <a href="/contact" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-4 px-8 rounded-xl transition-all">
-                                Book a Demo
+                                {{ __('landing.sol_party.cta_demo') }}
                             </a>
                         </div>
-                        <p class="text-xs text-slate-500 mt-2 relative z-10">No credit card required. Cancel anytime.</p>
+                        <p class="text-xs text-slate-500 mt-2 relative z-10">{{ __('landing.sol_party.cta_note') }}</p>
                     </div>
                 </div>
             </div>

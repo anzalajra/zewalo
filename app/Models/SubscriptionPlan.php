@@ -62,6 +62,22 @@ class SubscriptionPlan extends Model
     }
 
     /**
+     * Get the prices for this plan (multi-currency).
+     */
+    public function prices(): HasMany
+    {
+        return $this->hasMany(PlanPrice::class);
+    }
+
+    /**
+     * Get the price for a specific currency.
+     */
+    public function priceFor(string $currency): ?PlanPrice
+    {
+        return $this->prices()->where('currency', $currency)->first();
+    }
+
+    /**
      * Get storage limit in human readable format.
      */
     public function getStorageLimitAttribute(): string

@@ -1,11 +1,11 @@
 @extends('layouts.frontend')
 
-@section('title', 'Dashboard')
+@section('title', __('portal.dashboard'))
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex items-center gap-3 mb-8">
-        <h1 class="text-2xl font-bold">Welcome, {{ $customer->name }}!</h1>
+        <h1 class="text-2xl font-bold">{{ __('portal.welcome', ['name' => $customer->name]) }}</h1>
         @if($customer->category)
             <span class="px-3 py-1 rounded-full text-sm font-medium text-white shadow-sm" style="background-color: {{ $customer->category->badge_color ?? '#6b7280' }}">
                 {{ $customer->category->name }}
@@ -15,8 +15,8 @@
 
     <!-- Verification Warning -->
     @if($verificationStatus !== 'verified')
-        <div class="mb-8 p-4 rounded-lg border 
-            @if($verificationStatus === 'pending') bg-yellow-50 border-yellow-300 
+        <div class="mb-8 p-4 rounded-lg border
+            @if($verificationStatus === 'pending') bg-yellow-50 border-yellow-300
             @else bg-red-50 border-red-300 @endif">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
@@ -32,12 +32,12 @@
                 </div>
                 <div class="ml-3">
                     @if($verificationStatus === 'pending')
-                        <h3 class="text-sm font-medium text-yellow-800">Verifikasi Sedang Diproses</h3>
-                        <p class="mt-1 text-sm text-yellow-700">Dokumen Anda sedang ditinjau oleh admin. Anda akan dapat melakukan rental setelah verifikasi disetujui.</p>
+                        <h3 class="text-sm font-medium text-yellow-800">{{ __('portal.verification_processing') }}</h3>
+                        <p class="mt-1 text-sm text-yellow-700">{{ __('portal.verification_processing_desc') }}</p>
                     @else
-                        <h3 class="text-sm font-medium text-red-800">Akun Belum Terverifikasi</h3>
-                        <p class="mt-1 text-sm text-red-700">Anda harus mengunggah dokumen yang diperlukan untuk melakukan rental. 
-                            <a href="{{ route('customer.profile') }}" class="font-semibold underline">Lengkapi verifikasi sekarang →</a>
+                        <h3 class="text-sm font-medium text-red-800">{{ __('portal.account_not_verified') }}</h3>
+                        <p class="mt-1 text-sm text-red-700">{{ __('portal.account_not_verified_desc') }}
+                            <a href="{{ route('customer.profile') }}" class="font-semibold underline">{{ __('portal.complete_verification_now') }}</a>
                         </p>
                     @endif
                 </div>
@@ -53,7 +53,7 @@
                     @if($verificationStatus === 'verified') bg-green-100
                     @elseif($verificationStatus === 'pending') bg-yellow-100
                     @else bg-red-100 @endif">
-                    <svg class="w-6 h-6 
+                    <svg class="w-6 h-6
                         @if($verificationStatus === 'verified') text-green-600
                         @elseif($verificationStatus === 'pending') text-yellow-600
                         @else text-red-600 @endif" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,8 +61,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600">Status</p>
-                    <p class="text-lg font-bold 
+                    <p class="text-sm text-gray-600">{{ __('portal.status') }}</p>
+                    <p class="text-lg font-bold
                         @if($verificationStatus === 'verified') text-green-600
                         @elseif($verificationStatus === 'pending') text-yellow-600
                         @else text-red-600 @endif">
@@ -80,7 +80,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600">Active Rentals</p>
+                    <p class="text-sm text-gray-600">{{ __('portal.active_rentals') }}</p>
                     <p class="text-2xl font-bold">{{ $activeRentals->count() }}</p>
                 </div>
             </div>
@@ -94,7 +94,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600">Completed</p>
+                    <p class="text-sm text-gray-600">{{ __('portal.completed') }}</p>
                     <p class="text-2xl font-bold">{{ $pastRentals->where('status', 'completed')->count() }}</p>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600">Cart Items</p>
+                    <p class="text-sm text-gray-600">{{ __('portal.cart_items') }}</p>
                     <p class="text-2xl font-bold">{{ $cartCount }}</p>
                 </div>
             </div>
@@ -118,7 +118,7 @@
     <!-- Active Rentals -->
     <div class="bg-white rounded-lg shadow mb-8">
         <div class="p-6 border-b">
-            <h2 class="text-lg font-semibold">Active Rentals</h2>
+            <h2 class="text-lg font-semibold">{{ __('portal.active_rentals') }}</h2>
         </div>
         @if($activeRentals->count() > 0)
             <div class="divide-y">
@@ -136,14 +136,14 @@
                                 @endif">
                                 {{ ucfirst(str_replace('_', ' ', $rental->status)) }}
                             </span>
-                            <a href="{{ route('customer.rental.detail', $rental->id) }}" class="text-primary-600 hover:underline">View Details</a>
+                            <a href="{{ route('customer.rental.detail', $rental->id) }}" class="text-primary-600 hover:underline">{{ __('portal.view_details') }}</a>
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
             <div class="p-6 text-center text-gray-500">
-                No active rentals.
+                {{ __('portal.no_active_rentals') }}
             </div>
         @endif
     </div>
@@ -151,16 +151,16 @@
     <!-- Quick Links -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <a href="{{ route('catalog.index') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
-            <h3 class="font-semibold mb-2">Browse Catalog</h3>
-            <p class="text-sm text-gray-600">Find and rent equipment</p>
+            <h3 class="font-semibold mb-2">{{ __('portal.browse_catalog') }}</h3>
+            <p class="text-sm text-gray-600">{{ __('portal.browse_catalog_desc') }}</p>
         </a>
         <a href="{{ route('customer.rentals') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
-            <h3 class="font-semibold mb-2">My Rentals</h3>
-            <p class="text-sm text-gray-600">View all rental history</p>
+            <h3 class="font-semibold mb-2">{{ __('portal.my_rentals') }}</h3>
+            <p class="text-sm text-gray-600">{{ __('portal.my_rentals_desc') }}</p>
         </a>
         <a href="{{ route('customer.profile') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
-            <h3 class="font-semibold mb-2">Profile & Verification</h3>
-            <p class="text-sm text-gray-600">Update info & upload documents</p>
+            <h3 class="font-semibold mb-2">{{ __('portal.profile_verification') }}</h3>
+            <p class="text-sm text-gray-600">{{ __('portal.profile_verification_desc') }}</p>
         </a>
     </div>
 </div>

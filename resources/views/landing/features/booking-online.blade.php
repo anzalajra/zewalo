@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
@@ -14,6 +14,8 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -49,20 +51,20 @@
                         <span class="material-symbols-outlined text-4xl">calendar_month</span>
                     </div>
                     <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">
-                        Booking Online</h2>
+                        {{ __('landing.feat_booking.brand_name') }}</h2>
                 </div>
                 <div class="flex flex-1 justify-end gap-8 items-center">
                     <nav class="hidden md:flex items-center gap-9">
                         <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                            href="#">Features</a>
+                            href="#">{{ __('landing.feat_booking.nav_features') }}</a>
                         <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                            href="#">Pricing</a>
+                            href="#">{{ __('landing.feat_booking.nav_pricing') }}</a>
                         <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                            href="#">About</a>
+                            href="#">{{ __('landing.feat_booking.nav_about') }}</a>
                     </nav>
                     <button
                         class="flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:opacity-90 transition-opacity">
-                        <span>Get Started</span>
+                        <span>{{ __('landing.feat_booking.get_started') }}</span>
                     </button>
                     <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700"
                         data-alt="User profile avatar placeholder"
@@ -78,24 +80,23 @@
                             <div
                                 class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold w-fit">
                                 <span class="material-symbols-outlined text-sm">bolt</span>
-                                Powerful Online Booking
+                                {{ __('landing.feat_booking.hero_badge') }}
                             </div>
                             <h1
                                 class="text-slate-900 dark:text-slate-100 text-4xl md:text-6xl font-black leading-tight tracking-tight">
-                                Convert Visitors into <span class="text-primary">Customers</span> Instantly
+                                {{ __('landing.feat_booking.hero_title_prefix') }} <span class="text-primary">{{ __('landing.feat_booking.hero_title_highlight') }}</span> {{ __('landing.feat_booking.hero_title_suffix') }}
                             </h1>
                             <p class="text-slate-600 dark:text-slate-400 text-lg md:text-xl leading-relaxed">
-                                A complete ecosystem to manage your online reservations. From stunning storefronts to
-                                automated payments, we handle the tech so you can focus on growth.
+                                {{ __('landing.feat_booking.hero_description') }}
                             </p>
                             <div class="flex flex-wrap gap-4">
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                    Start Free Trial
+                                    {{ __('landing.feat_booking.start_free_trial') }}
                                 </button>
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-base font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    View Demo
+                                    {{ __('landing.feat_booking.view_demo') }}
                                 </button>
                             </div>
                         </div>
@@ -128,10 +129,8 @@
                     class="w-full bg-white dark:bg-slate-950/50 py-20 flex justify-center border-y border-slate-200 dark:border-slate-800">
                     <div class="max-w-[1200px] w-full px-6">
                         <div class="text-center mb-16">
-                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4">Core
-                                Features of our Booking System</h2>
-                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">Everything you need
-                                to automate your appointments, rentals, or service bookings in one place.</p>
+                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4">{{ __('landing.feat_booking.features_title') }}</h2>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">{{ __('landing.feat_booking.features_subtitle') }}</p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <!-- Feature 1: Customer Storefront -->
@@ -141,11 +140,9 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">storefront</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Custom Storefront
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature1_title') }}
                                 </h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">A professional,
-                                    mobile-optimized booking site for your brand. Showcase your services with beautiful
-                                    layouts.</p>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature1_desc') }}</p>
                             </div>
                             <!-- Feature 2: Live Calendars -->
                             <div
@@ -154,10 +151,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">event_available</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Live Product
-                                    Calendars</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Real-time availability
-                                    sync for every item. Prevent double bookings automatically across all platforms.</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature2_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature2_desc') }}</p>
                             </div>
                             <!-- Feature 3: Quantity Settings -->
                             <div
@@ -166,10 +161,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">reorder</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Quantity
-                                    Management</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Define stock levels per
-                                    time slot. Perfect for group workshops, equipment rentals, or limited tour spots.
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature3_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature3_desc') }}
                                 </p>
                             </div>
                             <!-- Feature 4: Batch Date Editing -->
@@ -179,11 +172,9 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">edit_calendar</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Batch Date Editing
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature4_title') }}
                                 </h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Update schedules for
-                                    multiple dates at once. Save hours of admin work with bulk status and pricing
-                                    changes.</p>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature4_desc') }}</p>
                             </div>
                             <!-- Feature 5: Automated Payments -->
                             <div
@@ -192,10 +183,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">payments</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Automated Online
-                                    Payments</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Accept credit cards and
-                                    digital wallets. Secure Stripe integration with automatic invoices and receipts.</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature5_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature5_desc') }}</p>
                             </div>
                             <!-- Feature 6: Offline Options -->
                             <div
@@ -204,10 +193,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">point_of_sale</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">Offline Payment
-                                    Support</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Offer flexibility with
-                                    "Pay at Venue" options. Manual recording for cash and bank transfers.</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature6_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature6_desc') }}</p>
                             </div>
                         </div>
                     </div>
@@ -221,10 +208,9 @@
                                 <div
                                     class="bg-white dark:bg-slate-950 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-800">
                                     <div class="flex items-center justify-between mb-6">
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">Bulk Update: Weekend
-                                            slots</h4>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.batch_mock_title') }}</h4>
                                         <span
-                                            class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">Live</span>
+                                            class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">{{ __('landing.feat_booking.batch_mock_badge') }}</span>
                                     </div>
                                     <div class="space-y-4">
                                         <div
@@ -247,34 +233,30 @@
                                         </div>
                                         <div
                                             class="p-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex justify-between items-center">
-                                            <span class="text-xs text-slate-400">Apply to 12 selected dates</span>
+                                            <span class="text-xs text-slate-400">{{ __('landing.feat_booking.batch_mock_apply') }}</span>
                                             <button
-                                                class="bg-primary text-white text-xs px-4 py-2 rounded font-bold">Update
-                                                Pricing</button>
+                                                class="bg-primary text-white text-xs px-4 py-2 rounded font-bold">{{ __('landing.feat_booking.batch_mock_update_btn') }}</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="order-1 lg:order-2 space-y-6">
-                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">Manage
-                                    Thousands of Bookings in Seconds</h2>
+                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ __('landing.feat_booking.detail1_title') }}</h2>
                                 <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                    Tired of manually clicking every calendar day? Our Batch Date Editor allows you to
-                                    select ranges, specific weekdays, or entire months and update pricing, availability,
-                                    or text in a single click.
+                                    {{ __('landing.feat_booking.detail1_desc') }}
                                 </p>
                                 <ul class="space-y-3">
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        Smart date range selection
+                                        {{ __('landing.feat_booking.detail1_check1') }}
                                     </li>
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        Bulk price adjustments by % or value
+                                        {{ __('landing.feat_booking.detail1_check2') }}
                                     </li>
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        Toggle availability for holidays
+                                        {{ __('landing.feat_booking.detail1_check3') }}
                                     </li>
                                 </ul>
                             </div>
@@ -282,24 +264,22 @@
                         <!-- Payments Detail -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                             <div class="space-y-6">
-                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">Hybrid
-                                    Payment Solutions</h2>
+                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ __('landing.feat_booking.detail2_title') }}</h2>
                                 <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                    Give your customers the freedom to choose. Accept deposits online to secure the
-                                    booking, and settle the balance in person via cash or card terminal.
+                                    {{ __('landing.feat_booking.detail2_desc') }}
                                 </p>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div
                                         class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                                         <span class="material-symbols-outlined text-primary mb-2">account_balance</span>
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">Bank Transfer</h4>
-                                        <p class="text-xs text-slate-500">Automated tracking</p>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.payment_bank_title') }}</h4>
+                                        <p class="text-xs text-slate-500">{{ __('landing.feat_booking.payment_bank_desc') }}</p>
                                     </div>
                                     <div
                                         class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                                         <span class="material-symbols-outlined text-primary mb-2">credit_score</span>
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">Stripe / PayPal</h4>
-                                        <p class="text-xs text-slate-500">Instant settlements</p>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.payment_stripe_title') }}</h4>
+                                        <p class="text-xs text-slate-500">{{ __('landing.feat_booking.payment_stripe_desc') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -307,20 +287,19 @@
                                 <div
                                     class="w-full max-w-sm bg-white dark:bg-slate-950 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                                     <div class="flex justify-between items-center mb-8">
-                                        <span class="text-slate-500 font-medium">Checkout</span>
+                                        <span class="text-slate-500 font-medium">{{ __('landing.feat_booking.checkout_label') }}</span>
                                         <span class="material-symbols-outlined">shopping_cart</span>
                                     </div>
                                     <div class="space-y-6">
                                         <div class="flex justify-between font-bold text-xl">
-                                            <span class="text-slate-900 dark:text-slate-100">Total</span>
+                                            <span class="text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.checkout_total') }}</span>
                                             <span class="text-primary">$149.00</span>
                                         </div>
                                         <div class="space-y-3">
                                             <label
                                                 class="block p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="font-bold text-slate-900 dark:text-slate-100">Credit
-                                                        Card</span>
+                                                    <span class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.checkout_credit_card') }}</span>
                                                     <div class="size-4 rounded-full border-4 border-primary bg-white">
                                                     </div>
                                                 </div>
@@ -328,14 +307,13 @@
                                             <label
                                                 class="block p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="font-bold text-slate-500">Pay at Venue</span>
+                                                    <span class="font-bold text-slate-500">{{ __('landing.feat_booking.checkout_pay_at_venue') }}</span>
                                                     <div class="size-4 rounded-full border border-slate-300"></div>
                                                 </div>
                                             </label>
                                         </div>
                                         <button
-                                            class="w-full h-12 bg-slate-900 dark:bg-primary text-white font-bold rounded-xl mt-4">Confirm
-                                            Booking</button>
+                                            class="w-full h-12 bg-slate-900 dark:bg-primary text-white font-bold rounded-xl mt-4">{{ __('landing.feat_booking.checkout_confirm') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -346,23 +324,21 @@
                 <section class="w-full px-6 py-20 flex justify-center">
                     <div
                         class="max-w-[1000px] w-full bg-primary rounded-[2rem] p-8 md:p-16 flex flex-col items-center text-center gap-8 shadow-2xl shadow-primary/30 text-white">
-                        <h2 class="text-3xl md:text-5xl font-black leading-tight">Ready to streamline your online
-                            bookings?</h2>
+                        <h2 class="text-3xl md:text-5xl font-black leading-tight">{{ __('landing.feat_booking.cta_title') }}</h2>
                         <p class="text-white/80 text-lg md:text-xl max-w-2xl">
-                            Join over 10,000+ businesses using our system to manage their storefront and maximize their
-                            efficiency.
+                            {{ __('landing.feat_booking.cta_description') }}
                         </p>
                         <div class="flex flex-wrap gap-4 justify-center">
                             <button
                                 class="h-14 px-10 bg-white text-primary rounded-xl font-bold text-lg hover:scale-105 transition-transform">
-                                Start Free 14-Day Trial
+                                {{ __('landing.feat_booking.cta_trial_btn') }}
                             </button>
                             <button
                                 class="h-14 px-10 bg-primary/20 text-white border-2 border-white/20 rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
-                                Schedule a Demo
+                                {{ __('landing.feat_booking.cta_demo_btn') }}
                             </button>
                         </div>
-                        <p class="text-sm text-white/60">No credit card required. Cancel anytime.</p>
+                        <p class="text-sm text-white/60">{{ __('landing.feat_booking.cta_no_credit_card') }}</p>
                     </div>
                 </section>
             </main>
@@ -373,43 +349,42 @@
                     <div class="flex flex-col gap-4">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-3xl">calendar_month</span>
-                            <span class="text-slate-900 dark:text-slate-100 text-xl font-bold">Booking Online</span>
+                            <span class="text-slate-900 dark:text-slate-100 text-xl font-bold">{{ __('landing.feat_booking.brand_name') }}</span>
                         </div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                            The smartest way to manage your service-based business bookings and payments online.
+                            {{ __('landing.feat_booking.footer_tagline') }}
                         </p>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">Product</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_product') }}</h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">Features</a></li>
-                            <li><a class="hover:text-primary" href="#">Integrations</a></li>
-                            <li><a class="hover:text-primary" href="#">Enterprise</a></li>
-                            <li><a class="hover:text-primary" href="#">Pricing</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.nav_features') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_integrations') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_enterprise') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.nav_pricing') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">Company</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_company') }}</h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">About Us</a></li>
-                            <li><a class="hover:text-primary" href="#">Careers</a></li>
-                            <li><a class="hover:text-primary" href="#">Blog</a></li>
-                            <li><a class="hover:text-primary" href="#">Contact</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_about_us') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_careers') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_blog') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_contact') }}</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">Support</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_support') }}</h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">Help Center</a></li>
-                            <li><a class="hover:text-primary" href="#">API Docs</a></li>
-                            <li><a class="hover:text-primary" href="#">Security</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_help_center') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_api_docs') }}</a></li>
+                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_security') }}</a></li>
                         </ul>
                     </div>
                 </div>
                 <div
                     class="border-t border-slate-200 dark:border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">© 2024 Booking Online Inc. All rights
-                        reserved.</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">{{ __('landing.feat_booking.footer_copyright') }}</p>
                     <div class="flex gap-6">
                         <a class="text-slate-400 hover:text-primary" href="#"><span
                                 class="material-symbols-outlined">public</span></a>

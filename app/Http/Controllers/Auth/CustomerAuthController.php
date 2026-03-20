@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\TenantFeature;
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Setting;
+use App\Models\CustomerCategory;
 use App\Models\EmailLog;
+use App\Models\Setting;
+use App\Models\User;
 use App\Notifications\CustomerResetPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,20 +44,26 @@ class CustomerAuthController extends Controller
 
     public function showRegistrationForm()
     {
-        if (!Setting::get('registration_open', true)) {
+        if (! Setting::get('registration_open', true)) {
             return redirect()->route('customer.login')->with('error', 'Pendaftaran anggota baru sedang ditutup.');
         }
 
-        $categories = \App\Models\CustomerCategory::where('is_active', true)->get();
+        $complexRegistration = tenant()->hasFeature(TenantFeature::ComplexRegistration);
+
+        $categories = CustomerCategory::where('is_active', true)
+            ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')])
+            ->orderBy('sort_order')
+            ->get();
+
         $customFields = json_decode(Setting::get('registration_custom_fields', '[]'), true);
         $defaultCategoryId = Setting::get('default_customer_category_id');
-        
-        return view('frontend.auth.register', compact('categories', 'customFields', 'defaultCategoryId'));
+
+        return view('frontend.auth.register', compact('categories', 'customFields', 'defaultCategoryId', 'complexRegistration'));
     }
 
     public function register(Request $request)
     {
-        if (!Setting::get('registration_open', true)) {
+        if (! Setting::get('registration_open', true)) {
             return back()->with('error', 'Pendaftaran anggota baru sedang ditutup.');
         }
 
@@ -73,24 +81,24 @@ class CustomerAuthController extends Controller
         $customData = [];
         $selectedCategory = $request->customer_category_id;
 
-        if (!empty($customFields)) {
+        if (! empty($customFields)) {
             foreach ($customFields as $field) {
                 // Check visibility
                 $visibleCategories = $field['visible_for_categories'] ?? [];
-                if (!empty($visibleCategories) && !in_array($selectedCategory, $visibleCategories)) {
+                if (! empty($visibleCategories) && ! in_array($selectedCategory, $visibleCategories)) {
                     continue; // Skip validation if not visible
                 }
 
-                $fieldName = 'custom_' . $field['name']; // Prefix to avoid conflict
+                $fieldName = 'custom_'.$field['name']; // Prefix to avoid conflict
                 $rules[$fieldName] = $field['required'] ? 'required' : 'nullable';
-                
+
                 if ($field['type'] === 'number') {
                     $rules[$fieldName] .= '|numeric';
                 }
                 if ($field['type'] === 'email') {
                     $rules[$fieldName] .= '|email';
                 }
-                
+
                 // Collect data if present
                 if ($request->has($fieldName)) {
                     $customData[$field['name']] = $request->input($fieldName);
@@ -111,7 +119,7 @@ class CustomerAuthController extends Controller
             'email_verified_at' => $autoVerify ? now() : null,
             'is_verified' => $autoVerify,
             'verified_at' => $autoVerify ? now() : null,
-            'custom_fields' => !empty($customData) ? $customData : null,
+            'custom_fields' => ! empty($customData) ? $customData : null,
         ]);
 
         Auth::guard('customer')->login($customer);
@@ -148,7 +156,7 @@ class CustomerAuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors([
                 'email' => 'We could not find an account with that email address.',
             ])->onlyInput('email');
@@ -156,7 +164,7 @@ class CustomerAuthController extends Controller
 
         // Generate token
         $token = Str::random(64);
-        
+
         // Store token in password_reset_tokens table
         DB::table('password_reset_tokens')->updateOrInsert(
             ['email' => $request->email],
@@ -170,7 +178,7 @@ class CustomerAuthController extends Controller
         // Send notification
         try {
             $user->notify(new CustomerResetPassword($token));
-            
+
             return back()->with('status', 'Password reset link has been sent to your email!');
         } catch (\Exception $e) {
             EmailLog::logFailed(
@@ -179,7 +187,7 @@ class CustomerAuthController extends Controller
                 $e->getMessage(),
                 CustomerResetPassword::class
             );
-            
+
             return back()->withErrors([
                 'email' => 'Failed to send reset email. Please try again later.',
             ]);
@@ -213,14 +221,14 @@ class CustomerAuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             return back()->withErrors([
                 'email' => 'Invalid password reset request.',
             ]);
         }
 
         // Check if token matches
-        if (!Hash::check($request->token, $record->token)) {
+        if (! Hash::check($request->token, $record->token)) {
             return back()->withErrors([
                 'email' => 'Invalid or expired reset token.',
             ]);
@@ -229,6 +237,7 @@ class CustomerAuthController extends Controller
         // Check if token is expired (60 minutes)
         if (now()->diffInMinutes($record->created_at) > 60) {
             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
             return back()->withErrors([
                 'email' => 'Reset token has expired. Please request a new one.',
             ]);
@@ -236,7 +245,7 @@ class CustomerAuthController extends Controller
 
         // Update password
         $user = User::where('email', $request->email)->first();
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors([
                 'email' => 'User not found.',
             ]);

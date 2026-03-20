@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Contact Zewalo</title>
+    <title>{{ __('landing.contact.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
@@ -47,9 +49,8 @@
                     <div class="flex flex-wrap justify-between gap-6 p-4 mb-8">
                         <div class="flex min-w-72 flex-col gap-3">
                             <h1 class="text-slate-900 dark:text-white text-5xl font-black leading-tight tracking-tight">
-                                Contact Us</h1>
-                            <p class="text-primary text-lg font-medium leading-normal">We're here to help you build the
-                                future.</p>
+                                {{ __('landing.contact.heading') }}</h1>
+                            <p class="text-primary text-lg font-medium leading-normal">{{ __('landing.contact.subheading') }}</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 px-4">
@@ -59,42 +60,42 @@
                                 class="bg-white dark:bg-slate-800/50 p-8 rounded-xl shadow-sm border border-primary/10">
                                 <h2
                                     class="text-slate-900 dark:text-white text-2xl font-bold leading-tight tracking-tight pb-6">
-                                    Send us a message</h2>
+                                    {{ __('landing.contact.send_message') }}</h2>
                                 <form class="flex flex-col gap-5">
                                     <div class="flex flex-wrap items-end gap-4">
                                         <label class="flex flex-col min-w-40 flex-1">
                                             <p
                                                 class="text-slate-700 dark:text-slate-300 text-sm font-semibold leading-normal pb-2">
-                                                Name</p>
+                                                {{ __('landing.contact.name') }}</p>
                                             <input
                                                 class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 placeholder:text-slate-400 p-[15px] text-base font-normal leading-normal transition-all"
-                                                placeholder="Your full name" type="text" value="" />
+                                                placeholder="{{ __('landing.contact.name_placeholder') }}" type="text" value="" />
                                         </label>
                                     </div>
                                     <div class="flex flex-wrap items-end gap-4">
                                         <label class="flex flex-col min-w-40 flex-1">
                                             <p
                                                 class="text-slate-700 dark:text-slate-300 text-sm font-semibold leading-normal pb-2">
-                                                Email</p>
+                                                {{ __('landing.contact.email') }}</p>
                                             <input
                                                 class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-14 placeholder:text-slate-400 p-[15px] text-base font-normal leading-normal transition-all"
-                                                placeholder="yourname@zewalo.com" type="email" value="" />
+                                                placeholder="{{ __('landing.contact.email_placeholder') }}" type="email" value="" />
                                         </label>
                                     </div>
                                     <div class="flex flex-wrap items-end gap-4">
                                         <label class="flex flex-col min-w-40 flex-1">
                                             <p
                                                 class="text-slate-700 dark:text-slate-300 text-sm font-semibold leading-normal pb-2">
-                                                Message</p>
+                                                {{ __('landing.contact.message') }}</p>
                                             <textarea
                                                 class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 min-h-[180px] placeholder:text-slate-400 p-[15px] text-base font-normal leading-normal transition-all"
-                                                placeholder="Tell us about your project or inquiry..."></textarea>
+                                                placeholder="{{ __('landing.contact.message_placeholder') }}"></textarea>
                                         </label>
                                     </div>
                                     <div class="pt-4">
                                         <button
                                             class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-8 rounded-lg transition-colors flex items-center justify-center gap-2 group">
-                                            Submit Message
+                                            {{ __('landing.contact.submit') }}
                                             <span
                                                 class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">send</span>
                                         </button>
@@ -106,7 +107,7 @@
                         <div class="lg:col-span-5 flex flex-col gap-8">
                             <!-- Office Address -->
                             <div class="flex flex-col gap-4">
-                                <h3 class="text-slate-900 dark:text-white text-xl font-bold">Office Address</h3>
+                                <h3 class="text-slate-900 dark:text-white text-xl font-bold">{{ __('landing.contact.office_address') }}</h3>
                                 <div
                                     class="flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
                                     <div
@@ -114,18 +115,16 @@
                                         <span class="material-symbols-outlined">location_on</span>
                                     </div>
                                     <div class="flex flex-col gap-1">
-                                        <p class="font-bold text-slate-900 dark:text-white">Headquarters</p>
+                                        <p class="font-bold text-slate-900 dark:text-white">{{ __('landing.contact.headquarters') }}</p>
                                         <p class="text-slate-600 dark:text-slate-400 leading-relaxed">
-                                            123 Innovation Drive, Tech District<br />
-                                            San Francisco, CA 94103<br />
-                                            United States
+                                            {!! __('landing.contact.address') !!}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             <!-- Contact Details -->
                             <div class="flex flex-col gap-4">
-                                <h3 class="text-slate-900 dark:text-white text-xl font-bold">Direct Contact</h3>
+                                <h3 class="text-slate-900 dark:text-white text-xl font-bold">{{ __('landing.contact.direct_contact') }}</h3>
                                 <div class="flex flex-col gap-3">
                                     <div
                                         class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
@@ -135,7 +134,7 @@
                                         </div>
                                         <div class="flex flex-col">
                                             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                                Email</p>
+                                                {{ __('landing.contact.email') }}</p>
                                             <a class="text-slate-900 dark:text-white font-medium hover:text-primary transition-colors"
                                                 href="mailto:hello@zewalo.com">hello@zewalo.com</a>
                                         </div>
@@ -148,7 +147,7 @@
                                         </div>
                                         <div class="flex flex-col">
                                             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                                                Phone</p>
+                                                {{ __('landing.contact.phone') }}</p>
                                             <a class="text-slate-900 dark:text-white font-medium hover:text-primary transition-colors"
                                                 href="tel:+1555000000">+1 (555) 123-4567</a>
                                         </div>
@@ -164,8 +163,7 @@
                                 <div class="absolute inset-0 bg-primary/10 pointer-events-none"></div>
                                 <div
                                     class="absolute bottom-4 left-4 bg-white dark:bg-slate-900 px-3 py-1 rounded shadow-lg text-xs font-bold text-primary flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-sm">explore</span> Find us on Google
-                                    Maps
+                                    <span class="material-symbols-outlined text-sm">explore</span> {{ __('landing.contact.find_on_maps') }}
                                 </div>
                             </div>
                         </div>

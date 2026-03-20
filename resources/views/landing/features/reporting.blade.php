@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>ProRent SaaS - Reports &amp; Analytics</title>
+    <title>{{ __('landing.feat_reporting.page_title') }}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>[x-cloak] { display: none !important; }</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
@@ -60,17 +62,17 @@
                 <div class="size-8 text-primary">
                     <span class="material-symbols-outlined text-4xl">analytics</span>
                 </div>
-                <h2 class="text-xl font-bold leading-tight tracking-tight">ProRent SaaS</h2>
+                <h2 class="text-xl font-bold leading-tight tracking-tight">{{ __('landing.feat_reporting.brand_name') }}</h2>
             </div>
             <div class="hidden md:flex flex-1 justify-end gap-8 items-center">
                 <nav class="flex items-center gap-8">
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">Dashboard</a>
+                        href="#">{{ __('landing.feat_reporting.nav_dashboard') }}</a>
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">Properties</a>
-                    <a class="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">Reports</a>
+                        href="#">{{ __('landing.feat_reporting.nav_properties') }}</a>
+                    <a class="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">{{ __('landing.feat_reporting.nav_reports') }}</a>
                     <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">Settings</a>
+                        href="#">{{ __('landing.feat_reporting.nav_settings') }}</a>
                 </nav>
                 <div class="flex gap-3">
                     <button
@@ -94,24 +96,23 @@
                         <div
                             class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider w-fit">
                             <span class="material-symbols-outlined text-sm">auto_graph</span>
-                            Advanced Reporting
+                            {{ __('landing.feat_reporting.hero_badge') }}
                         </div>
                         <h1
                             class="text-4xl md:text-6xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-                            Comprehensive Rental &amp; Financial Reporting
+                            {{ __('landing.feat_reporting.hero_title') }}
                         </h1>
                         <p class="text-lg text-slate-600 dark:text-slate-400 max-w-lg">
-                            Gain total transparency into your property portfolio with real-time data visualizations and
-                            automated financial tracking designed for modern property managers.
+                            {{ __('landing.feat_reporting.hero_description') }}
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4">
                             <button
                                 class="flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-white text-base font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
-                                Get Started Free
+                                {{ __('landing.feat_reporting.get_started_free') }}
                             </button>
                             <button
                                 class="flex h-12 items-center justify-center rounded-lg border-2 border-primary/20 bg-transparent px-8 text-primary text-base font-bold hover:bg-primary/5 transition-all">
-                                Watch Demo
+                                {{ __('landing.feat_reporting.watch_demo') }}
                             </button>
                         </div>
                     </div>
@@ -122,7 +123,7 @@
                         </div>
                         <div
                             class="absolute -bottom-6 -left-6 hidden md:block w-48 bg-white dark:bg-slate-800 p-4 rounded-lg shadow-xl border border-primary/10">
-                            <p class="text-xs font-bold text-slate-400 uppercase">Growth</p>
+                            <p class="text-xs font-bold text-slate-400 uppercase">{{ __('landing.feat_reporting.growth_label') }}</p>
                             <p class="text-2xl font-black text-primary">+24.8%</p>
                             <div class="w-full h-1 bg-primary/10 mt-2 rounded-full overflow-hidden">
                                 <div class="w-3/4 h-full bg-primary"></div>
@@ -134,11 +135,10 @@
             <section class="bg-white dark:bg-slate-900/50 py-20">
                 <div class="max-w-[1200px] mx-auto px-6">
                     <div class="text-center mb-16">
-                        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4">Detailed Operational Insights
+                        <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-4">{{ __('landing.feat_reporting.features_title') }}
                         </h2>
                         <p class="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                            Powerful tools to help you manage your properties more effectively with data-driven decision
-                            making.
+                            {{ __('landing.feat_reporting.features_subtitle') }}
                         </p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -149,9 +149,8 @@
                                 <span class="material-symbols-outlined text-2xl">bar_chart</span>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Rental Performance</h3>
-                                <p class="text-slate-600 dark:text-slate-400">Track occupancy rates, lease expirations,
-                                    and tenant turnover across your entire portfolio.</p>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">{{ __('landing.feat_reporting.feature1_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_reporting.feature1_desc') }}</p>
                             </div>
                         </div>
                         <div
@@ -161,9 +160,8 @@
                                 <span class="material-symbols-outlined text-2xl">receipt_long</span>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Expense Tracking</h3>
-                                <p class="text-slate-600 dark:text-slate-400">Monitor maintenance costs and utility
-                                    overheads automatically with granular categorization.</p>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">{{ __('landing.feat_reporting.feature2_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_reporting.feature2_desc') }}</p>
                             </div>
                         </div>
                         <div
@@ -173,9 +171,8 @@
                                 <span class="material-symbols-outlined text-2xl">description</span>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Tax Readiness</h3>
-                                <p class="text-slate-600 dark:text-slate-400">Generate P&amp;L statements and Schedule E
-                                    reports in one click, ready for your accountant.</p>
+                                <h3 class="text-xl font-bold text-slate-900 dark:text-white">{{ __('landing.feat_reporting.feature3_title') }}</h3>
+                                <p class="text-slate-600 dark:text-slate-400">{{ __('landing.feat_reporting.feature3_desc') }}</p>
                             </div>
                         </div>
                     </div>
@@ -191,9 +188,8 @@
                                         class="size-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-4">
                                         <span class="material-symbols-outlined text-xl">sync</span>
                                     </div>
-                                    <h4 class="font-bold mb-2">Automated Reconciliation</h4>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Sync with your
-                                        bank accounts to match transactions instantly and reduce manual entry errors.
+                                    <h4 class="font-bold mb-2">{{ __('landing.feat_reporting.subfeature1_title') }}</h4>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_reporting.subfeature1_desc') }}
                                     </p>
                                 </div>
                                 <div class="p-6 rounded-xl bg-primary/5 border border-primary/10">
@@ -201,53 +197,44 @@
                                         class="size-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-4">
                                         <span class="material-symbols-outlined text-xl">share</span>
                                     </div>
-                                    <h4 class="font-bold mb-2">Investor Portals</h4>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Share
-                                        professional financial summaries with stakeholders securely via private access
-                                        links.</p>
+                                    <h4 class="font-bold mb-2">{{ __('landing.feat_reporting.subfeature2_title') }}</h4>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_reporting.subfeature2_desc') }}</p>
                                 </div>
                                 <div class="p-6 rounded-xl bg-primary/5 border border-primary/10">
                                     <div
                                         class="size-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-4">
                                         <span class="material-symbols-outlined text-xl">notifications_active</span>
                                     </div>
-                                    <h4 class="font-bold mb-2">Custom Alerts</h4>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Get notified
-                                        when expenses exceed budgets or when revenue goals are met.</p>
+                                    <h4 class="font-bold mb-2">{{ __('landing.feat_reporting.subfeature3_title') }}</h4>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_reporting.subfeature3_desc') }}</p>
                                 </div>
                                 <div class="p-6 rounded-xl bg-primary/5 border border-primary/10">
                                     <div
                                         class="size-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-4">
                                         <span class="material-symbols-outlined text-xl">cloud_download</span>
                                     </div>
-                                    <h4 class="font-bold mb-2">Multi-Format Export</h4>
-                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Download
-                                        reports in PDF, CSV, or XLSX formats for further external analysis.</p>
+                                    <h4 class="font-bold mb-2">{{ __('landing.feat_reporting.subfeature4_title') }}</h4>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_reporting.subfeature4_desc') }}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex flex-col gap-6 order-1 lg:order-2">
-                            <h2 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">Full Financial
-                                Transparency</h2>
+                            <h2 class="text-4xl font-black text-slate-900 dark:text-white leading-tight">{{ __('landing.feat_reporting.detail_title') }}</h2>
                             <p class="text-slate-600 dark:text-slate-400 text-lg">
-                                Our platform ensures every cent is accounted for, providing owners and managers with
-                                audit-ready documents and real-time clarity.
+                                {{ __('landing.feat_reporting.detail_desc') }}
                             </p>
                             <ul class="flex flex-col gap-4 mt-4">
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span class="text-slate-700 dark:text-slate-300 font-medium">Bank-grade security
-                                        protocols for all data</span>
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.feat_reporting.detail_check1') }}</span>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span class="text-slate-700 dark:text-slate-300 font-medium">Real-time portfolio
-                                        valuations</span>
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.feat_reporting.detail_check2') }}</span>
                                 </li>
                                 <li class="flex items-start gap-3">
                                     <span class="material-symbols-outlined text-primary">check_circle</span>
-                                    <span class="text-slate-700 dark:text-slate-300 font-medium">Historical data
-                                        archiving for compliance</span>
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium">{{ __('landing.feat_reporting.detail_check3') }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -260,22 +247,21 @@
                         class="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none">
                     </div>
                     <div class="relative z-10 flex flex-col items-center text-center max-w-3xl mx-auto gap-8">
-                        <h2 class="text-4xl font-black">Ready to master your property finances?</h2>
+                        <h2 class="text-4xl font-black">{{ __('landing.feat_reporting.cta_title') }}</h2>
                         <p class="text-slate-300 text-lg">
-                            Join thousands of property owners who have optimized their operations with our advanced
-                            reporting tools.
+                            {{ __('landing.feat_reporting.cta_description') }}
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
                             <button
                                 class="px-10 py-4 bg-primary text-white font-bold rounded-lg hover:brightness-110 transition-all text-lg">
-                                Start Your 14-Day Trial
+                                {{ __('landing.feat_reporting.cta_trial_btn') }}
                             </button>
                             <button
                                 class="px-10 py-4 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 transition-all text-lg">
-                                Talk to Sales
+                                {{ __('landing.feat_reporting.cta_talk_sales') }}
                             </button>
                         </div>
-                        <p class="text-sm text-slate-500">No credit card required. Cancel anytime.</p>
+                        <p class="text-sm text-slate-500">{{ __('landing.feat_reporting.cta_no_credit_card') }}</p>
                     </div>
                 </div>
             </section>
@@ -285,39 +271,38 @@
                 <div class="flex flex-col gap-4">
                     <div class="flex items-center gap-2 text-slate-900 dark:text-white">
                         <span class="material-symbols-outlined text-primary">analytics</span>
-                        <h2 class="text-lg font-bold">ProRent SaaS</h2>
+                        <h2 class="text-lg font-bold">{{ __('landing.feat_reporting.brand_name') }}</h2>
                     </div>
                     <p class="text-sm text-slate-500 leading-relaxed">
-                        Leading the property management industry with innovative, data-driven solutions for modern
-                        landlords and property managers.
+                        {{ __('landing.feat_reporting.footer_tagline') }}
                     </p>
                 </div>
                 <div class="flex flex-col gap-4">
-                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Platform</h4>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Dashboard</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Properties</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Maintenance</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Tenants</a>
+                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">{{ __('landing.feat_reporting.footer_platform') }}</h4>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.nav_dashboard') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.nav_properties') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_maintenance') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_tenants') }}</a>
                 </div>
                 <div class="flex flex-col gap-4">
-                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Resources
+                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">{{ __('landing.feat_reporting.footer_resources') }}
                     </h4>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Help Center</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Guides</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">API Docs</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Status</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_help_center') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_guides') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_api_docs') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_status') }}</a>
                 </div>
                 <div class="flex flex-col gap-4">
-                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Company</h4>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">About Us</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Privacy Policy</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Terms of Service</a>
-                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">Contact</a>
+                    <h4 class="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">{{ __('landing.feat_reporting.footer_company') }}</h4>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_about_us') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_privacy_policy') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_terms_of_service') }}</a>
+                    <a class="text-sm text-slate-500 hover:text-primary transition-colors" href="#">{{ __('landing.feat_reporting.footer_contact') }}</a>
                 </div>
             </div>
             <div
                 class="max-w-[1200px] mx-auto mt-12 pt-8 border-t border-primary/10 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p class="text-sm text-slate-500">© 2024 ProRent SaaS Inc. All rights reserved.</p>
+                <p class="text-sm text-slate-500">{{ __('landing.feat_reporting.footer_copyright') }}</p>
                 <div class="flex gap-6">
                     <a class="text-slate-400 hover:text-primary" href="#"><span
                             class="material-symbols-outlined">public</span></a>

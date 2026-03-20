@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     {{-- PWA Meta Tags --}}
     <meta name="theme-color" content="#0ea5e9">
     <meta name="mobile-web-app-capable" content="yes">
@@ -15,12 +15,12 @@
     <meta name="msapplication-TileColor" content="#0ea5e9">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="format-detection" content="telephone=no">
-    
+
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-    <title>{{ config('app.name', 'Zewalo') }} - @yield('title', 'Rental Equipment')</title>
+    <title>{{ config('app.name', 'Zewalo') }} - @yield('title', __('common.rental_equipment'))</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -41,7 +41,7 @@
                     <!-- Mobile menu button -->
                     <div class="-ml-2 mr-2 flex items-center sm:hidden">
                         <button @click="mobileMenuOpen = !mobileMenuOpen" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500" aria-controls="mobile-menu" aria-expanded="false">
-                            <span class="sr-only">Open main menu</span>
+                            <span class="sr-only">{{ __('common.open_main_menu') }}</span>
                             <!-- Icon when menu is closed. -->
                             <svg x-show="!mobileMenuOpen" class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -68,12 +68,12 @@
                                 $navigationModel = \LaraZeus\Sky\SkyPlugin::get()->getModel('Navigation');
                                 $headerHandle = \App\Models\Setting::get('header_navigation_handle', 'main-menu');
                                 $mainMenu = $navigationModel::fromHandle($headerHandle) ?? $navigationModel::fromHandle('navigation');
-                                
+
                                 if ($mainMenu && !empty($mainMenu->items)) {
                                     foreach($mainMenu->items as $item) {
                                         $url = '#';
                                         $target = $item['data']['target'] ?? '_self';
-                                        
+
                                         try {
                                             if ($item['type'] === 'page_link' && isset($item['data']['page_id'])) {
                                                 $postModel = \LaraZeus\Sky\SkyPlugin::get()->getModel('Post');
@@ -98,20 +98,20 @@
                                     }
                                 } else {
                                     $menuItems = [
-                                        ['label' => 'Home', 'url' => url('/'), 'target' => '_self'],
-                                        ['label' => 'Catalog', 'url' => route('catalog.index'), 'target' => '_self'],
+                                        ['label' => __('common.home'), 'url' => url('/'), 'target' => '_self'],
+                                        ['label' => __('common.catalog'), 'url' => route('catalog.index'), 'target' => '_self'],
                                     ];
                                 }
                             } catch (\Exception $e) {
                                 $menuItems = [
-                                    ['label' => 'Home', 'url' => url('/'), 'target' => '_self'],
-                                    ['label' => 'Catalog', 'url' => route('catalog.index'), 'target' => '_self'],
+                                    ['label' => __('common.home'), 'url' => url('/'), 'target' => '_self'],
+                                    ['label' => __('common.catalog'), 'url' => route('catalog.index'), 'target' => '_self'],
                                 ];
                             }
                         @endphp
 
                         @foreach($menuItems as $item)
-                            <a href="{{ $item['url'] }}" 
+                            <a href="{{ $item['url'] }}"
                                target="{{ $item['target'] }}"
                                class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium {{ request()->url() == $item['url'] ? 'text-primary-600' : '' }}">
                                 {{ $item['label'] }}
@@ -146,7 +146,7 @@
                                 @endif
                             </button>
 
-                            <div x-show="open" 
+                            <div x-show="open"
                                  @click.away="open = false"
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-95"
@@ -156,13 +156,13 @@
                                  x-transition:leave-end="opacity-0 scale-95"
                                  class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 overflow-hidden ring-1 ring-black ring-opacity-5"
                                  style="display: none;">
-                                
+
                                 <div class="px-4 py-2 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                    <h3 class="text-sm font-semibold text-gray-700">Notifications</h3>
+                                    <h3 class="text-sm font-semibold text-gray-700">{{ __('common.notifications') }}</h3>
                                     @if($unreadCount > 0)
                                         <form action="{{ route('customer.notifications.read-all') }}" method="POST">
                                             @csrf
-                                            <button type="submit" class="text-xs text-primary-600 hover:text-primary-800 font-medium">Mark all read</button>
+                                            <button type="submit" class="text-xs text-primary-600 hover:text-primary-800 font-medium">{{ __('common.mark_all_read') }}</button>
                                         </form>
                                     @endif
                                 </div>
@@ -181,7 +181,7 @@
                                                     @endif
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $notification->data['title'] ?? 'Notification' }}</p>
+                                                    <p class="text-sm font-medium text-gray-900 truncate">{{ $notification->data['title'] ?? __('common.notification') }}</p>
                                                     <p class="text-xs text-gray-500 line-clamp-2">{{ $notification->data['body'] ?? '' }}</p>
                                                     <p class="mt-1 text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
                                                 </div>
@@ -197,18 +197,20 @@
                                             <svg class="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                                             </svg>
-                                            <p>No notifications</p>
+                                            <p>{{ __('common.no_notifications') }}</p>
                                         </div>
                                     @endforelse
                                 </div>
-                                
+
                                 @if(auth('customer')->user()->notifications->count() > 10)
                                     <div class="bg-gray-50 px-4 py-2 text-center border-t border-gray-100">
-                                        <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-500">View all notifications</a>
+                                        <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-500">{{ __('common.view_all_notifications') }}</a>
                                     </div>
                                 @endif
                             </div>
                         </div>
+
+                        <x-language-switcher class="hidden sm:block" />
 
                         <div class="relative hidden sm:block" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-2 focus:outline-none group">
@@ -222,8 +224,8 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
                             </button>
-                            
-                            <div x-show="open" 
+
+                            <div x-show="open"
                                  @click.away="open = false"
                                  x-transition:enter="transition ease-out duration-200"
                                  x-transition:enter-start="opacity-0 scale-95"
@@ -233,7 +235,7 @@
                                  x-transition:leave-end="opacity-0 scale-95"
                                  class="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] py-2 z-50 ring-1 ring-black ring-opacity-5 origin-top-right"
                                  style="display: none;">
-                                 
+
                                 <div class="px-4 py-3 border-b border-gray-100 mb-1">
                                     <div class="flex items-center gap-3">
                                         <div class="h-10 w-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 font-bold text-lg">
@@ -246,21 +248,22 @@
                                     </div>
                                 </div>
 
-                                <a href="{{ route('customer.dashboard') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">Dashboard</a>
-                                <a href="{{ route('customer.rentals') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">My Rentals</a>
-                                <a href="{{ route('customer.profile') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">Profile</a>
-                                
+                                <a href="{{ route('customer.dashboard') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">{{ __('common.dashboard') }}</a>
+                                <a href="{{ route('customer.rentals') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">{{ __('common.my_rentals') }}</a>
+                                <a href="{{ route('customer.profile') }}" class="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors">{{ __('common.profile') }}</a>
+
                                 <div class="border-t border-gray-100 my-1"></div>
-                                
+
                                 <form method="POST" action="{{ route('customer.logout') }}">
                                     @csrf
-                                    <button type="submit" class="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">Logout</button>
+                                    <button type="submit" class="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">{{ __('common.logout') }}</button>
                                 </form>
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('customer.login') }}" class="text-gray-600 hover:text-primary-600 text-sm font-medium">Login</a>
-                        <a href="{{ route('customer.register') }}" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700">Register</a>
+                        <x-language-switcher class="hidden sm:block" />
+                        <a href="{{ route('customer.login') }}" class="text-gray-600 hover:text-primary-600 text-sm font-medium">{{ __('common.login') }}</a>
+                        <a href="{{ route('customer.register') }}" class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700">{{ __('common.register') }}</a>
                     @endauth
                 </div>
             </div>
@@ -270,7 +273,7 @@
         <div x-show="mobileMenuOpen" class="sm:hidden" id="mobile-menu" style="display: none;">
             <div class="space-y-1 pt-2 pb-3">
                 @foreach($menuItems as $item)
-                    <a href="{{ $item['url'] }}" 
+                    <a href="{{ $item['url'] }}"
                        target="{{ $item['target'] }}"
                        class="block border-l-4 py-2 pl-3 pr-4 text-base font-medium {{ request()->url() == $item['url'] ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700' }}">
                         {{ $item['label'] }}
@@ -291,18 +294,18 @@
                         </div>
                     </div>
                     <div class="mt-3 space-y-1">
-                        <a href="{{ route('customer.dashboard') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">Dashboard</a>
-                        <a href="{{ route('customer.rentals') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">My Rentals</a>
-                        <a href="{{ route('customer.profile') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">Profile</a>
+                        <a href="{{ route('customer.dashboard') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.dashboard') }}</a>
+                        <a href="{{ route('customer.rentals') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.my_rentals') }}</a>
+                        <a href="{{ route('customer.profile') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.profile') }}</a>
                         <form method="POST" action="{{ route('customer.logout') }}">
                             @csrf
-                            <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">Logout</button>
+                            <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.logout') }}</button>
                         </form>
                     </div>
                 @else
                     <div class="mt-3 space-y-1">
-                        <a href="{{ route('customer.login') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">Login</a>
-                        <a href="{{ route('customer.register') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">Register</a>
+                        <a href="{{ route('customer.login') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.login') }}</a>
+                        <a href="{{ route('customer.register') }}" class="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800">{{ __('common.register') }}</a>
                     </div>
                 @endauth
             </div>
@@ -337,13 +340,13 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-xl font-bold mb-4">{{ \App\Models\Setting::get('site_name', 'Zewalo') }}</h3>
-                    <p class="text-gray-400">{{ \App\Models\Setting::get('site_tagline', 'Your trusted equipment rental partner.') }}</p>
+                    <p class="text-gray-400">{{ \App\Models\Setting::get('site_tagline', __('common.default_tagline')) }}</p>
                     @if(\App\Models\Setting::get('site_address'))
                         <p class="text-gray-400 mt-4 text-sm font-light leading-relaxed whitespace-pre-line">{{ \App\Models\Setting::get('site_address') }}</p>
                     @endif
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <h4 class="font-semibold mb-4">{{ __('common.quick_links') }}</h4>
                     <ul class="space-y-2 text-gray-400">
                         @php
                             $footerItems = [];
@@ -351,12 +354,12 @@
                                 $navigationModel = \LaraZeus\Sky\SkyPlugin::get()->getModel('Navigation');
                                 $footerHandle = \App\Models\Setting::get('footer_navigation_handle', 'footer-menu');
                                 $footerMenu = $navigationModel::fromHandle($footerHandle);
-                                
+
                                 if ($footerMenu && !empty($footerMenu->items)) {
                                      foreach($footerMenu->items as $item) {
                                         $url = '#';
                                         $target = $item['data']['target'] ?? '_self';
-                                        
+
                                         try {
                                             if ($item['type'] === 'page_link' && isset($item['data']['page_id'])) {
                                                 $postModel = \LaraZeus\Sky\SkyPlugin::get()->getModel('Post');
@@ -383,21 +386,21 @@
                                      // Fallback to old system if no Sky menu found
                                      $oldFooterMenu = \App\Models\NavigationMenu::where('handle', 'footer-menu')->first();
                                      $footerItems = $oldFooterMenu ? $oldFooterMenu->items : [
-                                        ['label' => 'Home', 'url' => url('/'), 'target' => '_self'],
-                                        ['label' => 'Catalog', 'url' => route('catalog.index'), 'target' => '_self'],
+                                        ['label' => __('common.home'), 'url' => url('/'), 'target' => '_self'],
+                                        ['label' => __('common.catalog'), 'url' => route('catalog.index'), 'target' => '_self'],
                                      ];
                                 }
                             } catch (\Exception $e) {
                                  $footerItems = [
-                                    ['label' => 'Home', 'url' => url('/'), 'target' => '_self'],
-                                    ['label' => 'Catalog', 'url' => route('catalog.index'), 'target' => '_self'],
+                                    ['label' => __('common.home'), 'url' => url('/'), 'target' => '_self'],
+                                    ['label' => __('common.catalog'), 'url' => route('catalog.index'), 'target' => '_self'],
                                  ];
                             }
                         @endphp
-                        
+
                         @foreach($footerItems as $item)
                             <li>
-                                <a href="{{ $item['url'] }}" 
+                                <a href="{{ $item['url'] }}"
                                    target="{{ $item['target'] ?? '_self' }}"
                                    class="hover:text-white">
                                     {{ $item['label'] }}
@@ -407,14 +410,14 @@
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <h4 class="font-semibold mb-4">{{ __('common.contact') }}</h4>
                     <ul class="space-y-2 text-gray-400">
-                        <li>Phone: {{ \App\Models\Setting::get('site_phone', '021-1234567') }}</li>
-                        <li>Email: {{ \App\Models\Setting::get('site_email', 'info@zewalo.com') }}</li>
+                        <li>{{ __('common.phone') }}: {{ \App\Models\Setting::get('site_phone', '021-1234567') }}</li>
+                        <li>{{ __('common.email') }}: {{ \App\Models\Setting::get('site_email', 'info@zewalo.com') }}</li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="font-semibold mb-4">Follow Us</h4>
+                    <h4 class="font-semibold mb-4">{{ __('common.follow_us') }}</h4>
                     <div class="flex space-x-4">
                         <a href="#" class="text-gray-400 hover:text-white">Instagram</a>
                         <a href="#" class="text-gray-400 hover:text-white">Facebook</a>
@@ -425,7 +428,7 @@
                 @if(\App\Models\Setting::get('site_copyright'))
                     {{ \App\Models\Setting::get('site_copyright') }}
                 @else
-                    &copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Zewalo') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ \App\Models\Setting::get('site_name', 'Zewalo') }}. {{ __('common.all_rights_reserved') }}
                 @endif
                 <div class="mt-2 text-xs text-gray-500">
                     v{{ config('app.version') }}
@@ -435,7 +438,7 @@
     </footer>
 
     @stack('scripts')
-    
+
     {{-- PWA Service Worker Registration --}}
     <script>
         if ('serviceWorker' in navigator) {
@@ -449,20 +452,20 @@
                     });
             });
         }
-        
+
         // Install prompt handling
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            
+
             // Show install button if needed (optional UI)
             const installBanner = document.getElementById('pwa-install-banner');
             if (installBanner) {
                 installBanner.classList.remove('hidden');
             }
         });
-        
+
         // Handle install click
         function installPWA() {
             if (deferredPrompt) {

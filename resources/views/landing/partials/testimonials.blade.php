@@ -3,20 +3,20 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {{-- Section Header --}}
         <div class="text-center max-w-3xl mx-auto mb-16">
-            <span class="inline-block text-sm font-semibold uppercase tracking-wider text-indigo-600 mb-3">Testimoni</span>
+            <span class="inline-block text-sm font-semibold uppercase tracking-wider text-indigo-600 mb-3">{{ __('landing.testimonials.badge') }}</span>
             <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
-                Dipercaya oleh <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Ribuan</span> Pelaku Usaha
+                {{ __('landing.testimonials.title_prefix') }} <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{{ __('landing.testimonials.title_highlight') }}</span> {{ __('landing.testimonials.title_suffix') }}
             </h2>
-            <p class="mt-4 text-lg text-gray-600">Lihat apa kata mereka tentang Zewalo.</p>
+            <p class="mt-4 text-lg text-gray-600">{{ __('landing.testimonials.subtitle') }}</p>
         </div>
 
         {{-- Stats Row --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
             @foreach([
-                ['value' => '2.500+', 'label' => 'Bisnis Aktif'],
-                ['value' => '15.000+', 'label' => 'Pengguna Harian'],
-                ['value' => '99.9%', 'label' => 'Uptime'],
-                ['value' => '4.9/5', 'label' => 'Rating Pengguna'],
+                ['value' => '2.500+', 'label' => __('landing.testimonials.stat_businesses')],
+                ['value' => '15.000+', 'label' => __('landing.testimonials.stat_daily_users')],
+                ['value' => '99.9%', 'label' => __('landing.testimonials.stat_uptime')],
+                ['value' => '4.9/5', 'label' => __('landing.testimonials.stat_rating')],
             ] as $stat)
             <div class="text-center p-6 rounded-2xl bg-gray-50">
                 <div class="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{{ $stat['value'] }}</div>
@@ -30,56 +30,56 @@
             @foreach([
                 [
                     'name' => 'Rina Sari',
-                    'role' => 'Pemilik',
+                    'role' => __('landing.testimonials.role_owner'),
                     'company' => 'Bali Surf Board Rental',
                     'avatar' => 'RS',
                     'color' => 'indigo',
-                    'quote' => 'Zewalo mengubah cara kami mengelola rental papan selancar. Booking online meningkat 300% dalam 3 bulan pertama. Pelanggan sangat puas dengan kemudahannya!',
+                    'quote' => __('landing.testimonials.quote_rina'),
                     'rating' => 5,
                 ],
                 [
                     'name' => 'Ahmad Hidayat',
-                    'role' => 'Manager Operasional',
+                    'role' => __('landing.testimonials.role_ops_manager'),
                     'company' => 'Prima Alat Berat',
                     'avatar' => 'AH',
                     'color' => 'purple',
-                    'quote' => 'Tracking alat berat jadi mudah sekali. Laporan keuangan real-time membantu kami membuat keputusan bisnis yang lebih cepat dan tepat.',
+                    'quote' => __('landing.testimonials.quote_ahmad'),
                     'rating' => 5,
                 ],
                 [
                     'name' => 'Dewi Lestari',
-                    'role' => 'CEO',
+                    'role' => __('landing.testimonials.role_ceo'),
                     'company' => 'EventPro Rental',
                     'avatar' => 'DL',
                     'color' => 'emerald',
-                    'quote' => 'Dari tenda, kursi, sampai sound system — semua terdata rapi. Fitur invoice otomatis menghemat waktu admin kami hingga 5 jam per hari.',
+                    'quote' => __('landing.testimonials.quote_dewi'),
                     'rating' => 5,
                 ],
                 [
                     'name' => 'Budi Santoso',
-                    'role' => 'Pemilik',
+                    'role' => __('landing.testimonials.role_owner'),
                     'company' => 'Santoso Car Rental',
                     'avatar' => 'BS',
                     'color' => 'amber',
-                    'quote' => 'Setup-nya sangat cepat, 5 menit langsung jalan. Pelanggan bisa booking dan bayar online, kami tinggal terima notifikasi. Luar biasa efisien!',
+                    'quote' => __('landing.testimonials.quote_budi'),
                     'rating' => 5,
                 ],
                 [
                     'name' => 'Maya Putri',
-                    'role' => 'Co-Founder',
+                    'role' => __('landing.testimonials.role_cofounder'),
                     'company' => 'CamLens Studio',
                     'avatar' => 'MP',
                     'color' => 'rose',
-                    'quote' => 'Rental kamera & lensa kami jadi lebih terorganisir. Fitur tracking kondisi barang sangat membantu meminimalisir kerusakan.',
+                    'quote' => __('landing.testimonials.quote_maya'),
                     'rating' => 4,
                 ],
                 [
                     'name' => 'Fajar Nugroho',
-                    'role' => 'Direktur',
+                    'role' => __('landing.testimonials.role_director'),
                     'company' => 'Nugroho Property',
                     'avatar' => 'FN',
                     'color' => 'cyan',
-                    'quote' => 'Kami kelola 50+ unit properti sewaan dengan Zewalo. Manajemen kontrak, pembayaran, dan maintenance request jadi terpusat di satu platform.',
+                    'quote' => __('landing.testimonials.quote_fajar'),
                     'rating' => 5,
                 ],
             ] as $testimonial)

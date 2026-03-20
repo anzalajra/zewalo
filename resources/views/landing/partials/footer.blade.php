@@ -14,7 +14,7 @@
 </a>
 </div>
 <p class="text-slate-500 text-sm leading-relaxed max-w-xs mb-6">
-                        Solusi modern untuk manajemen bisnis rental Anda. Efisien, terintegrasi, dan mudah digunakan.
+                        {{ __('landing.footer.description') }}
                     </p>
 <div class="flex gap-4">
 <a class="text-slate-400 hover:text-primary transition-colors" href="#">
@@ -29,33 +29,34 @@
 </div>
 </div>
 <div>
-<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">Perusahaan</h4>
+<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">{{ __('landing.footer.company') }}</h4>
 <ul class="space-y-4">
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Tentang Kami</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Karir</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Blog</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Kontak</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.about_us') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.careers') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.blog') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.contact') }}</a></li>
 </ul>
 </div>
 <div>
-<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">Legal</h4>
+<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">{{ __('landing.footer.legal') }}</h4>
 <ul class="space-y-4">
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Privasi</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Ketentuan</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Keamanan</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.privacy') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.terms') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.security') }}</a></li>
 </ul>
 </div>
 <div>
-<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">Dukungan</h4>
+<h4 class="font-bold text-sm mb-6 uppercase tracking-wider">{{ __('landing.footer.support') }}</h4>
 <ul class="space-y-4">
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Pusat Bantuan</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Dokumentasi</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">Status Sistem</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.help_center') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.documentation') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.system_status') }}</a></li>
 </ul>
 </div>
 </div>
-<div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 text-center">
-<p class="text-sm text-slate-500">© {{ date('Y') }} Zewalo. Seluruh hak cipta dilindungi.</p>
+<div class="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+<p class="text-sm text-slate-500">{{ __('landing.footer.copyright', ['year' => date('Y')]) }}</p>
+<x-language-switcher />
 </div>
 </div>
 </footer>
