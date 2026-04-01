@@ -67,6 +67,25 @@
                     <textarea name="notes" rows="3" class="w-full border rounded-lg px-3 py-2" placeholder="{{ __('storefront.checkout.notes_placeholder') }}"></textarea>
                 </div>
 
+                <!-- Payment Method -->
+                @if(isset($manualTransferEnabled) && $manualTransferEnabled)
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h2 class="text-lg font-semibold mb-4">{{ __('storefront.checkout.payment_method') ?? 'Metode Pembayaran' }}</h2>
+                    <label class="flex items-start gap-3 border rounded-lg p-4 cursor-pointer hover:border-primary-500 transition-colors">
+                        <input type="radio" name="payment_method" value="manual_transfer" class="mt-1">
+                        <div>
+                            <span class="font-medium text-gray-900">Transfer Bank Manual</span>
+                            @if($manualTransferDetails)
+                                <p class="text-sm text-gray-500 mt-1">
+                                    {{ $manualTransferDetails['bank_name'] }} — {{ $manualTransferDetails['account_number'] }}
+                                    (a/n {{ $manualTransferDetails['account_holder'] }})
+                                </p>
+                            @endif
+                        </div>
+                    </label>
+                </div>
+                @endif
+
                 <!-- Terms -->
                 <div class="bg-white rounded-lg shadow p-6">
                     <label class="flex items-start">

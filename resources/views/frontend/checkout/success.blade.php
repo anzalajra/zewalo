@@ -64,6 +64,45 @@
         </div>
     </div>
 
+    @if($rental->payment_method === 'manual_transfer' && isset($manualTransferDetails) && $manualTransferDetails)
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+        <h3 class="font-semibold text-yellow-800 mb-3">Instruksi Transfer</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-sm text-yellow-700">Bank</label>
+                <p class="font-semibold text-yellow-900">{{ $manualTransferDetails['bank_name'] }}</p>
+            </div>
+            <div>
+                <label class="block text-sm text-yellow-700">Nomor Rekening</label>
+                <p class="font-semibold text-yellow-900">{{ $manualTransferDetails['account_number'] }}</p>
+            </div>
+            <div>
+                <label class="block text-sm text-yellow-700">Atas Nama</label>
+                <p class="font-semibold text-yellow-900">{{ $manualTransferDetails['account_holder'] }}</p>
+            </div>
+        </div>
+
+        @if(! $rental->transfer_proof_path)
+        <form action="{{ route('checkout.upload-proof', $rental) }}" method="POST" enctype="multipart/form-data" class="mt-4 border-t border-yellow-200 pt-4">
+            @csrf
+            <label class="block text-sm font-medium text-yellow-800 mb-2">Upload Bukti Transfer</label>
+            <input type="file" name="transfer_proof" accept="image/*" required
+                class="block w-full text-sm text-gray-700 border border-yellow-300 rounded-lg cursor-pointer bg-white focus:outline-none">
+            @error('transfer_proof')
+                <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+            @enderror
+            <button type="submit" class="mt-3 bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-yellow-700 transition">
+                Upload Bukti Transfer
+            </button>
+        </form>
+        @else
+        <div class="mt-4 border-t border-yellow-200 pt-4">
+            <p class="text-sm text-green-700 font-medium">Bukti transfer sudah diupload. Menunggu verifikasi.</p>
+        </div>
+        @endif
+    </div>
+    @endif
+
     <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
         <h3 class="font-semibold text-primary-800 mb-2">{{ __('storefront.checkout.whats_next') }}</h3>
         <ul class="text-sm text-primary-700 space-y-1">

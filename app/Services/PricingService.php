@@ -87,6 +87,44 @@ class PricingService
     }
 
     /**
+     * Get pricing for a plan based on a tenant's locked region.
+     * This is the authoritative source for checkout pricing — never trust frontend values.
+     *
+     * @return array{currency: string, amount_monthly: float, amount_yearly: float, formatted_monthly: string, formatted_yearly: string, gateway_code: ?string}|null
+     */
+    public function getPricingForTenantRegion(SubscriptionPlan $plan, string $region): ?array
+    {
+        $currency = $region === 'id' ? 'IDR' : 'USD';
+
+        $price = $plan->priceFor($currency);
+
+        // Fallback to plan's default pricing if no plan_price entry
+        if (! $price) {
+            if ($plan->currency === $currency || ! $plan->currency) {
+                return [
+                    'currency' => $currency,
+                    'amount_monthly' => (float) $plan->price_monthly,
+                    'amount_yearly' => (float) $plan->price_yearly,
+                    'formatted_monthly' => $this->formatCurrency((float) $plan->price_monthly, $currency),
+                    'formatted_yearly' => $this->formatCurrency((float) $plan->price_yearly, $currency),
+                    'gateway_code' => null,
+                ];
+            }
+
+            return null;
+        }
+
+        return [
+            'currency' => $price->currency,
+            'amount_monthly' => (float) $price->amount_monthly,
+            'amount_yearly' => (float) $price->amount_yearly,
+            'formatted_monthly' => $this->formatCurrency((float) $price->amount_monthly, $price->currency),
+            'formatted_yearly' => $this->formatCurrency((float) $price->amount_yearly, $price->currency),
+            'gateway_code' => $price->payment_gateway_code,
+        ];
+    }
+
+    /**
      * Format a currency amount for display.
      */
     public function formatCurrency(float $amount, string $currency): string

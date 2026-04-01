@@ -44,6 +44,9 @@ class Rental extends Model
         'pph_amount',
         'price_includes_tax',
         'is_taxable',
+        'payment_method',
+        'transfer_proof_path',
+        'payment_verified_at',
     ];
 
     protected $casts = [
@@ -64,6 +67,7 @@ class Rental extends Model
         'pph_amount' => 'decimal:2',
         'price_includes_tax' => 'boolean',
         'is_taxable' => 'boolean',
+        'payment_verified_at' => 'datetime',
     ];
 
     public const STATUS_QUOTATION = 'quotation';

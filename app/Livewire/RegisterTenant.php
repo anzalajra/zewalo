@@ -6,6 +6,7 @@ use App\Jobs\CreateTenantJob;
 use App\Models\Domain;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Services\GeoIpService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -239,6 +240,11 @@ class RegisterTenant extends Component
         // Seed initial cache status so polling works immediately
         Cache::put($cacheKey, ['status' => 'queued'], CreateTenantJob::CACHE_TTL);
 
+        // Detect region from IP geolocation
+        $geoIpService = app(GeoIpService::class);
+        $countryCode = $geoIpService->getCountryCode(request());
+        $region = $countryCode === 'ID' ? 'id' : 'intl';
+
         // Dispatch to background Redis queue — HTTP request returns now
         CreateTenantJob::dispatch(
             tenantId: $tenantId,
@@ -249,6 +255,7 @@ class RegisterTenant extends Component
             domain: $fullDomain,
             planSlug: $this->selected_plan_slug,
             businessCategory: $this->business_category,
+            region: $region,
         );
 
         $this->tenantDomain = $fullDomain;

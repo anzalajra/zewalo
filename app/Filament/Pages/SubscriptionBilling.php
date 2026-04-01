@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\SaasInvoice;
 use App\Models\User;
 use App\Services\Payment\PaymentService;
+use App\Services\Payment\SubscriptionCheckoutService;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Livewire\Attributes\Computed;
@@ -41,6 +43,17 @@ class SubscriptionBilling extends Page
     public ?array $paymentInstructions = null;
 
     public bool $showPaymentModal = false;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('upgrade')
+                ->label('Upgrade Plan')
+                ->icon('heroicon-o-arrow-up-circle')
+                ->url(SubscriptionCheckout::getUrl())
+                ->color('primary'),
+        ];
+    }
 
     public function mount(): void
     {
@@ -108,8 +121,14 @@ class SubscriptionBilling extends Page
     }
 
     #[Computed]
-    public function paymentMethods(): \Illuminate\Database\Eloquent\Collection
+    public function paymentMethods(): \Illuminate\Support\Collection
     {
+        $tenant = tenant();
+
+        if ($tenant) {
+            return app(SubscriptionCheckoutService::class)->getPaymentMethodsForTenant($tenant);
+        }
+
         return PaymentMethod::active()
             ->whereHas('paymentGateway', fn ($q) => $q->where('is_active', true))
             ->with('paymentGateway')

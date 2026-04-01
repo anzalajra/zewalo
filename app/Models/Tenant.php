@@ -38,6 +38,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'status',
         'current_rental_transactions_month',
         'current_rental_month',
+        'region',
         'data',
     ];
 
@@ -67,7 +68,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'status',
             'current_rental_transactions_month',
             'current_rental_month',
+            'region',
         ];
+    }
+
+    /**
+     * Get the currency based on tenant's locked region.
+     */
+    public function getCurrency(): string
+    {
+        return $this->region === 'id' ? 'IDR' : 'USD';
+    }
+
+    /**
+     * Get available payment gateway codes based on tenant's region.
+     */
+    public function getAvailableGatewayCodes(): array
+    {
+        return $this->region === 'id'
+            ? ['duitku', 'lemonsqueezy']
+            : ['lemonsqueezy'];
     }
 
     /**

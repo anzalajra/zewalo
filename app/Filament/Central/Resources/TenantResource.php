@@ -174,6 +174,15 @@ class TenantResource extends Resource
                                             ->default('trial')
                                             ->required(),
 
+                                        Select::make('region')
+                                            ->label('Region')
+                                            ->options([
+                                                'id' => 'Indonesia (IDR)',
+                                                'intl' => 'International (USD)',
+                                            ])
+                                            ->nullable()
+                                            ->helperText('Auto-detected at registration. Override only if needed.'),
+
                                         DateTimePicker::make('trial_ends_at')
                                             ->label('Trial Ends At')
                                             ->nullable(),
@@ -259,6 +268,21 @@ class TenantResource extends Resource
                         default => 'gray',
                     }),
 
+                Tables\Columns\TextColumn::make('region')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'id' => 'success',
+                        'intl' => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'id' => 'Indonesia',
+                        'intl' => 'International',
+                        default => 'Unset',
+                    })
+                    ->sortable()
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('domains.domain')
                     ->label('Domains')
                     ->listWithLineBreaks()
@@ -289,6 +313,12 @@ class TenantResource extends Resource
                 Tables\Filters\SelectFilter::make('subscription_plan_id')
                     ->label('Plan')
                     ->relationship('subscriptionPlan', 'name'),
+
+                Tables\Filters\SelectFilter::make('region')
+                    ->options([
+                        'id' => 'Indonesia',
+                        'intl' => 'International',
+                    ]),
             ])
             ->recordActions([
                 ActionGroup::make([

@@ -56,6 +56,7 @@ class CreateTenantJob implements ShouldQueue
         public string $domain,
         public string $planSlug = 'free',
         public string $businessCategory = 'other',
+        public string $region = 'intl',
     ) {
         $this->onQueue('tenant-creation');
     }
@@ -109,6 +110,7 @@ class CreateTenantJob implements ShouldQueue
                 'email' => $this->adminEmail,
                 'subscription_plan_id' => $plan?->id,
                 'status' => $initialStatus,
+                'region' => $this->region,
                 'trial_ends_at' => $trialEndsAt,
                 'subscription_ends_at' => null,
                 'current_rental_transactions_month' => 0,

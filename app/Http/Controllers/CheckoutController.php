@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Discount;
 use App\Models\Rental;
 use App\Models\RentalItem;
+use App\Models\Setting;
 use App\Services\PromotionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -77,11 +78,20 @@ class CheckoutController extends Controller
         // Get active promotions for display
         $activePromotions = PromotionService::getActivePromotionsSummary();
 
+        // Load tenant payment settings
+        $manualTransferEnabled = filter_var(Setting::get('payment_manual_transfer_enabled', false), FILTER_VALIDATE_BOOLEAN);
+        $manualTransferDetails = $manualTransferEnabled ? [
+            'bank_name' => Setting::get('payment_manual_transfer_bank_name', ''),
+            'account_number' => Setting::get('payment_manual_transfer_account_number', ''),
+            'account_holder' => Setting::get('payment_manual_transfer_account_holder', ''),
+        ] : null;
+
         return view('frontend.checkout.index', compact(
             'customer', 'cartItems', 'subtotal', 'deposit', 'discountAmount',
             'categoryDiscountAmount', 'categoryName', 'grossTotal',
             'dailyDiscountAmount', 'dailyDiscountName', 'datePromotionAmount', 'datePromotionName',
-            'totalDiscount', 'activePromotions'
+            'totalDiscount', 'activePromotions',
+            'manualTransferEnabled', 'manualTransferDetails'
         ));
     }
 
@@ -207,6 +217,7 @@ class CheckoutController extends Controller
         $request->validate([
             'notes' => 'nullable|string|max:500',
             'agree_terms' => 'required|accepted',
+            'payment_method' => 'nullable|string|in:manual_transfer',
         ]);
 
         $cartItems = $customer->carts()->with(['productUnit.product'])->get();
@@ -311,6 +322,7 @@ class CheckoutController extends Controller
                     'total' => $subtotal - $rentalTotalDiscount,
                     'deposit' => $deposit,
                     'notes' => $request->notes,
+                    'payment_method' => $request->payment_method,
                 ]);
 
                 foreach ($items as $cartItem) {
@@ -401,6 +413,37 @@ class CheckoutController extends Controller
 
         $rental->load(['items.productUnit.product']);
 
-        return view('frontend.checkout.success', compact('rental'));
+        // Load manual transfer details if payment method is manual_transfer
+        $manualTransferDetails = null;
+        if ($rental->payment_method === 'manual_transfer') {
+            $manualTransferDetails = [
+                'bank_name' => Setting::get('payment_manual_transfer_bank_name', ''),
+                'account_number' => Setting::get('payment_manual_transfer_account_number', ''),
+                'account_holder' => Setting::get('payment_manual_transfer_account_holder', ''),
+            ];
+        }
+
+        return view('frontend.checkout.success', compact('rental', 'manualTransferDetails'));
+    }
+
+    public function uploadTransferProof(Request $request, Rental $rental)
+    {
+        $customer = Auth::guard('customer')->user();
+
+        if ($rental->user_id != $customer->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'transfer_proof' => 'required|image|max:5120', // max 5MB
+        ]);
+
+        $path = $request->file('transfer_proof')->store('transfer-proofs', 'public');
+
+        $rental->update([
+            'transfer_proof_path' => $path,
+        ]);
+
+        return back()->with('success', 'Bukti transfer berhasil diupload. Kami akan memverifikasi pembayaran Anda.');
     }
 }

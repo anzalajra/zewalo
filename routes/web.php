@@ -91,7 +91,7 @@ if (! $isInstalled) {
     ];
 
     foreach ($landingPages as $uri => $data) {
-        Route::get('/' . $uri, function () use ($data) {
+        Route::get('/'.$uri, function () use ($data) {
             $centralDomains = config('tenancy.central_domains', []);
             if (in_array(request()->getHost(), $centralDomains, true)) {
                 $viewData = [];
@@ -162,6 +162,7 @@ if (! $isInstalled) {
             Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
             Route::post('/checkout/validate-discount', [CheckoutController::class, 'validateDiscount'])->name('checkout.validate-discount');
             Route::get('/checkout/success/{rental}', [CheckoutController::class, 'success'])->name('checkout.success');
+            Route::post('/checkout/upload-proof/{rental}', [CheckoutController::class, 'uploadTransferProof'])->name('checkout.upload-proof');
         });
 
         // Customer Documents
