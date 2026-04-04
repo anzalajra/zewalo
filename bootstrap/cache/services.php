@@ -71,8 +71,8 @@
     67 => 'App\\Providers\\CentralSettingsServiceProvider',
     68 => 'App\\Providers\\AppServiceProvider',
     69 => 'App\\Providers\\StorageServiceProvider',
-    70 => 'App\\Providers\\Filament\\AdminPanelProvider',
-    71 => 'App\\Providers\\Filament\\CentralPanelProvider',
+    70 => 'App\\Providers\\Filament\\CentralPanelProvider',
+    71 => 'App\\Providers\\Filament\\AdminPanelProvider',
     72 => 'App\\Providers\\TenancyServiceProvider',
   ),
   'eager' => 
@@ -130,8 +130,8 @@
     50 => 'App\\Providers\\CentralSettingsServiceProvider',
     51 => 'App\\Providers\\AppServiceProvider',
     52 => 'App\\Providers\\StorageServiceProvider',
-    53 => 'App\\Providers\\Filament\\AdminPanelProvider',
-    54 => 'App\\Providers\\Filament\\CentralPanelProvider',
+    53 => 'App\\Providers\\Filament\\CentralPanelProvider',
+    54 => 'App\\Providers\\Filament\\AdminPanelProvider',
     55 => 'App\\Providers\\TenancyServiceProvider',
   ),
   'deferred' => 

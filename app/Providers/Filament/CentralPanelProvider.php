@@ -27,7 +27,7 @@ class CentralPanelProvider extends PanelProvider
     {
         return $panel
             ->id('central')
-            ->domain('sa.'.env('APP_DOMAIN', 'localhost'))
+            ->domain('sa.'.config('app.domain', 'localhost'))
             ->path('admin')
             ->login()
             ->maxContentWidth(Width::Full)
