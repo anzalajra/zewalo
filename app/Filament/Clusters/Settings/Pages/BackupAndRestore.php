@@ -39,6 +39,12 @@ class BackupAndRestore extends Page implements HasTable
     public string $progressMessage = '';
     public int $progressPercent = 0;
 
+    public function boot(): void
+    {
+        // Override Livewire temp upload limit only for this page (500MB)
+        config(['livewire.temporary_file_upload.rules' => ['required', 'file', 'max:512000']]);
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -114,6 +120,7 @@ class BackupAndRestore extends Page implements HasTable
                     FileUpload::make('backup_file')
                         ->label('Upload Backup File (ZIP)')
                         ->acceptedFileTypes(['application/zip', 'application/x-zip-compressed'])
+                        ->maxSize(512000) // 500MB
                         ->disk('local')
                         ->directory('backups')
                         ->required(),
