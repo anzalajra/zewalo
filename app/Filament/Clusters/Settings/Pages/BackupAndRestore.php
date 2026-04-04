@@ -190,7 +190,10 @@ class BackupAndRestore extends Page implements HasTable
                 $tablesToBackup = array_intersect($tablesToBackup, $allTables);
             }
 
-            if (empty($tablesToBackup)) {
+            $includeFiles = $isFullBackup || in_array('files', $options);
+            $onlyFiles = !$isFullBackup && $options === ['files'];
+
+            if (empty($tablesToBackup) && !$onlyFiles) {
                 throw new \Exception("No tables found to backup for the selected options. Please check if the required tables exist.");
             }
 
@@ -212,7 +215,6 @@ class BackupAndRestore extends Page implements HasTable
 
             // Backup files if 'files' or 'full' is selected
             $fileCount = 0;
-            $includeFiles = $isFullBackup || in_array('files', $options);
 
             if ($includeFiles) {
                 $this->progressMessage = 'Backing up files & media...';
