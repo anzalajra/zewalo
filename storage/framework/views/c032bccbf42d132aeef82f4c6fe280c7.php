@@ -189,45 +189,28 @@
 </div>
 </section>
 <!-- Pricing Section -->
-<section class="py-20 bg-slate-50 dark:bg-slate-900/30">
+<section class="py-20 bg-slate-50 dark:bg-slate-900/30" x-data="{ frequency: 'monthly' }">
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 <div class="text-center mb-12">
 <h2 class="text-3xl font-bold mb-4"><?php echo e(__('landing.index.pricing_heading')); ?></h2>
-<div class="flex items-center justify-center gap-4 mt-6"><span class="text-sm font-medium" id="monthly-label"><?php echo e(__('landing.index.pricing_monthly')); ?></span>
-<button class="relative w-12 h-6 bg-slate-200 rounded-full transition-colors" id="pricing-toggle" onclick="togglePricing()">
-<span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform" id="toggle-knob"></span>
+<div class="flex items-center justify-center gap-4 mt-6">
+<span class="text-sm font-medium" :class="frequency === 'monthly' ? 'text-slate-900' : 'text-slate-500'"><?php echo e(__('landing.index.pricing_monthly')); ?></span>
+<button @click="frequency = frequency === 'monthly' ? 'yearly' : 'monthly'" class="relative w-12 h-6 rounded-full transition-colors" :class="frequency === 'yearly' ? 'bg-primary' : 'bg-slate-200'">
+<span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform" :class="frequency === 'yearly' ? 'translate-x-6' : ''"></span>
 </button>
-<span class="text-sm font-medium text-slate-500" id="yearly-label"><?php echo e(__('landing.index.pricing_yearly')); ?> <span class="text-green-500 font-bold"><?php echo e(__('landing.index.pricing_yearly_discount')); ?></span></span>
-<script>
-    function togglePricing() {
-        const knob = document.getElementById('toggle-knob');
-        const toggle = document.getElementById('pricing-toggle');
-        const isYearly = knob.classList.contains('translate-x-6');
-
-        const basicPrice = document.getElementById('price-basic');
-        const proPrice = document.getElementById('price-pro');
-
-        if (isYearly) {
-            knob.classList.remove('translate-x-6');
-            toggle.classList.remove('bg-primary');
-            toggle.classList.add('bg-slate-200');
-            basicPrice.innerText = '19';
-            proPrice.innerText = '49';
-        } else {
-            knob.classList.add('translate-x-6');
-            toggle.classList.remove('bg-slate-200');
-            toggle.classList.add('bg-primary');
-            basicPrice.innerText = '15';
-            proPrice.innerText = '39';
-        }
-    }
-</script></div>
+<span class="text-sm font-medium" :class="frequency === 'yearly' ? 'text-slate-900' : 'text-slate-500'"><?php echo e(__('landing.index.pricing_yearly')); ?> <span class="text-green-500 font-bold"><?php echo e(__('landing.index.pricing_yearly_discount')); ?></span></span>
 </div>
+</div>
+<?php
+    $freePlan = isset($plans) && $plans->isNotEmpty() ? $plans->first() : null;
+    $basicPlan = isset($plans) && $plans->count() > 1 ? $plans[1] : null;
+    $proPlan = isset($plans) && $plans->count() > 2 ? $plans[2] : null;
+?>
 <div class="grid md:grid-cols-3 gap-8"><!-- Free -->
 <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col">
 <h3 class="text-lg font-bold mb-2"><?php echo e(__('landing.index.pricing_free')); ?></h3>
 <div class="flex items-baseline gap-1 mb-2">
-<span class="text-4xl font-black">$0</span>
+<span class="text-4xl font-black"><?php echo e($freePlan ? $freePlan['pricing']['formatted_monthly'] : '$0'); ?></span>
 <span class="text-slate-500"><?php echo e(__('landing.index.pricing_per_month')); ?></span>
 </div>
 <p class="text-sm text-primary font-medium mb-6"><?php echo e(__('landing.index.pricing_free_forever')); ?></p>
@@ -249,7 +232,7 @@
 <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col">
 <h3 class="text-lg font-bold mb-2"><?php echo e(__('landing.index.pricing_basic')); ?></h3>
 <div class="flex items-baseline gap-1 mb-2">
-<span class="text-4xl font-black">$<span id="price-basic">19</span></span>
+<span class="text-4xl font-black" x-text="frequency === 'monthly' ? '<?php echo e($basicPlan ? $basicPlan['pricing']['formatted_monthly'] : '$19'); ?>' : '<?php echo e($basicPlan ? $basicPlan['pricing']['formatted_yearly'] : '$15'); ?>'"><?php echo e($basicPlan ? $basicPlan['pricing']['formatted_monthly'] : '$19'); ?></span>
 <span class="text-slate-500"><?php echo e(__('landing.index.pricing_per_month')); ?></span>
 </div>
 <p class="text-sm text-primary font-medium mb-6"><?php echo e(__('landing.index.pricing_free_trial')); ?></p>
@@ -277,7 +260,7 @@
 <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider"><?php echo e(__('landing.index.pricing_popular')); ?></div>
 <h3 class="text-lg font-bold mb-2"><?php echo e(__('landing.index.pricing_pro')); ?></h3>
 <div class="flex items-baseline gap-1 mb-2">
-<span class="text-4xl font-black text-primary">$<span id="price-pro">49</span></span>
+<span class="text-4xl font-black text-primary" x-text="frequency === 'monthly' ? '<?php echo e($proPlan ? $proPlan['pricing']['formatted_monthly'] : '$49'); ?>' : '<?php echo e($proPlan ? $proPlan['pricing']['formatted_yearly'] : '$39'); ?>'"><?php echo e($proPlan ? $proPlan['pricing']['formatted_monthly'] : '$49'); ?></span>
 <span class="text-slate-500"><?php echo e(__('landing.index.pricing_per_month')); ?></span>
 </div>
 <p class="text-sm text-primary font-medium mb-6"><?php echo e(__('landing.index.pricing_free_trial')); ?></p>

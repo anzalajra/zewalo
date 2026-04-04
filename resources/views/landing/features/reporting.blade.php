@@ -56,39 +56,6 @@
     <!-- END: MainHeader -->
 
     <div class="relative flex min-h-screen flex-col">
-        <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-6 md:px-20 py-4 bg-white dark:bg-slate-900">
-            <div class="flex items-center gap-4 text-slate-900 dark:text-white">
-                <div class="size-8 text-primary">
-                    <span class="material-symbols-outlined text-4xl">analytics</span>
-                </div>
-                <h2 class="text-xl font-bold leading-tight tracking-tight">{{ __('landing.feat_reporting.brand_name') }}</h2>
-            </div>
-            <div class="hidden md:flex flex-1 justify-end gap-8 items-center">
-                <nav class="flex items-center gap-8">
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_reporting.nav_dashboard') }}</a>
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_reporting.nav_properties') }}</a>
-                    <a class="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">{{ __('landing.feat_reporting.nav_reports') }}</a>
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_reporting.nav_settings') }}</a>
-                </nav>
-                <div class="flex gap-3">
-                    <button
-                        class="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                        <span class="material-symbols-outlined text-xl">notifications</span>
-                    </button>
-                    <button
-                        class="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
-                        <span class="material-symbols-outlined text-xl">account_circle</span>
-                    </button>
-                </div>
-            </div>
-            <div class="md:hidden">
-                <span class="material-symbols-outlined text-slate-900 dark:text-white">menu</span>
-            </div>
-        </header>
         <main class="flex-grow">
             <section class="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

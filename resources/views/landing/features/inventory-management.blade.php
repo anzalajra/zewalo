@@ -43,47 +43,7 @@
     <!-- END: MainHeader -->
 
     <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-        <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-6 md:px-10 py-3 sticky top-0 z-50">
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-4 text-slate-900 dark:text-slate-100">
-                    <div class="size-6 text-primary">
-                        <span class="material-symbols-outlined text-3xl">inventory_2</span>
-                    </div>
-                    <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">
-                        {{ __('landing.feat_inventory.brand_name') }}</h2>
-                </div>
-                <nav class="hidden md:flex items-center gap-9">
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_inventory.nav_dashboard') }}</a>
-                    <a class="text-primary text-sm font-bold leading-normal" href="#">{{ __('landing.feat_inventory.nav_inventory') }}</a>
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_inventory.nav_orders') }}</a>
-                    <a class="text-slate-700 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_inventory.nav_reports') }}</a>
-                </nav>
-            </div>
-            <div class="flex flex-1 justify-end gap-4 md:gap-8 items-center">
-                <label class="hidden lg:flex flex-col min-w-40 !h-10 max-w-64">
-                    <div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-slate-100 dark:bg-slate-800">
-                        <div class="text-slate-500 flex items-center justify-center pl-4">
-                            <span class="material-symbols-outlined text-xl">search</span>
-                        </div>
-                        <input
-                            class="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 h-full placeholder:text-slate-500 px-4 pl-2 text-base font-normal"
-                            placeholder="{{ __('landing.feat_inventory.search_placeholder') }}" value="" />
-                    </div>
-                </label>
-                <button
-                    class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">
-                    <span class="truncate">{{ __('landing.feat_inventory.get_started') }}</span>
-                </button>
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700"
-                    data-alt="User profile avatar placeholder"
-                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAUMxlWz_fN0rVDWU0J1a4yqbjmgdDNE5HdFBNf3wvbUQbtMXZbIitiubcxC-XRGWk35zP2M5e-qmpMr_Ow9AfBGnC3Rl1DcB7yNtyULE0n3AfqawnBd0vt_RU8eJPzJ6MSVYegMBYk4uMWLNmDqiX2D3aM0IgvEbWOgCVCJHzBdLGSozzOlr0NBfl5Rcrk6MQufShNDeuJ0gKbUGm12GAHXNuYnSCNea19MB_mbQDUYlLtLLBF1-DKZFQ60KFFpIadQyCYPziRFQNM");'>
-                </div>
-            </div>
-        </header>
+        
         <main class="flex-1">
             <section class="px-6 md:px-20 lg:px-40 py-16 md:py-24 bg-white dark:bg-background-dark">
                 <div class="max-w-[1200px] mx-auto flex flex-col lg:flex-row gap-12 items-center">

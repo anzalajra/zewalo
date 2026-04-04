@@ -43,38 +43,6 @@
 
     <div class="relative flex min-h-screen flex-col">
         <!-- Header -->
-        <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 bg-white dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
-            <div class="flex items-center gap-4 text-slate-900 dark:text-slate-100">
-                <div class="size-6 text-primary">
-                    <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                            fill="currentColor"></path>
-                    </svg>
-                </div>
-                <h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">{{ __('landing.feat_live_stock.brand_name') }}</h2>
-            </div>
-            <div class="flex flex-1 justify-end gap-8">
-                <div class="flex items-center gap-9">
-                    <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_live_stock.nav_dashboard') }}</a>
-                    <a class="text-sm font-medium leading-normal text-primary" href="#">{{ __('landing.feat_live_stock.nav_inventory') }}</a>
-                    <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_live_stock.nav_orders') }}</a>
-                    <a class="text-sm font-medium leading-normal hover:text-primary transition-colors"
-                        href="#">{{ __('landing.feat_live_stock.nav_reports') }}</a>
-                </div>
-                <button
-                    class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
-                    <span class="truncate">{{ __('landing.feat_live_stock.get_started') }}</span>
-                </button>
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-primary/20"
-                    data-alt="User profile avatar placeholder"
-                    style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1xxgwK6_XgjLMY0tvKfC4f6viYYEQu_djnR4Vuo5aZRC4PkkymMXOdC0vLqGOqIGFNd81iw6rYR_hm2A4DyPzdKSIWEBvB3NQh7Dxnmvb8LPeIQ2NQLXRXwCJ1V_JyCxzvXVlENkjt7YmEjglVFqzb-TbP8zP5XyhnUIKBB1rllwONpuQUH7WUSmYuLdM8OTpkGdvibqLmd4CQ5jAXeaVikqkj38MTrbkCHnybX7GkCO3VjVKhk39J-JTKaoAYccA00ldoIAI7Tcy");'>
-                </div>
-            </div>
-        </header>
         <main class="flex-1">
             <!-- Hero Section -->
             <section class="max-w-[1200px] mx-auto px-4 py-12 @container">

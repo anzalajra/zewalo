@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
 
 <head>
     <meta charset="utf-8" />
@@ -38,7 +38,7 @@
 
 <body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
     <!-- BEGIN: MainHeader -->
-    @include('landing.partials.header')
+    <?php echo $__env->make('landing.partials.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <!-- END: MainHeader -->
 
     <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
@@ -50,23 +50,28 @@
                             <div
                                 class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold w-fit">
                                 <span class="material-symbols-outlined text-sm">bolt</span>
-                                {{ __('landing.feat_booking.hero_badge') }}
+                                <?php echo e(__('landing.feat_booking.hero_badge')); ?>
+
                             </div>
                             <h1
                                 class="text-slate-900 dark:text-slate-100 text-4xl md:text-6xl font-black leading-tight tracking-tight">
-                                {{ __('landing.feat_booking.hero_title_prefix') }} <span class="text-primary">{{ __('landing.feat_booking.hero_title_highlight') }}</span> {{ __('landing.feat_booking.hero_title_suffix') }}
+                                <?php echo e(__('landing.feat_booking.hero_title_prefix')); ?> <span class="text-primary"><?php echo e(__('landing.feat_booking.hero_title_highlight')); ?></span> <?php echo e(__('landing.feat_booking.hero_title_suffix')); ?>
+
                             </h1>
                             <p class="text-slate-600 dark:text-slate-400 text-lg md:text-xl leading-relaxed">
-                                {{ __('landing.feat_booking.hero_description') }}
+                                <?php echo e(__('landing.feat_booking.hero_description')); ?>
+
                             </p>
                             <div class="flex flex-wrap gap-4">
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 bg-primary text-white text-base font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
-                                    {{ __('landing.feat_booking.start_free_trial') }}
+                                    <?php echo e(__('landing.feat_booking.start_free_trial')); ?>
+
                                 </button>
                                 <button
                                     class="flex min-w-[160px] cursor-pointer items-center justify-center rounded-lg h-12 px-6 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-base font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                                    {{ __('landing.feat_booking.view_demo') }}
+                                    <?php echo e(__('landing.feat_booking.view_demo')); ?>
+
                                 </button>
                             </div>
                         </div>
@@ -99,8 +104,8 @@
                     class="w-full bg-white dark:bg-slate-950/50 py-20 flex justify-center border-y border-slate-200 dark:border-slate-800">
                     <div class="max-w-[1200px] w-full px-6">
                         <div class="text-center mb-16">
-                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4">{{ __('landing.feat_booking.features_title') }}</h2>
-                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto">{{ __('landing.feat_booking.features_subtitle') }}</p>
+                            <h2 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-bold mb-4"><?php echo e(__('landing.feat_booking.features_title')); ?></h2>
+                            <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl mx-auto"><?php echo e(__('landing.feat_booking.features_subtitle')); ?></p>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <!-- Feature 1: Customer Storefront -->
@@ -110,9 +115,10 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">storefront</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature1_title') }}
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature1_title')); ?>
+
                                 </h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature1_desc') }}</p>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature1_desc')); ?></p>
                             </div>
                             <!-- Feature 2: Live Calendars -->
                             <div
@@ -121,8 +127,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">event_available</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature2_title') }}</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature2_desc') }}</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature2_title')); ?></h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature2_desc')); ?></p>
                             </div>
                             <!-- Feature 3: Quantity Settings -->
                             <div
@@ -131,8 +137,9 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">reorder</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature3_title') }}</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature3_desc') }}
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature3_title')); ?></h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature3_desc')); ?>
+
                                 </p>
                             </div>
                             <!-- Feature 4: Batch Date Editing -->
@@ -142,9 +149,10 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">edit_calendar</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature4_title') }}
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature4_title')); ?>
+
                                 </h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature4_desc') }}</p>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature4_desc')); ?></p>
                             </div>
                             <!-- Feature 5: Automated Payments -->
                             <div
@@ -153,8 +161,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">payments</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature5_title') }}</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature5_desc') }}</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature5_title')); ?></h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature5_desc')); ?></p>
                             </div>
                             <!-- Feature 6: Offline Options -->
                             <div
@@ -163,8 +171,8 @@
                                     class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                     <span class="material-symbols-outlined text-3xl">point_of_sale</span>
                                 </div>
-                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.feature6_title') }}</h3>
-                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed">{{ __('landing.feat_booking.feature6_desc') }}</p>
+                                <h3 class="text-xl font-bold mb-3 text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.feature6_title')); ?></h3>
+                                <p class="text-slate-600 dark:text-slate-400 leading-relaxed"><?php echo e(__('landing.feat_booking.feature6_desc')); ?></p>
                             </div>
                         </div>
                     </div>
@@ -178,9 +186,9 @@
                                 <div
                                     class="bg-white dark:bg-slate-950 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-800">
                                     <div class="flex items-center justify-between mb-6">
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.batch_mock_title') }}</h4>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.batch_mock_title')); ?></h4>
                                         <span
-                                            class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">{{ __('landing.feat_booking.batch_mock_badge') }}</span>
+                                            class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded"><?php echo e(__('landing.feat_booking.batch_mock_badge')); ?></span>
                                     </div>
                                     <div class="space-y-4">
                                         <div
@@ -203,30 +211,34 @@
                                         </div>
                                         <div
                                             class="p-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex justify-between items-center">
-                                            <span class="text-xs text-slate-400">{{ __('landing.feat_booking.batch_mock_apply') }}</span>
+                                            <span class="text-xs text-slate-400"><?php echo e(__('landing.feat_booking.batch_mock_apply')); ?></span>
                                             <button
-                                                class="bg-primary text-white text-xs px-4 py-2 rounded font-bold">{{ __('landing.feat_booking.batch_mock_update_btn') }}</button>
+                                                class="bg-primary text-white text-xs px-4 py-2 rounded font-bold"><?php echo e(__('landing.feat_booking.batch_mock_update_btn')); ?></button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="order-1 lg:order-2 space-y-6">
-                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ __('landing.feat_booking.detail1_title') }}</h2>
+                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight"><?php echo e(__('landing.feat_booking.detail1_title')); ?></h2>
                                 <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                    {{ __('landing.feat_booking.detail1_desc') }}
+                                    <?php echo e(__('landing.feat_booking.detail1_desc')); ?>
+
                                 </p>
                                 <ul class="space-y-3">
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        {{ __('landing.feat_booking.detail1_check1') }}
+                                        <?php echo e(__('landing.feat_booking.detail1_check1')); ?>
+
                                     </li>
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        {{ __('landing.feat_booking.detail1_check2') }}
+                                        <?php echo e(__('landing.feat_booking.detail1_check2')); ?>
+
                                     </li>
                                     <li class="flex items-center gap-3 text-slate-700 dark:text-slate-300">
                                         <span class="material-symbols-outlined text-primary">check_circle</span>
-                                        {{ __('landing.feat_booking.detail1_check3') }}
+                                        <?php echo e(__('landing.feat_booking.detail1_check3')); ?>
+
                                     </li>
                                 </ul>
                             </div>
@@ -234,22 +246,23 @@
                         <!-- Payments Detail -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                             <div class="space-y-6">
-                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ __('landing.feat_booking.detail2_title') }}</h2>
+                                <h2 class="text-3xl font-bold text-slate-900 dark:text-slate-100 leading-tight"><?php echo e(__('landing.feat_booking.detail2_title')); ?></h2>
                                 <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                                    {{ __('landing.feat_booking.detail2_desc') }}
+                                    <?php echo e(__('landing.feat_booking.detail2_desc')); ?>
+
                                 </p>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div
                                         class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                                         <span class="material-symbols-outlined text-primary mb-2">account_balance</span>
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.payment_bank_title') }}</h4>
-                                        <p class="text-xs text-slate-500">{{ __('landing.feat_booking.payment_bank_desc') }}</p>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.payment_bank_title')); ?></h4>
+                                        <p class="text-xs text-slate-500"><?php echo e(__('landing.feat_booking.payment_bank_desc')); ?></p>
                                     </div>
                                     <div
                                         class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                                         <span class="material-symbols-outlined text-primary mb-2">credit_score</span>
-                                        <h4 class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.payment_stripe_title') }}</h4>
-                                        <p class="text-xs text-slate-500">{{ __('landing.feat_booking.payment_stripe_desc') }}</p>
+                                        <h4 class="font-bold text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.payment_stripe_title')); ?></h4>
+                                        <p class="text-xs text-slate-500"><?php echo e(__('landing.feat_booking.payment_stripe_desc')); ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -257,19 +270,19 @@
                                 <div
                                     class="w-full max-w-sm bg-white dark:bg-slate-950 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
                                     <div class="flex justify-between items-center mb-8">
-                                        <span class="text-slate-500 font-medium">{{ __('landing.feat_booking.checkout_label') }}</span>
+                                        <span class="text-slate-500 font-medium"><?php echo e(__('landing.feat_booking.checkout_label')); ?></span>
                                         <span class="material-symbols-outlined">shopping_cart</span>
                                     </div>
                                     <div class="space-y-6">
                                         <div class="flex justify-between font-bold text-xl">
-                                            <span class="text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.checkout_total') }}</span>
+                                            <span class="text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.checkout_total')); ?></span>
                                             <span class="text-primary">$149.00</span>
                                         </div>
                                         <div class="space-y-3">
                                             <label
                                                 class="block p-4 border-2 border-primary bg-primary/5 rounded-xl cursor-pointer">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="font-bold text-slate-900 dark:text-slate-100">{{ __('landing.feat_booking.checkout_credit_card') }}</span>
+                                                    <span class="font-bold text-slate-900 dark:text-slate-100"><?php echo e(__('landing.feat_booking.checkout_credit_card')); ?></span>
                                                     <div class="size-4 rounded-full border-4 border-primary bg-white">
                                                     </div>
                                                 </div>
@@ -277,13 +290,13 @@
                                             <label
                                                 class="block p-4 border border-slate-200 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="font-bold text-slate-500">{{ __('landing.feat_booking.checkout_pay_at_venue') }}</span>
+                                                    <span class="font-bold text-slate-500"><?php echo e(__('landing.feat_booking.checkout_pay_at_venue')); ?></span>
                                                     <div class="size-4 rounded-full border border-slate-300"></div>
                                                 </div>
                                             </label>
                                         </div>
                                         <button
-                                            class="w-full h-12 bg-slate-900 dark:bg-primary text-white font-bold rounded-xl mt-4">{{ __('landing.feat_booking.checkout_confirm') }}</button>
+                                            class="w-full h-12 bg-slate-900 dark:bg-primary text-white font-bold rounded-xl mt-4"><?php echo e(__('landing.feat_booking.checkout_confirm')); ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -294,21 +307,24 @@
                 <section class="w-full px-6 py-20 flex justify-center">
                     <div
                         class="max-w-[1000px] w-full bg-primary rounded-[2rem] p-8 md:p-16 flex flex-col items-center text-center gap-8 shadow-2xl shadow-primary/30 text-white">
-                        <h2 class="text-3xl md:text-5xl font-black leading-tight">{{ __('landing.feat_booking.cta_title') }}</h2>
+                        <h2 class="text-3xl md:text-5xl font-black leading-tight"><?php echo e(__('landing.feat_booking.cta_title')); ?></h2>
                         <p class="text-white/80 text-lg md:text-xl max-w-2xl">
-                            {{ __('landing.feat_booking.cta_description') }}
+                            <?php echo e(__('landing.feat_booking.cta_description')); ?>
+
                         </p>
                         <div class="flex flex-wrap gap-4 justify-center">
                             <button
                                 class="h-14 px-10 bg-white text-primary rounded-xl font-bold text-lg hover:scale-105 transition-transform">
-                                {{ __('landing.feat_booking.cta_trial_btn') }}
+                                <?php echo e(__('landing.feat_booking.cta_trial_btn')); ?>
+
                             </button>
                             <button
                                 class="h-14 px-10 bg-primary/20 text-white border-2 border-white/20 rounded-xl font-bold text-lg hover:bg-white/10 transition-colors">
-                                {{ __('landing.feat_booking.cta_demo_btn') }}
+                                <?php echo e(__('landing.feat_booking.cta_demo_btn')); ?>
+
                             </button>
                         </div>
-                        <p class="text-sm text-white/60">{{ __('landing.feat_booking.cta_no_credit_card') }}</p>
+                        <p class="text-sm text-white/60"><?php echo e(__('landing.feat_booking.cta_no_credit_card')); ?></p>
                     </div>
                 </section>
             </main>
@@ -319,42 +335,43 @@
                     <div class="flex flex-col gap-4">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-primary text-3xl">calendar_month</span>
-                            <span class="text-slate-900 dark:text-slate-100 text-xl font-bold">{{ __('landing.feat_booking.brand_name') }}</span>
+                            <span class="text-slate-900 dark:text-slate-100 text-xl font-bold"><?php echo e(__('landing.feat_booking.brand_name')); ?></span>
                         </div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
-                            {{ __('landing.feat_booking.footer_tagline') }}
+                            <?php echo e(__('landing.feat_booking.footer_tagline')); ?>
+
                         </p>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_product') }}</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6"><?php echo e(__('landing.feat_booking.footer_product')); ?></h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.nav_features') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_integrations') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_enterprise') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.nav_pricing') }}</a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.nav_features')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_integrations')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_enterprise')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.nav_pricing')); ?></a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_company') }}</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6"><?php echo e(__('landing.feat_booking.footer_company')); ?></h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_about_us') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_careers') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_blog') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_contact') }}</a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_about_us')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_careers')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_blog')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_contact')); ?></a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6">{{ __('landing.feat_booking.footer_support') }}</h4>
+                        <h4 class="text-slate-900 dark:text-slate-100 font-bold mb-6"><?php echo e(__('landing.feat_booking.footer_support')); ?></h4>
                         <ul class="space-y-4 text-sm text-slate-500 dark:text-slate-400">
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_help_center') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_api_docs') }}</a></li>
-                            <li><a class="hover:text-primary" href="#">{{ __('landing.feat_booking.footer_security') }}</a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_help_center')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_api_docs')); ?></a></li>
+                            <li><a class="hover:text-primary" href="#"><?php echo e(__('landing.feat_booking.footer_security')); ?></a></li>
                         </ul>
                     </div>
                 </div>
                 <div
                     class="border-t border-slate-200 dark:border-slate-800 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">{{ __('landing.feat_booking.footer_copyright') }}</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm"><?php echo e(__('landing.feat_booking.footer_copyright')); ?></p>
                     <div class="flex gap-6">
                         <a class="text-slate-400 hover:text-primary" href="#"><span
                                 class="material-symbols-outlined">public</span></a>
@@ -368,8 +385,8 @@
         </div>
     </div>
     <!-- BEGIN: MainFooter -->
-    @include('landing.partials.footer')
+    <?php echo $__env->make('landing.partials.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <!-- END: MainFooter -->
 </body>
 
-</html>
+</html><?php /**PATH /var/www/resources/views/landing/features/booking-online.blade.php ENDPATH**/ ?>

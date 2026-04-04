@@ -30,6 +30,7 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+docker-compose.local.yml
 /docker/nginx/ssl/*.crt
 /docker/nginx/ssl/*.key
 /docker/nginx/ssl/*.pem

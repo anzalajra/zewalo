@@ -43,34 +43,7 @@
 
     <div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
         <div class="layout-container flex h-full grow flex-col">
-            <header
-                class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-10 py-3 bg-white dark:bg-slate-900">
-                <div class="flex items-center gap-4 text-slate-900 dark:text-slate-100">
-                    <div class="size-8 text-primary">
-                        <span class="material-symbols-outlined text-4xl">receipt_long</span>
-                    </div>
-                    <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">
-                        {{ __('landing.feat_quotation.brand_name') }}</h2>
-                </div>
-                <div class="flex flex-1 justify-end gap-8">
-                    <div class="flex items-center gap-9">
-                        <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">{{ __('landing.feat_quotation.nav_features') }}</a>
-                        <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">{{ __('landing.feat_quotation.nav_pricing') }}</a>
-                        <a class="text-slate-900 dark:text-slate-100 text-sm font-medium leading-normal hover:text-primary transition-colors"
-                            href="#">{{ __('landing.feat_quotation.nav_about') }}</a>
-                    </div>
-                    <button
-                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
-                        <span class="truncate">{{ __('landing.feat_quotation.get_started') }}</span>
-                    </button>
-                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-200 dark:border-slate-700"
-                        data-alt="Professional user profile avatar"
-                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD-3mEqFArp-AhIagQzdr1BYlxn942CPiXoAfGLBwVrVnIwfx6sPxikc0YPVv-4kVJEfaev30JhHYjuCHU-HyzV5ermyHYVRQZQOuCpgQ9960UruERg_NKunJGtlZiuCzZnaudnBiXuSdqwfcRXie1n6pZz3M-XJNFNDr7nYwz9qj09tU4DyQ8GOUUJzPKXWF3MGbHnVFcKS4SUkJmCLJHSDHvQlJs-wlPYdiSY2fIU1vgd9BLl0oyCgK1iJjEDyGo4F6TAFegxG8nP");'>
-                    </div>
-                </div>
-            </header>
+            
             <main class="flex flex-col flex-1">
                 <section class="px-4 md:px-20 lg:px-40 py-12 md:py-20 bg-white dark:bg-slate-900">
                     <div class="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center gap-12">
