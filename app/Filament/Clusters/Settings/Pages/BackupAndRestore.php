@@ -161,7 +161,7 @@ class BackupAndRestore extends Page implements HasTable
             }
 
             // Determine which tables to backup
-            $allTables = Schema::getTableListing();
+            $allTables = Schema::getTableListing(schemaQualified: false);
             $excludeTables = $this->getExcludedTables();
 
             if ($isFullBackup) {
@@ -178,6 +178,15 @@ class BackupAndRestore extends Page implements HasTable
                 $tablesToBackup = array_intersect($tablesToBackup, $allTables);
             }
 
+            if (empty($tablesToBackup)) {
+                throw new \Exception("No tables found to backup for the selected options. Please check if the required tables exist.");
+            }
+
+            Log::channel('backup-restore')->info('Starting backup', [
+                'type' => $type,
+                'tables' => array_values($tablesToBackup),
+            ]);
+
             $tableCount = 0;
             foreach ($tablesToBackup as $table) {
                 $this->progressMessage = "Backing up table: $table";
@@ -190,6 +199,10 @@ class BackupAndRestore extends Page implements HasTable
             }
 
             $zip->close();
+
+            if (!File::exists($zipPath)) {
+                throw new \Exception("Backup file could not be created. The ZIP archive may be empty.");
+            }
 
             BackupHistory::create([
                 'user_id' => Auth::id(),
@@ -262,6 +275,13 @@ class BackupAndRestore extends Page implements HasTable
                 }
 
                 $tableName = pathinfo($filename, PATHINFO_FILENAME);
+
+                // Strip schema prefix for cross-server compatibility
+                // e.g., "kintsidg_1ca1_whftv.customers" → "customers"
+                if (str_contains($tableName, '.')) {
+                    $tableName = substr($tableName, strrpos($tableName, '.') + 1);
+                }
+
                 $this->progressMessage = "Restoring table: $tableName";
 
                 $json = $zip->getFromIndex($i);
