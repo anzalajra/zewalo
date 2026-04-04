@@ -93,7 +93,10 @@ if (! $isInstalled) {
     foreach ($landingPages as $uri => $data) {
         Route::get('/'.$uri, function () use ($data) {
             $centralDomains = config('tenancy.central_domains', []);
-            if (in_array(request()->getHost(), $centralDomains, true)) {
+            $host = request()->getHost();
+            // Also check without www prefix for robustness
+            $hostWithoutWww = preg_replace('/^www\./', '', $host);
+            if (in_array($host, $centralDomains, true) || in_array($hostWithoutWww, $centralDomains, true)) {
                 $viewData = [];
 
                 // Pass pricing data to pricing page

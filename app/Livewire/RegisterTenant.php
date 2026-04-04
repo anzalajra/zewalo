@@ -6,6 +6,7 @@ use App\Jobs\CreateTenantJob;
 use App\Models\Domain;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantCategory;
 use App\Services\GeoIpService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -33,9 +34,12 @@ class RegisterTenant extends Component
 
     public string $subdomain = '';
 
-    public string $business_category = '';
+    public ?int $business_category = null;
 
     public string $selected_plan_slug = 'free';
+
+    /** @var array<int, array<string, mixed>> */
+    public array $categories = [];
 
     // Step 3: Provisioning
     public bool $submitted = false;
@@ -67,6 +71,10 @@ class RegisterTenant extends Component
 
     public function mount(): void
     {
+        $this->categories = TenantCategory::active()
+            ->get(['id', 'name', 'slug', 'icon'])
+            ->toArray();
+
         $this->plans = SubscriptionPlan::active()
             ->whereIn('slug', ['free', 'basic', 'pro'])
             ->orderBy('sort_order')
@@ -155,7 +163,7 @@ class RegisterTenant extends Component
             $this->validate([
                 'store_name' => 'required|string|max:255',
                 'subdomain' => 'required|string|max:63|alpha_dash',
-                'business_category' => 'required|string',
+                'business_category' => 'required|integer|exists:central.tenant_categories,id',
                 'selected_plan_slug' => 'required|exists:subscription_plans,slug',
             ]);
 

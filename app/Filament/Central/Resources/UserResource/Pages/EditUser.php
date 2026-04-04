@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Filament\Central\Resources\UserResource\Pages;
+
+use App\Filament\Central\Resources\UserResource;
+use Filament\Actions;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Auth;
+
+class EditUser extends EditRecord
+{
+    protected static string $resource = UserResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\DeleteAction::make()
+                ->hidden(fn () => $this->record->id === Auth::id()),
+        ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
+}

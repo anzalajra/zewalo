@@ -238,14 +238,9 @@
                                     <select wire:model="business_category"
                                             class="flex-1 w-full bg-transparent px-4 py-3 text-slate-900 focus:outline-none focus:ring-0 border-none">
                                         <option value="" disabled selected>Pilih kategori rental</option>
-                                        <option value="photography">Fotografi & Videografi</option>
-                                        <option value="automotive">Kendaraan & Otomotif</option>
-                                        <option value="camping">Peralatan Camping</option>
-                                        <option value="electronics">Elektronik & Gadget</option>
-                                        <option value="wedding">Peralatan Pernikahan</option>
-                                        <option value="sports">Peralatan Olahraga</option>
-                                        <option value="music">Alat Musik & Sound System</option>
-                                        <option value="other">Lainnya</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category['id'] }}">{{ $category['name'] }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 @error('business_category') <p class="mt-1 text-sm text-red-500">{{ $message }}</p> @enderror

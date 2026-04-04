@@ -47,6 +47,7 @@ class CentralPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Central/Pages'), for: 'App\Filament\Central\Pages')
             ->pages([
                 Dashboard::class,
+                \App\Filament\Pages\Profile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Central/Widgets'), for: 'App\Filament\Central\Widgets')
             ->widgets([

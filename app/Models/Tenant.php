@@ -39,6 +39,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'current_rental_transactions_month',
         'current_rental_month',
         'region',
+        'tenant_category_id',
         'data',
     ];
 
@@ -69,6 +70,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'current_rental_transactions_month',
             'current_rental_month',
             'region',
+            'tenant_category_id',
         ];
     }
 
@@ -88,6 +90,14 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return $this->region === 'id'
             ? ['duitku', 'lemonsqueezy']
             : ['lemonsqueezy'];
+    }
+
+    /**
+     * Get the category for the tenant.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(TenantCategory::class, 'tenant_category_id');
     }
 
     /**

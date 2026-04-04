@@ -77,6 +77,13 @@ class TenantResource extends Resource
                                             ->email()
                                             ->required()
                                             ->maxLength(255),
+
+                                        Select::make('tenant_category_id')
+                                            ->label('Business Category')
+                                            ->relationship('category', 'name')
+                                            ->preload()
+                                            ->searchable()
+                                            ->nullable(),
                                     ])
                                     ->columns(2),
 
@@ -250,6 +257,13 @@ class TenantResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Category')
+                    ->badge()
+                    ->color('gray')
+                    ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('subscriptionPlan.name')

@@ -23,15 +23,23 @@ class R2StorageSettings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cloud';
+
     protected static string|UnitEnum|null $navigationGroup = 'System';
+
     protected static ?string $navigationLabel = 'R2 Storage';
+
     protected static ?string $title = 'Cloudflare R2 Storage Settings';
+
     protected static ?int $navigationSort = 100;
+
     protected string $view = 'filament.central.pages.r2-storage-settings';
 
     public ?array $data = [];
+
     public array $healthInfo = [];
+
     public array $storageStats = [];
+
     public bool $isConfigured = false;
 
     public function mount(): void
@@ -97,7 +105,7 @@ class R2StorageSettings extends Page implements HasForms
                         TextInput::make('public_url')
                             ->label('Public URL (Optional)')
                             ->placeholder('https://files.domain.com')
-                            ->helperText('URL publik jika menggunakan custom domain atau R2.dev subdomain'),
+                            ->helperText('URL publik tanpa nama bucket di path. Contoh: https://pub-xxx.r2.dev (BUKAN https://pub-xxx.r2.dev/bucket-name)'),
                         TextInput::make('region')
                             ->label('Region')
                             ->default('auto')
@@ -163,12 +171,24 @@ class R2StorageSettings extends Page implements HasForms
 
     protected function applyR2Config(): void
     {
+        $bucket = CentralSetting::get('r2_bucket');
+        $url = CentralSetting::get('r2_url');
+
+        // Sanitize URL: strip trailing bucket name to prevent duplication
+        if ($url && $bucket) {
+            $url = rtrim($url, '/');
+            $path = parse_url($url, PHP_URL_PATH) ?? '';
+            if ($path === '/'.$bucket || str_ends_with($path, '/'.$bucket)) {
+                $url = preg_replace('#/'.preg_quote($bucket, '#').'$#', '', $url);
+            }
+        }
+
         config([
             'filesystems.disks.r2.key' => CentralSetting::get('r2_access_key_id'),
             'filesystems.disks.r2.secret' => CentralSetting::get('r2_secret_access_key'),
-            'filesystems.disks.r2.bucket' => CentralSetting::get('r2_bucket'),
+            'filesystems.disks.r2.bucket' => $bucket,
             'filesystems.disks.r2.endpoint' => CentralSetting::get('r2_endpoint'),
-            'filesystems.disks.r2.url' => CentralSetting::get('r2_url'),
+            'filesystems.disks.r2.url' => $url,
             'filesystems.disks.r2.region' => CentralSetting::get('r2_region', 'auto'),
             'filesystems.disks.r2.use_path_style_endpoint' => (bool) CentralSetting::get('r2_use_path_style_endpoint', true),
         ]);
@@ -209,6 +229,7 @@ class R2StorageSettings extends Page implements HasForms
     public static function getNavigationBadge(): ?string
     {
         $service = app(R2StorageService::class);
+
         return $service->isConfigured() ? null : '!';
     }
 

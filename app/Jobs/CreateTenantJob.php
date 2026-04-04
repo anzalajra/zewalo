@@ -55,7 +55,7 @@ class CreateTenantJob implements ShouldQueue
         public string $adminPassword,
         public string $domain,
         public string $planSlug = 'free',
-        public string $businessCategory = 'other',
+        public ?int $businessCategory = null,
         public string $region = 'intl',
     ) {
         $this->onQueue('tenant-creation');
@@ -109,15 +109,13 @@ class CreateTenantJob implements ShouldQueue
                 'name' => $this->storeName,
                 'email' => $this->adminEmail,
                 'subscription_plan_id' => $plan?->id,
+                'tenant_category_id' => $this->businessCategory,
                 'status' => $initialStatus,
                 'region' => $this->region,
                 'trial_ends_at' => $trialEndsAt,
                 'subscription_ends_at' => null,
                 'current_rental_transactions_month' => 0,
                 'current_rental_month' => now()->format('Y-m'),
-                'data' => [
-                    'business_category' => $this->businessCategory,
-                ],
             ]);
 
             Log::info("CreateTenantJob: Tenant record + DB created: {$tenant->id}");

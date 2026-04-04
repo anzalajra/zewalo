@@ -41,6 +41,20 @@ class CentralSettingsServiceProvider extends ServiceProvider
                 if ($settingKey === 'r2_use_path_style_endpoint') {
                     $value = (bool) $value;
                 }
+
+                // Prevent bucket name duplication in URL
+                // If r2_url ends with the bucket name, strip it to avoid paths like bucket/bucket/
+                if ($settingKey === 'r2_url') {
+                    $bucket = $r2Settings['r2_bucket'] ?? config('filesystems.disks.r2.bucket');
+                    if ($bucket) {
+                        $value = rtrim($value, '/');
+                        $path = parse_url($value, PHP_URL_PATH) ?? '';
+                        if ($path === '/'.$bucket || str_ends_with($path, '/'.$bucket)) {
+                            $value = preg_replace('#/'.preg_quote($bucket, '#').'$#', '', $value);
+                        }
+                    }
+                }
+
                 config([$configKey => $value]);
             }
         }

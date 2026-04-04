@@ -76,7 +76,7 @@ return [
             'secret' => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
             'region' => env('CLOUDFLARE_R2_REGION', 'auto'),
             'bucket' => env('CLOUDFLARE_R2_BUCKET'),
-            'url' => env('CLOUDFLARE_R2_URL'),
+            'url' => env('CLOUDFLARE_R2_URL'), // Public URL without bucket name in path
             'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
             'use_path_style_endpoint' => env('CLOUDFLARE_R2_USE_PATH_STYLE_ENDPOINT', true),
             'visibility' => 'private',
