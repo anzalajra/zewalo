@@ -33,7 +33,7 @@
                                         <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8 p-8">
                                             <div class="col-span-8 grid grid-cols-2 gap-x-8 gap-y-6">
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/live-stock') }}\">
+                                                    href="{{ url('/feature/live-stock') }}">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">show_chart</span>
@@ -47,7 +47,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/inventory-management') }}\">
+                                                    href="{{ url('/feature/inventory-management') }}">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">inventory_2</span>
@@ -61,7 +61,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/booking-online') }}\">
+                                                    href="{{ url('/feature/booking-online') }}">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">calendar_today</span>
@@ -75,7 +75,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                                                    href=\"{{ url('/feature/quotation-invoicing') }}\">
+                                                    href="{{ url('/feature/quotation-invoicing') }}">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">description</span>
@@ -89,7 +89,7 @@
                                                     </div>
                                                 </a>
                                                 <a class="group/item flex items-start gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all col-span-2"
-                                                    href=\"{{ url('/feature/reporting') }}\">
+                                                    href="{{ url('/feature/reporting') }}">
                                                     <div
                                                         class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover/item:bg-primary group-hover/item:text-white transition-colors">
                                                         <span class="material-symbols-outlined">bar_chart</span>
