@@ -133,11 +133,15 @@ class RentalSettings extends Page implements HasForms
             'start_date' => $startDate,
             'end_date'   => $endDate,
         ];
+
+        Setting::set('holidays', json_encode(array_values($this->holidays)));
     }
 
     public function removeHoliday(int $index): void
     {
         array_splice($this->holidays, $index, 1);
+
+        Setting::set('holidays', json_encode(array_values($this->holidays)));
     }
 
     public function save(): void

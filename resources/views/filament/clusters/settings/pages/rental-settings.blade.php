@@ -73,6 +73,7 @@
 
         {{-- Custom Holiday Section --}}
         <div
+            wire:ignore
             class="mt-6 fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10"
             x-data="holidayManager(@js($this->holidays))"
             x-init="initCalendar()"
