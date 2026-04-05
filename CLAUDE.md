@@ -21,12 +21,28 @@ Zewalo is a multi-tenant SaaS rental management platform built with Laravel 12, 
 ## Development Commands
 
 ```bash
-# Full dev environment (server + queue + logs + vite)
-composer dev
+# Start localhost (http://localhost) — URUTAN WAJIB:
+# 1. Buka Docker Desktop dulu, tunggu sampai fully started
+# 2. Baru jalankan:
+docker compose -f docker-compose.dev.yml up -d
+# Akses: http://localhost (port 80, Nginx)
 
-# Or with Docker
-make dev              # Start dev containers
-make dev-down         # Stop dev containers
+# Stop dev containers
+docker compose -f docker-compose.dev.yml down
+
+# Clear cache di dalam container (bukan di host!)
+docker compose -f docker-compose.dev.yml exec app php artisan view:clear
+docker compose -f docker-compose.dev.yml exec app php artisan config:clear
+docker compose -f docker-compose.dev.yml exec app php artisan cache:clear
+
+# Run migration di dalam container
+docker compose -f docker-compose.dev.yml exec app php artisan migrate --path=database/migrations/central --database=central
+
+# CATATAN: Jangan jalankan `php artisan` langsung di host untuk clear cache,
+# karena app berjalan di dalam Docker container, bukan di host.
+
+# Full dev environment tanpa Docker (pakai XAMPP, port 8000)
+composer dev
 
 # Individual commands
 php artisan serve

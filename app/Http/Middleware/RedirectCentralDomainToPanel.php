@@ -36,6 +36,7 @@ class RedirectCentralDomainToPanel
                 str_starts_with($path, 'login-tenant') ||
                 str_starts_with($path, 'pricing') ||
                 str_starts_with($path, 'feature') ||
+                str_starts_with($path, 'solution') ||
                 str_starts_with($path, 'contact') ||
                 str_starts_with($path, 'careers') ||
                 str_starts_with($path, 'about-us') ||
