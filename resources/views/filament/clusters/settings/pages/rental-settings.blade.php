@@ -229,24 +229,25 @@
                         return;
                     }
 
+                    const name      = this.newName.trim();
                     const startDate = this.selectedStart;
                     const endDate   = this.selectedEnd || this.selectedStart;
 
-                    $wire.addHoliday(this.newName.trim(), startDate, endDate).then(() => {
-                        this.holidays = $wire.holidays;
-                    });
-
-                    // Reset form
+                    // Reset form immediately so UI feels responsive
                     this.newName       = '';
                     this.selectedStart = null;
                     this.selectedEnd   = null;
                     this.selectedRange = '';
                     if (this.fpInstance) this.fpInstance.clear();
+
+                    this.$wire.addHoliday(name, startDate, endDate).then(() => {
+                        this.holidays = this.$wire.holidays;
+                    });
                 },
 
                 removeHoliday(index) {
-                    $wire.removeHoliday(index).then(() => {
-                        this.holidays = $wire.holidays;
+                    this.$wire.removeHoliday(index).then(() => {
+                        this.holidays = this.$wire.holidays;
                     });
                 }
             };
