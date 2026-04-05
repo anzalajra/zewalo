@@ -121,9 +121,6 @@ class TenantResource extends Resource
 
                                                 try {
                                                     $dbName = 'tenant_'.$record->id;
-                                                    $user = DB::connection('central')
-                                                        ->getDoctrineConnection()
-                                                        ->getSchemaManager();
 
                                                     // Query the tenant database directly
                                                     $tenantDb = config('database.connections.tenant');

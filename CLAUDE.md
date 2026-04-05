@@ -197,6 +197,31 @@ Sistem menggunakan **Laravel Notification** (bukan Mailable class terpisah). Sem
 3. `toMail()` return `(new MailMessage)->markdown('emails.[area].[name]', [...data...])`
 4. Buat blade template di `resources/views/emails/[area]/[name].blade.php` menggunakan `<x-mail::message>`, `<x-mail::panel>`, `<x-mail::button>`
 
+## Production Environment Variables (Critical)
+
+Beberapa env var yang **wajib** di-set di production (Dokploy) agar fitur berjalan:
+
+| Key | Value | Keterangan |
+|-----|-------|-----------|
+| `QUEUE_CONNECTION` | `redis` | **Wajib.** Default-nya `database`, tapi queue worker berjalan di Redis. Tanpa ini, job seperti `CreateTenantJob` tidak pernah diproses dan tenant registration stuck di "Menunggu antrian.. 5%". |
+| `REDIS_HOST` | nama service Redis | Nama container Redis di Dokploy, contoh: `zewalo-redis-gnumoa`. Otomatis di-set oleh Dokploy. |
+
+### Tenant Registration Queue
+
+Proses pembuatan tenant (`/register-tenant` step 3) menggunakan `CreateTenantJob` yang di-dispatch ke queue **`tenant-creation`** via Redis. Queue worker di supervisord (`docker/supervisord.conf`) harus:
+1. Menggunakan connection `redis` (bukan `database`)
+2. Listen ke queue `tenant-creation,default`
+
+Jika stuck di progress 5% ("Menunggu antrian..."), cek:
+```bash
+# Verifikasi QUEUE_CONNECTION
+docker exec -it <container> php artisan config:show queue | grep "^  default"
+# Harus: default = redis (bukan database)
+
+# Monitor queue
+docker exec -it <container> php artisan queue:monitor redis:tenant-creation,redis:default
+```
+
 ## Key Conventions
 
 - The app uses Indonesian language for some user-facing routes and labels (e.g., `/masuk` for login)

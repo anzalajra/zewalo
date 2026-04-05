@@ -236,9 +236,9 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <x-filament::link-button :href="App\Filament\Pages\SubscriptionBilling::getUrl()" color="gray">
+                    <x-filament::button tag="a" :href="App\Filament\Pages\SubscriptionBilling::getUrl()" color="gray">
                         Kembali ke Billing
-                    </x-filament::link-button>
+                    </x-filament::button>
                 </div>
             </div>
         </x-filament::section>

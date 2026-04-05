@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,6 +36,10 @@ class InitializeTenancyIfApplicable
         }
 
         // Delegate to stancl's InitializeTenancyByDomain
-        return app(InitializeTenancyByDomain::class)->handle($request, $next);
+        try {
+            return app(InitializeTenancyByDomain::class)->handle($request, $next);
+        } catch (TenantCouldNotBeIdentifiedOnDomainException) {
+            abort(404, 'Toko tidak ditemukan.');
+        }
     }
 }

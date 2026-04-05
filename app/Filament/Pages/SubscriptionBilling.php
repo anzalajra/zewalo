@@ -195,8 +195,15 @@ class SubscriptionBilling extends Page
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
+            $message = $e->getMessage();
+            // Strip raw JSON/API response from user-facing message (e.g. Duitku "500 response: {...}")
+            if (preg_match('/^(.+?):\s*\d{3}\s+response:/i', $message, $m)) {
+                $message = trim($m[1]);
+            }
+
             Notification::make()
-                ->title('Gagal membuat pembayaran: '.$e->getMessage())
+                ->title('Gagal membuat pembayaran')
+                ->body($message)
                 ->danger()
                 ->send();
         }
