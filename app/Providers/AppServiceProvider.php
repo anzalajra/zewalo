@@ -84,6 +84,16 @@ class AppServiceProvider extends ServiceProvider
                     if (! empty($mailConfig)) {
                         config($mailConfig);
                     }
+
+                    // Apply AWS SES credentials when using ses or sesv2 driver
+                    if (! empty($centralMailSettings['mail_mailer']) &&
+                        in_array($centralMailSettings['mail_mailer'], ['ses', 'sesv2'])) {
+                        if (! empty($centralMailSettings['aws_access_key_id'])) {
+                            config(['services.ses.key'    => $centralMailSettings['aws_access_key_id']]);
+                            config(['services.ses.secret' => $centralMailSettings['aws_secret_access_key'] ?? null]);
+                            config(['services.ses.region' => $centralMailSettings['aws_default_region'] ?? 'ap-southeast-1']);
+                        }
+                    }
                 }
 
                 // Override from address/name with tenant-specific sender identity

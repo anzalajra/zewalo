@@ -29,12 +29,11 @@ class TenantReadyNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject("Toko Anda Siap! — {$this->storeName}")
-            ->greeting('Selamat datang di Zewalo!')
-            ->line("Toko **{$this->storeName}** Anda sudah berhasil dibuat dan siap digunakan.")
-            ->line('Akses dashboard admin toko Anda:')
-            ->action('Masuk ke Dashboard', $loginUrl)
-            ->line("Login menggunakan email: **{$this->adminEmail}**")
-            ->line("Alamat toko Anda: **{$this->domain}**")
-            ->salutation('Salam, Tim Zewalo');
+            ->markdown('emails.central.tenant-ready', [
+                'storeName'  => $this->storeName,
+                'domain'     => $this->domain,
+                'adminEmail' => $this->adminEmail,
+                'loginUrl'   => $loginUrl,
+            ]);
     }
 }

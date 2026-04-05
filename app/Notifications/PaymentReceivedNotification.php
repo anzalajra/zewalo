@@ -28,13 +28,12 @@ class PaymentReceivedNotification extends Notification
 
         return (new MailMessage)
             ->subject('Pembayaran Diterima - '.$this->invoice->invoice_number)
-            ->greeting('Halo '.($tenant->name ?? 'Tenant').',')
-            ->line('Pembayaran Anda telah berhasil diterima.')
-            ->line('**Detail Pembayaran:**')
-            ->line('Invoice: '.$this->invoice->invoice_number)
-            ->line('Jumlah: Rp '.number_format((float) $this->invoice->total, 0, ',', '.'))
-            ->line('Dibayar: '.$this->invoice->paid_at?->format('d M Y H:i'))
-            ->line('Terima kasih atas pembayaran Anda. Subscription Anda telah diperpanjang.')
-            ->action('Lihat Detail', url('/admin/subscription-billing'));
+            ->markdown('emails.central.payment-received', [
+                'tenantName'    => $tenant->name ?? 'Tenant',
+                'invoiceNumber' => $this->invoice->invoice_number,
+                'total'         => $this->invoice->total,
+                'paidAt'        => $this->invoice->paid_at?->format('d M Y H:i') ?? '-',
+                'detailUrl'     => url('/admin/subscription-billing'),
+            ]);
     }
 }

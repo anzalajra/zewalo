@@ -40,12 +40,12 @@ class CustomerResetPassword extends Notification implements ShouldQueue
         try {
             $mail = (new MailMessage)
                 ->subject($subject)
-                ->greeting('Hello '.$notifiable->name.'!')
-                ->line('You are receiving this email because we received a password reset request for your account.')
-                ->action('Reset Password', $url)
-                ->line('This password reset link will expire in 60 minutes.')
-                ->line('If you did not request a password reset, no further action is required.')
-                ->salutation('Regards, '.config('app.name'));
+                ->markdown('emails.tenant.customer-reset-password', [
+                    'customerName'  => $notifiable->name,
+                    'resetUrl'      => $url,
+                    'storeName'     => config('app.name'),
+                    'expiryMinutes' => 60,
+                ]);
 
             // Log successful send attempt
             EmailLog::logSent(

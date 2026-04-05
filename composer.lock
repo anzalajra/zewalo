@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56c0b3c2c43153a9c22a780718b32144",
+    "content-hash": "6d9c9cc8bd87b0c28f5cbb0a36ae940c",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -128,16 +128,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.371.4",
+            "version": "3.376.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "957f8a5ecc30670c95dfc37a9d04660899fc44e0"
+                "reference": "2081f8db174df4bb8842aed3b7b513590ee9d219"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/957f8a5ecc30670c95dfc37a9d04660899fc44e0",
-                "reference": "957f8a5ecc30670c95dfc37a9d04660899fc44e0",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/2081f8db174df4bb8842aed3b7b513590ee9d219",
+                "reference": "2081f8db174df4bb8842aed3b7b513590ee9d219",
                 "shasum": ""
             },
             "require": {
@@ -158,12 +158,12 @@
                 "aws/aws-php-sns-message-validator": "~1.0",
                 "behat/behat": "~3.0",
                 "composer/composer": "^2.7.8",
-                "dms/phpunit-arraysubset-asserts": "^0.4.0",
+                "dms/phpunit-arraysubset-asserts": "^v0.5.0",
                 "doctrine/cache": "~1.4",
                 "ext-dom": "*",
                 "ext-openssl": "*",
                 "ext-sockets": "*",
-                "phpunit/phpunit": "^9.6",
+                "phpunit/phpunit": "^10.0",
                 "psr/cache": "^2.0 || ^3.0",
                 "psr/simple-cache": "^2.0 || ^3.0",
                 "sebastian/comparator": "^1.2.3 || ^4.0 || ^5.0",
@@ -219,9 +219,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.371.4"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.376.3"
             },
-            "time": "2026-03-03T19:52:06+00:00"
+            "time": "2026-04-03T18:07:33+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -9082,65 +9082,6 @@
                 "source": "https://github.com/archtechx/virtualcolumn/tree/v1.5.0"
             },
             "time": "2025-02-25T13:12:44+00:00"
-        },
-        {
-            "name": "stripe/stripe-php",
-            "version": "v19.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/stripe/stripe-php.git",
-                "reference": "095384404587d07de2ad1154c389c4051c5ed92f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/095384404587d07de2ad1154c389c4051c5ed92f",
-                "reference": "095384404587d07de2ad1154c389c4051c5ed92f",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "php": ">=5.6.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "3.94.0",
-                "phpstan/phpstan": "^1.2",
-                "phpunit/phpunit": "^5.7 || ^9.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Stripe\\": "lib/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Stripe and contributors",
-                    "homepage": "https://github.com/stripe/stripe-php/contributors"
-                }
-            ],
-            "description": "Stripe PHP Library",
-            "homepage": "https://stripe.com/",
-            "keywords": [
-                "api",
-                "payment processing",
-                "stripe"
-            ],
-            "support": {
-                "issues": "https://github.com/stripe/stripe-php/issues",
-                "source": "https://github.com/stripe/stripe-php/tree/v19.4.1"
-            },
-            "time": "2026-03-06T22:53:13+00:00"
         },
         {
             "name": "symfony/cache",

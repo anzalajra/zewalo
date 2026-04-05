@@ -37,18 +37,19 @@ class InvoiceCreatedNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $customerName = $this->invoice->user?->name ?? 'Unknown';
+        $customerName = $this->invoice->user?->name ?? $this->invoice->customer?->name ?? 'Unknown';
+        $rental = $this->invoice->rental;
 
         return (new MailMessage)
-            ->subject('New Invoice Created - '.$this->invoice->number)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('A new invoice has been created.')
-            ->line('**Invoice Details:**')
-            ->line('Invoice Number: '.$this->invoice->number)
-            ->line('Customer: '.$customerName)
-            ->line('Total: Rp '.number_format($this->invoice->total, 0, ',', '.'))
-            ->line('Due Date: '.$this->invoice->due_date?->format('d M Y'))
-            ->action('View Invoice', url("/admin/invoices/{$this->invoice->id}"));
+            ->subject('Invoice Baru - '.$this->invoice->number)
+            ->markdown('emails.tenant.invoice-created', [
+                'invoiceNumber' => $this->invoice->number,
+                'rentalCode'    => $rental?->rental_code ?? '-',
+                'customerName'  => $customerName,
+                'total'         => $this->invoice->total,
+                'dueDate'       => $this->invoice->due_date?->format('d M Y') ?? '-',
+                'invoiceUrl'    => url("/admin/invoices/{$this->invoice->id}"),
+            ]);
     }
 
     public function toDatabase(object $notifiable): array

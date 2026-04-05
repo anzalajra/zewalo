@@ -36,13 +36,15 @@ class ReturnReminderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Return Reminder - '.$this->rental->rental_code)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('This is a reminder to return your rental items tomorrow.')
-            ->line('Rental Code: '.$this->rental->rental_code)
-            ->line('Return Date: '.$this->rental->end_date->format('d M Y'))
-            ->action('View Booking', url('/rentals/'.$this->rental->id))
-            ->line('Thank you for choosing Zewalo!');
+            ->subject('Pengingat Pengembalian - '.$this->rental->rental_code)
+            ->markdown('emails.tenant.return-reminder', [
+                'customerName' => $notifiable->name,
+                'rentalCode'   => $this->rental->rental_code,
+                'returnDate'   => $this->rental->end_date->format('d M Y'),
+                'location'     => Setting::get('address', config('app.name')),
+                'rentalUrl'    => url('/rentals/'.$this->rental->id),
+                'storeName'    => Setting::get('site_name', config('app.name')),
+            ]);
     }
 
     public function toDatabase(object $notifiable): array

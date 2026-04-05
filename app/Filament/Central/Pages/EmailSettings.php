@@ -9,6 +9,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -56,7 +57,7 @@ class EmailSettings extends Page implements HasForms
 
     protected static function saveSettings(array $settings): void
     {
-        $encryptedKeys = ['mail_password'];
+        $encryptedKeys = ['mail_password', 'aws_secret_access_key'];
 
         foreach ($settings as $key => $value) {
             CentralSetting::set(
@@ -73,14 +74,17 @@ class EmailSettings extends Page implements HasForms
         $saved = static::loadSettings();
 
         $this->form->fill([
-            'mail_mailer' => $saved['mail_mailer'] ?? config('mail.default'),
-            'mail_host' => $saved['mail_host'] ?? config('mail.mailers.smtp.host'),
-            'mail_port' => $saved['mail_port'] ?? config('mail.mailers.smtp.port'),
-            'mail_username' => $saved['mail_username'] ?? config('mail.mailers.smtp.username'),
-            'mail_password' => $saved['mail_password'] ?? '',
-            'mail_encryption' => $saved['mail_encryption'] ?? config('mail.mailers.smtp.encryption'),
-            'mail_from_address' => $saved['mail_from_address'] ?? config('mail.from.address'),
-            'mail_from_name' => $saved['mail_from_name'] ?? config('mail.from.name'),
+            'mail_mailer'           => $saved['mail_mailer'] ?? config('mail.default'),
+            'mail_host'             => $saved['mail_host'] ?? config('mail.mailers.smtp.host'),
+            'mail_port'             => $saved['mail_port'] ?? config('mail.mailers.smtp.port'),
+            'mail_username'         => $saved['mail_username'] ?? config('mail.mailers.smtp.username'),
+            'mail_password'         => $saved['mail_password'] ?? '',
+            'mail_encryption'       => $saved['mail_encryption'] ?? config('mail.mailers.smtp.encryption'),
+            'aws_access_key_id'     => $saved['aws_access_key_id'] ?? '',
+            'aws_secret_access_key' => $saved['aws_secret_access_key'] ?? '',
+            'aws_default_region'    => $saved['aws_default_region'] ?? 'ap-southeast-1',
+            'mail_from_address'     => $saved['mail_from_address'] ?? config('mail.from.address'),
+            'mail_from_name'        => $saved['mail_from_name'] ?? config('mail.from.name'),
         ]);
     }
 
@@ -89,21 +93,28 @@ class EmailSettings extends Page implements HasForms
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('Email Delivery Settings')
-                    ->description('Configure SMTP settings for all tenant email delivery. These settings apply globally to all tenants.')
+                Section::make('Metode Pengiriman Email')
+                    ->description('Pilih driver yang digunakan untuk mengirim semua email dari platform ini.')
                     ->schema([
                         Select::make('mail_mailer')
-                            ->label('Mailer')
+                            ->label('Mailer / Driver')
                             ->options([
-                                'smtp' => 'SMTP',
-                                'sendmail' => 'Sendmail',
+                                'smtp'    => 'SMTP',
+                                'sesv2'   => 'Amazon SES v2 (Direkomendasikan)',
+                                'ses'     => 'Amazon SES v1',
                                 'mailgun' => 'Mailgun',
-                                'ses' => 'Amazon SES',
                                 'postmark' => 'Postmark',
-                                'log' => 'Log (Testing)',
+                                'log'     => 'Log (Testing Only)',
                             ])
                             ->default('smtp')
-                            ->helperText('Driver untuk pengiriman email'),
+                            ->live()
+                            ->helperText('Driver sesv2 menggunakan Amazon SES API v2 yang lebih baru dan andal.')
+                            ->columnSpanFull(),
+                    ]),
+
+                Section::make('Konfigurasi SMTP')
+                    ->description('Isi dengan detail server SMTP yang digunakan.')
+                    ->schema([
                         TextInput::make('mail_host')
                             ->label('Host')
                             ->placeholder('smtp.gmail.com'),
@@ -118,41 +129,83 @@ class EmailSettings extends Page implements HasForms
                             ->label('Password')
                             ->password()
                             ->revealable()
-                            ->helperText('Untuk Gmail, gunakan App Password'),
+                            ->helperText('Untuk Gmail, gunakan App Password.'),
                         Select::make('mail_encryption')
-                            ->label('Encryption')
+                            ->label('Enkripsi')
                             ->options([
                                 'tls' => 'TLS',
                                 'ssl' => 'SSL',
-                                '' => 'None',
+                                ''    => 'None',
                             ])
                             ->default('tls'),
+                    ])
+                    ->columns(2)
+                    ->hidden(fn (Get $get) => $get('mail_mailer') !== 'smtp'),
+
+                Section::make('Konfigurasi Amazon SES')
+                    ->description('Masukkan kredensial AWS IAM yang memiliki izin ses:SendEmail dan ses:SendRawEmail.')
+                    ->schema([
+                        TextInput::make('aws_access_key_id')
+                            ->label('AWS Access Key ID')
+                            ->placeholder('AKIAxxxxxxxxxxxxxxxxx')
+                            ->columnSpanFull(),
+                        TextInput::make('aws_secret_access_key')
+                            ->label('AWS Secret Access Key')
+                            ->password()
+                            ->revealable()
+                            ->helperText('Disimpan terenkripsi di database.')
+                            ->columnSpanFull(),
+                        Select::make('aws_default_region')
+                            ->label('AWS Region')
+                            ->options([
+                                'ap-southeast-1' => 'Asia Pacific — Singapore (ap-southeast-1)',
+                                'ap-southeast-3' => 'Asia Pacific — Jakarta (ap-southeast-3)',
+                                'ap-northeast-1' => 'Asia Pacific — Tokyo (ap-northeast-1)',
+                                'us-east-1'      => 'US East — N. Virginia (us-east-1)',
+                                'us-west-2'      => 'US West — Oregon (us-west-2)',
+                                'eu-west-1'      => 'Europe — Ireland (eu-west-1)',
+                                'eu-central-1'   => 'Europe — Frankfurt (eu-central-1)',
+                            ])
+                            ->default('ap-southeast-1')
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2)
+                    ->hidden(fn (Get $get) => ! in_array($get('mail_mailer'), ['ses', 'sesv2'])),
+
+                Section::make('Identitas Pengirim')
+                    ->description('Alamat dan nama pengirim default. Dapat di-override per-tenant via pengaturan toko.')
+                    ->schema([
                         TextInput::make('mail_from_address')
-                            ->label('Default From Address')
-                            ->placeholder('noreply@example.com')
+                            ->label('From Address')
+                            ->placeholder('no-reply@yourdomain.com')
                             ->email()
-                            ->helperText('Fallback jika tenant belum mengatur alamat pengirim sendiri'),
+                            ->helperText('Pastikan domain/email ini sudah diverifikasi di SES jika menggunakan Amazon SES.'),
                         TextInput::make('mail_from_name')
-                            ->label('Default From Name')
+                            ->label('From Name')
                             ->placeholder('Zewalo')
-                            ->helperText('Fallback jika tenant belum mengatur nama pengirim sendiri'),
+                            ->helperText('Fallback jika tenant belum mengatur nama pengirim sendiri.'),
+                    ])->columns(2),
+
+                Section::make('Uji Koneksi')
+                    ->description('Kirim email percobaan untuk memverifikasi konfigurasi sudah benar. Pengaturan akan disimpan terlebih dahulu sebelum tes dikirim.')
+                    ->schema([
                         Actions::make([
                             Action::make('testEmail')
-                                ->label('Send Test Email')
+                                ->label('Kirim Email Test')
                                 ->icon('heroicon-o-paper-airplane')
                                 ->color('info')
                                 ->form([
                                     TextInput::make('test_email_recipient')
-                                        ->label('Email Recipient')
+                                        ->label('Alamat Email Tujuan')
                                         ->email()
                                         ->required()
-                                        ->helperText('Email address to send test email to'),
+                                        ->helperText('Jika menggunakan SES Sandbox, email penerima harus sudah diverifikasi di AWS SES Console.'),
                                 ])
                                 ->action(function (array $data) {
                                     $this->sendTestEmail($data['test_email_recipient']);
                                 }),
                         ])->columnSpanFull(),
-                    ])->columns(2),
+                    ]),
             ]);
     }
 
@@ -162,17 +215,15 @@ class EmailSettings extends Page implements HasForms
 
         try {
             static::saveSettings($data);
-
-            // Apply immediately to current request
             $this->applyMailConfig($data);
 
             Notification::make()
-                ->title('Email settings saved successfully')
+                ->title('Pengaturan email berhasil disimpan')
                 ->success()
                 ->send();
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Failed to save email settings')
+                ->title('Gagal menyimpan pengaturan email')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -182,30 +233,27 @@ class EmailSettings extends Page implements HasForms
     public function sendTestEmail(string $recipient): void
     {
         try {
-            // Save first, then apply
             $data = $this->form->getState();
             static::saveSettings($data);
             $this->applyMailConfig($data);
 
-            $subject = 'Test Email - '.config('app.name');
-            $body = 'This is a test email from '.config('app.name').".\n\n";
-            $body .= "If you received this email, your email configuration is working correctly.\n\n";
-            $body .= 'Sent at: '.now()->format('Y-m-d H:i:s');
+            $subject = '[Test Email] ' . config('app.name');
+            $body = "Ini adalah email percobaan dari " . config('app.name') . ".\n\n"
+                . "Jika kamu menerima email ini, konfigurasi email sudah berjalan dengan benar.\n\n"
+                . 'Dikirim pada: ' . now()->format('Y-m-d H:i:s');
 
             Mail::raw($body, function ($message) use ($recipient, $subject) {
-                $message->to($recipient)
-                    ->subject($subject);
+                $message->to($recipient)->subject($subject);
             });
 
             Notification::make()
-                ->title('Test email sent successfully!')
-                ->body("Email sent to {$recipient}")
+                ->title('Email test berhasil dikirim!')
+                ->body("Email dikirim ke {$recipient}")
                 ->success()
                 ->send();
-
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Failed to send test email')
+                ->title('Gagal mengirim email test')
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
@@ -215,15 +263,24 @@ class EmailSettings extends Page implements HasForms
     protected function applyMailConfig(array $data): void
     {
         $mailer = $data['mail_mailer'] ?? 'smtp';
-        $encryption = $data['mail_encryption'] ?? 'tls';
 
         Config::set('mail.default', $mailer);
-        Config::set('mail.mailers.smtp.host', $data['mail_host'] ?? null);
-        Config::set('mail.mailers.smtp.port', $data['mail_port'] ?? 587);
-        Config::set('mail.mailers.smtp.username', $data['mail_username'] ?? null);
-        Config::set('mail.mailers.smtp.password', $data['mail_password'] ?? null);
-        Config::set('mail.mailers.smtp.encryption', $encryption ?: null);
         Config::set('mail.from.address', $data['mail_from_address'] ?? null);
         Config::set('mail.from.name', $data['mail_from_name'] ?? config('app.name'));
+
+        if ($mailer === 'smtp') {
+            $encryption = $data['mail_encryption'] ?? 'tls';
+            Config::set('mail.mailers.smtp.host', $data['mail_host'] ?? null);
+            Config::set('mail.mailers.smtp.port', $data['mail_port'] ?? 587);
+            Config::set('mail.mailers.smtp.username', $data['mail_username'] ?? null);
+            Config::set('mail.mailers.smtp.password', $data['mail_password'] ?? null);
+            Config::set('mail.mailers.smtp.encryption', $encryption ?: null);
+        }
+
+        if (in_array($mailer, ['ses', 'sesv2'])) {
+            Config::set('services.ses.key', $data['aws_access_key_id'] ?? null);
+            Config::set('services.ses.secret', $data['aws_secret_access_key'] ?? null);
+            Config::set('services.ses.region', $data['aws_default_region'] ?? 'ap-southeast-1');
+        }
     }
 }

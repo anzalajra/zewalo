@@ -28,13 +28,13 @@ class SaasInvoiceCreatedNotification extends Notification
 
         return (new MailMessage)
             ->subject('Invoice Langganan Baru - '.$this->invoice->invoice_number)
-            ->greeting('Halo '.($tenant->name ?? 'Tenant').',')
-            ->line('Invoice langganan baru telah dibuat.')
-            ->line('**Detail Invoice:**')
-            ->line('Nomor: '.$this->invoice->invoice_number)
-            ->line('Jumlah: Rp '.number_format((float) $this->invoice->total, 0, ',', '.'))
-            ->line('Jatuh Tempo: '.$this->invoice->due_at->format('d M Y'))
-            ->line('Silakan lakukan pembayaran sebelum jatuh tempo untuk menghindari gangguan layanan.')
-            ->action('Bayar Sekarang', url('/admin/subscription-billing'));
+            ->markdown('emails.central.saas-invoice-created', [
+                'tenantName'    => $tenant->name ?? 'Tenant',
+                'invoiceNumber' => $this->invoice->invoice_number,
+                'period'        => $this->invoice->created_at->format('M Y'),
+                'total'         => $this->invoice->total,
+                'dueAt'         => $this->invoice->due_at->format('d M Y'),
+                'paymentUrl'    => url('/admin/subscription-billing'),
+            ]);
     }
 }

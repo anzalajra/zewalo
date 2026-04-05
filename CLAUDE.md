@@ -142,6 +142,61 @@ str_starts_with($path, 'new-section') ||
 
 > **Why this matters**: Forgetting step 2 causes the page to appear to load (URL is shown in browser status bar) but then silently redirect to homepage — a confusing bug that's hard to trace.
 
+## Email System (Amazon SES v2)
+
+### Mail Driver Configuration
+Mail driver dikonfigurasi secara dinamis melalui **Central Admin → Email Settings** (`sa.{domain}/admin/email-settings`), disimpan di model `CentralSetting` group `mail`, dan diapply saat boot via `AppServiceProvider`.
+
+**Hierarki prioritas (dari terendah ke tertinggi):**
+1. `.env` / `config/mail.php` defaults
+2. Central settings (`CentralSetting` group `mail`) — diatur via Central Admin UI
+3. Tenant-specific sender identity (`Setting` model: `mail_from_address`, `mail_from_name`)
+
+### Mengaktifkan Amazon SES v2
+1. Masuk ke Central Admin → Email Settings
+2. Pilih mailer **"Amazon SES v2"**
+3. Isi AWS Access Key ID, Secret Access Key (dienkripsi di DB), dan Region
+4. Isi From Address (harus sudah diverifikasi di AWS SES Console)
+5. Klik "Kirim Email Test" untuk verifikasi
+
+Kredensial AWS disimpan di `CentralSetting` (group `mail`) dan diapply ke `services.ses.*` saat boot. Tidak perlu env vars AWS jika sudah dikonfigurasi via UI.
+
+### Mailer yang Tersedia
+| Key | Keterangan |
+|-----|-----------|
+| `smtp` | SMTP biasa (Gmail, dll) |
+| `sesv2` | Amazon SES v2 — **direkomendasikan** |
+| `ses` | Amazon SES v1 (legacy) |
+| `mailgun` | Mailgun |
+| `postmark` | Postmark |
+| `log` | Log file saja (untuk testing) |
+
+### Email Notification Architecture
+Sistem menggunakan **Laravel Notification** (bukan Mailable class terpisah). Semua notifikasi ada di `app/Notifications/` dan menggunakan `->markdown('emails.x.y', [...])` di `toMail()`.
+
+**Central area** — dikirim dari platform ke tenant (`resources/views/emails/central/`):
+- `tenant-ready` → `TenantReadyNotification` — welcome email saat toko selesai di-provision
+- `saas-invoice-created` → `SaasInvoiceCreatedNotification` — tagihan langganan baru
+- `payment-received` → `PaymentReceivedNotification` — konfirmasi pembayaran diterima
+- `subscription-suspended` → `SubscriptionSuspendedNotification` — akun disuspend
+
+**Tenant area** — dikirim dari toko ke customer/admin (`resources/views/emails/tenant/`):
+- `new-booking` → `NewBookingNotification` — admin notif pemesanan baru
+- `booking-confirmed` → `BookingConfirmedNotification` — customer konfirmasi pemesanan
+- `delivery-out` → `DeliveryOutNotification` — surat jalan keluar
+- `delivery-in` → `DeliveryInNotification` — surat jalan masuk/pengembalian
+- `invoice-created` → `InvoiceCreatedNotification` — invoice baru
+- `customer-reset-password` → `CustomerResetPassword` — reset password customer
+- `pickup-reminder` → `PickupReminderNotification` — pengingat jadwal pengambilan
+- `return-reminder` → `ReturnReminderNotification` — pengingat jadwal pengembalian
+- `overdue-alert` → `OverdueAlertNotification` — peringatan keterlambatan
+
+### Menambah Notifikasi Baru
+1. Buat class di `app/Notifications/` yang extend `Notification`
+2. `via()` menggunakan `Setting::get('notification_email_enabled')` dan `tenant()?->hasFeature(TenantFeature::EmailNotification)` untuk mail channel
+3. `toMail()` return `(new MailMessage)->markdown('emails.[area].[name]', [...data...])`
+4. Buat blade template di `resources/views/emails/[area]/[name].blade.php` menggunakan `<x-mail::message>`, `<x-mail::panel>`, `<x-mail::button>`
+
 ## Key Conventions
 
 - The app uses Indonesian language for some user-facing routes and labels (e.g., `/masuk` for login)

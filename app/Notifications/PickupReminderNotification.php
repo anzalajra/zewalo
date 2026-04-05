@@ -36,13 +36,15 @@ class PickupReminderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Pickup Reminder - '.$this->rental->rental_code)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('This is a reminder to pick up your rental tomorrow.')
-            ->line('Rental Code: '.$this->rental->rental_code)
-            ->line('Pickup Date: '.$this->rental->start_date->format('d M Y'))
-            ->action('View Booking', url('/rentals/'.$this->rental->id))
-            ->line('Thank you for choosing Zewalo!');
+            ->subject('Pengingat Pengambilan - '.$this->rental->rental_code)
+            ->markdown('emails.tenant.pickup-reminder', [
+                'customerName' => $notifiable->name,
+                'rentalCode'   => $this->rental->rental_code,
+                'pickupDate'   => $this->rental->start_date->format('d M Y'),
+                'location'     => Setting::get('address', config('app.name')),
+                'rentalUrl'    => url('/rentals/'.$this->rental->id),
+                'storeName'    => Setting::get('site_name', config('app.name')),
+            ]);
     }
 
     public function toDatabase(object $notifiable): array

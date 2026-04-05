@@ -25,12 +25,10 @@ class SubscriptionSuspendedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Akun Anda Telah Disuspend - Zewalo')
-            ->greeting('Halo '.($this->tenant->name ?? 'Tenant').',')
-            ->line('Akun Anda telah disuspend karena belum melakukan pembayaran langganan.')
-            ->line('Anda tidak dapat mengakses panel admin hingga langganan diperpanjang.')
-            ->line('Silakan segera melakukan pembayaran untuk mengaktifkan kembali akun Anda.')
-            ->action('Perpanjang Langganan', url('/admin/subscription-billing'))
-            ->line('Jika Anda membutuhkan bantuan, silakan hubungi tim support Zewalo.');
+            ->subject('Akun Anda Telah Disuspend - '.config('app.name'))
+            ->markdown('emails.central.subscription-suspended', [
+                'tenantName' => $this->tenant->name ?? 'Tenant',
+                'paymentUrl' => url('/admin/subscription-billing'),
+            ]);
     }
 }

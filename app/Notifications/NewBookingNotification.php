@@ -51,17 +51,15 @@ class NewBookingNotification extends Notification
         $customerName = $this->rental->user?->name ?? $this->rental->customer?->name ?? 'Unknown';
 
         return (new MailMessage)
-            ->subject('New Rental Order - '.$this->rental->rental_code)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('A new rental order has been created.')
-            ->line('**Rental Details:**')
-            ->line('Rental Code: '.$this->rental->rental_code)
-            ->line('Customer: '.$customerName)
-            ->line('Start Date: '.$this->rental->start_date?->format('d M Y'))
-            ->line('End Date: '.$this->rental->end_date?->format('d M Y'))
-            ->line('Total: Rp '.number_format($this->rental->total, 0, ',', '.'))
-            ->action('View Rental', url("/admin/rentals/{$this->rental->id}"))
-            ->line('Please review and process this order.');
+            ->subject('Pemesanan Baru - '.$this->rental->rental_code)
+            ->markdown('emails.tenant.new-booking', [
+                'rentalCode'   => $this->rental->rental_code,
+                'customerName' => $customerName,
+                'startDate'    => $this->rental->start_date?->format('d M Y'),
+                'endDate'      => $this->rental->end_date?->format('d M Y'),
+                'total'        => $this->rental->total,
+                'rentalUrl'    => url("/admin/rentals/{$this->rental->id}"),
+            ]);
     }
 
     /**

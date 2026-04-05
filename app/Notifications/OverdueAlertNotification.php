@@ -38,14 +38,24 @@ class OverdueAlertNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $isCustomer = $notifiable instanceof User && ! $notifiable->hasAnyRole(['super_admin', 'admin', 'staff']);
+        $rentalUrl = $isCustomer
+            ? url('/rentals/'.$this->rental->id)
+            : url("/admin/rentals/{$this->rental->id}");
+        $overdaysDays = now()->diffInDays($this->rental->end_date);
+        $lateFee = Setting::get('late_fee_enabled') ? Setting::get('late_fee_amount') : null;
+
         return (new MailMessage)
-            ->subject('Overdue Alert - '.$this->rental->rental_code)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('Your rental is overdue! Please return the items immediately to avoid additional late fees.')
-            ->line('Rental Code: '.$this->rental->rental_code)
-            ->line('Due Date: '.$this->rental->end_date->format('d M Y'))
-            ->action('View Booking', url('/rentals/'.$this->rental->id))
-            ->line('Thank you for choosing Zewalo!');
+            ->subject('Peringatan Keterlambatan - '.$this->rental->rental_code)
+            ->markdown('emails.tenant.overdue-alert', [
+                'recipientName'  => $notifiable->name,
+                'rentalCode'     => $this->rental->rental_code,
+                'customerName'   => $this->rental->user?->name ?? $this->rental->customer?->name ?? 'Unknown',
+                'dueDate'        => $this->rental->end_date->format('d M Y'),
+                'overdaysDays'   => $overdaysDays,
+                'lateFeeAmount'  => $lateFee,
+                'rentalUrl'      => $rentalUrl,
+            ]);
     }
 
     public function toDatabase(object $notifiable): array

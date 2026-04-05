@@ -47,14 +47,16 @@ class BookingConfirmedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Booking Confirmed - '.$this->rental->rental_code)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('Your booking has been confirmed.')
-            ->line('Rental Code: '.$this->rental->rental_code)
-            ->line('Start Date: '.$this->rental->start_date->format('d M Y'))
-            ->line('End Date: '.$this->rental->end_date->format('d M Y'))
-            ->action('View Booking', url('/rentals/'.$this->rental->id))
-            ->line('Thank you for choosing Zewalo!');
+            ->subject('Pemesanan Dikonfirmasi - '.$this->rental->rental_code)
+            ->markdown('emails.tenant.booking-confirmed', [
+                'customerName' => $notifiable->name,
+                'rentalCode'   => $this->rental->rental_code,
+                'startDate'    => $this->rental->start_date->format('d M Y'),
+                'endDate'      => $this->rental->end_date->format('d M Y'),
+                'total'        => $this->rental->total,
+                'rentalUrl'    => url('/rentals/'.$this->rental->id),
+                'storeName'    => Setting::get('site_name', config('app.name')),
+            ]);
     }
 
     /**

@@ -38,18 +38,18 @@ class DeliveryOutNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $rental = $this->delivery->rental;
-        $customerName = $rental?->user?->name ?? 'Unknown';
+        $customerName = $rental?->user?->name ?? $rental?->customer?->name ?? 'Unknown';
 
         return (new MailMessage)
             ->subject('Surat Jalan Keluar - '.$this->delivery->delivery_number)
-            ->greeting('Hello '.$notifiable->name.',')
-            ->line('A delivery out (Surat Jalan Keluar) has been created.')
-            ->line('**Delivery Details:**')
-            ->line('Delivery Number: '.$this->delivery->delivery_number)
-            ->line('Rental Code: '.($rental?->rental_code ?? '-'))
-            ->line('Customer: '.$customerName)
-            ->line('Date: '.$this->delivery->date?->format('d M Y'))
-            ->action('View Delivery', url("/admin/deliveries/{$this->delivery->id}"));
+            ->markdown('emails.tenant.delivery-out', [
+                'deliveryNumber' => $this->delivery->delivery_number,
+                'rentalCode'     => $rental?->rental_code ?? '-',
+                'customerName'   => $customerName,
+                'deliveryDate'   => $this->delivery->date?->format('d M Y') ?? '-',
+                'items'          => [],
+                'deliveryUrl'    => url("/admin/deliveries/{$this->delivery->id}"),
+            ]);
     }
 
     public function toDatabase(object $notifiable): array
