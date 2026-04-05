@@ -101,7 +101,7 @@ class R2StorageSettings extends Page implements HasForms
                             ->label('R2 Endpoint URL')
                             ->required()
                             ->placeholder('https://ACCOUNT_ID.r2.cloudflarestorage.com')
-                            ->helperText('Format: https://[ACCOUNT_ID].r2.cloudflarestorage.com'),
+                            ->helperText('Format: https://[ACCOUNT_ID].r2.cloudflarestorage.com — JANGAN sertakan nama bucket di endpoint.'),
                         TextInput::make('public_url')
                             ->label('Public URL (Optional)')
                             ->placeholder('https://files.domain.com')
@@ -173,8 +173,9 @@ class R2StorageSettings extends Page implements HasForms
     {
         $bucket = CentralSetting::get('r2_bucket');
         $url = CentralSetting::get('r2_url');
+        $endpoint = CentralSetting::get('r2_endpoint');
 
-        // Sanitize URL: strip trailing bucket name to prevent duplication
+        // Sanitize public URL: strip trailing bucket name to prevent duplication
         if ($url && $bucket) {
             $url = rtrim($url, '/');
             $path = parse_url($url, PHP_URL_PATH) ?? '';
@@ -183,11 +184,20 @@ class R2StorageSettings extends Page implements HasForms
             }
         }
 
+        // Sanitize endpoint: strip trailing bucket name if accidentally included
+        if ($endpoint && $bucket) {
+            $endpoint = rtrim($endpoint, '/');
+            $path = parse_url($endpoint, PHP_URL_PATH) ?? '';
+            if ($path === '/'.$bucket || str_ends_with($path, '/'.$bucket)) {
+                $endpoint = preg_replace('#/'.preg_quote($bucket, '#').'$#', '', $endpoint);
+            }
+        }
+
         config([
             'filesystems.disks.r2.key' => CentralSetting::get('r2_access_key_id'),
             'filesystems.disks.r2.secret' => CentralSetting::get('r2_secret_access_key'),
             'filesystems.disks.r2.bucket' => $bucket,
-            'filesystems.disks.r2.endpoint' => CentralSetting::get('r2_endpoint'),
+            'filesystems.disks.r2.endpoint' => $endpoint,
             'filesystems.disks.r2.url' => $url,
             'filesystems.disks.r2.region' => CentralSetting::get('r2_region', 'auto'),
             'filesystems.disks.r2.use_path_style_endpoint' => (bool) CentralSetting::get('r2_use_path_style_endpoint', true),

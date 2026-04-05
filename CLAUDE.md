@@ -122,6 +122,26 @@ The app has a setup wizard flow (checks `storage/installed` file). Once installe
 Central models (`central` connection): `Tenant`, `Domain`, `SubscriptionPlan`
 Tenant models (default connection): `Product`, `ProductUnit`, `Rental`, `RentalItem`, `Customer`, `Invoice`, `Quotation`, `Delivery`, `Cart`, `Warehouse`, `Setting`, and finance models under `App\Models\Finance\`
 
+## Adding New Public Landing Pages (Central Domain)
+
+When adding a new public page accessible on the central domain (e.g., `/new-section/page`), **two places must be updated**:
+
+### 1. `routes/web.php`
+Add the route to the `$landingPages` array:
+```php
+'new-section/page' => ['view' => 'landing.new-section.page', 'name' => 'landing.new-section.page'],
+```
+
+### 2. `app/Http/Middleware/RedirectCentralDomainToPanel.php`
+Add the path prefix to the whitelist inside `handle()`. Without this, the middleware will redirect all unknown paths on the central domain back to `/` (homepage):
+```php
+str_starts_with($path, 'new-section') ||
+```
+
+**Current whitelisted prefixes**: `/`, `admin`, `register-tenant`, `login-tenant`, `pricing`, `feature`, `solution`, `contact`, `careers`, `about-us`, `blog`, `livewire`, `masuk`, `api/payment`, `impersonate`, `storage`, `build`, `vendor`, `css`, `js`, `fonts`, `icons`, `filament`, `_debugbar`, `up`.
+
+> **Why this matters**: Forgetting step 2 causes the page to appear to load (URL is shown in browser status bar) but then silently redirect to homepage — a confusing bug that's hard to trace.
+
 ## Key Conventions
 
 - The app uses Indonesian language for some user-facing routes and labels (e.g., `/masuk` for login)
