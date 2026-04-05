@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+         \Illuminate\Support\Facades\URL::forceScheme('https');
+         
         $this->loadMigrationsFrom(database_path('migrations/central'));
 
         Rental::observe(RentalObserver::class);

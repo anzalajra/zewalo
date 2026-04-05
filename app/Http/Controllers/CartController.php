@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\ProductUnit;
 use App\Models\Rental;
+use App\Services\RentalValidationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -77,7 +78,18 @@ class CartController extends Controller
 
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
-        
+
+        $scheduleErrors = RentalValidationService::validateRentalPeriod($startDate, $endDate);
+        if (! empty($scheduleErrors)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Jadwal tidak sesuai dengan jam operasional.',
+                    'errors'  => $scheduleErrors,
+                ], 422);
+            }
+            return back()->withErrors($scheduleErrors)->withInput();
+        }
+
         $product = \App\Models\Product::findOrFail($request->product_id);
 
         if ($request->filled('variation_id')) {
@@ -246,8 +258,20 @@ class CartController extends Controller
 
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
+
+        $scheduleErrors = RentalValidationService::validateRentalPeriod($startDate, $endDate);
+        if (! empty($scheduleErrors)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Jadwal tidak sesuai dengan jam operasional.',
+                    'errors'  => $scheduleErrors,
+                ], 422);
+            }
+            return back()->withErrors($scheduleErrors)->withInput();
+        }
+
         $days = max(1, $startDate->diffInDays($endDate));
-        
+
         $cartItems = $customer->carts()->with('productUnit.product')->get();
         $errors = [];
         $updatedCount = 0;
@@ -301,6 +325,17 @@ class CartController extends Controller
 
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date);
+
+        $scheduleErrors = RentalValidationService::validateRentalPeriod($startDate, $endDate);
+        if (! empty($scheduleErrors)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Jadwal tidak sesuai dengan jam operasional.',
+                    'errors'  => $scheduleErrors,
+                ], 422);
+            }
+            return back()->withErrors($scheduleErrors)->withInput();
+        }
 
         $cart->update([
             'start_date' => $startDate,

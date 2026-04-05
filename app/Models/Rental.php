@@ -759,10 +759,10 @@ class Rental extends Model
 
     public function validateReturn(): void
     {
-        // Check the latest Delivery IN (not the first, which may be a completed partial return)
+        // Check if all items (main units and kits) in the latest Delivery IN are checked
         $deliveryIn = $this->deliveries->where('type', Delivery::TYPE_IN)->sortByDesc('id')->first();
-
-        if (! $deliveryIn || ! $deliveryIn->allItemsChecked()) {
+        
+        if (!$deliveryIn || !$deliveryIn->allItemsChecked()) {
             throw new \Exception('All items must be checked in the Delivery Note before validating return.');
         }
 
@@ -860,25 +860,24 @@ class Rental extends Model
         }
 
         // Create or Update Delivery In (SJM)
-        // Find active (non-completed) Delivery IN to avoid re-populating completed ones
+        // Find a non-completed Delivery IN (to avoid re-populating completed partial return deliveries)
         $deliveryIn = $this->deliveries()->where('type', Delivery::TYPE_IN)
             ->where('status', '!=', Delivery::STATUS_COMPLETED)
             ->first();
 
-        if (! $deliveryIn) {
+        if (!$deliveryIn) {
             // Only create if no Delivery IN exists at all (first time)
-            $hasAnyDeliveryIn = $this->deliveries()->where('type', Delivery::TYPE_IN)->exists();
-            if ($hasAnyDeliveryIn) {
-                // All Delivery INs are completed (partial returns done), skip
+            if (!$this->deliveries()->where('type', Delivery::TYPE_IN)->exists()) {
+                $deliveryIn = Delivery::create([
+                    'rental_id' => $this->id,
+                    'type' => Delivery::TYPE_IN,
+                    'date' => $this->end_date,
+                    'status' => Delivery::STATUS_DRAFT,
+                ]);
+            } else {
+                // All Delivery INs are completed (from partial returns), nothing to sync
                 return;
             }
-
-            $deliveryIn = Delivery::create([
-                'rental_id' => $this->id,
-                'type' => Delivery::TYPE_IN,
-                'date' => $this->end_date,
-                'status' => Delivery::STATUS_DRAFT,
-            ]);
         }
 
         if ($deliveryIn->status === Delivery::STATUS_DRAFT) {

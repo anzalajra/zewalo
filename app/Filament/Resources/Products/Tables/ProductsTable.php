@@ -34,6 +34,7 @@ class ProductsTable
             ->columns([
                 \Filament\Tables\Columns\Layout\Split::make([
                     ImageColumn::make('image')
+                        ->disk('public')
                         ->square()
                         ->size(100)
                         ->extraImgAttributes([
