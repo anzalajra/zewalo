@@ -68,8 +68,6 @@ class StatsOverview extends BaseWidget
                 ->description('Awaiting document review')
                 ->descriptionIcon('heroicon-m-document-check')
                 ->color('danger'),
-        ]);
-
-        return $stats;
+        ];
     }
 }
