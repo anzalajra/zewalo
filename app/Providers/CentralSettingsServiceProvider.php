@@ -42,9 +42,9 @@ class CentralSettingsServiceProvider extends ServiceProvider
                     $value = (bool) $value;
                 }
 
-                // Prevent bucket name duplication in URL
-                // If r2_url ends with the bucket name, strip it to avoid paths like bucket/bucket/
-                if ($settingKey === 'r2_url') {
+                // Prevent bucket name duplication in URL or endpoint
+                // If r2_url/r2_endpoint ends with the bucket name, strip it to avoid paths like bucket/bucket/
+                if ($settingKey === 'r2_url' || $settingKey === 'r2_endpoint') {
                     $bucket = $r2Settings['r2_bucket'] ?? config('filesystems.disks.r2.bucket');
                     if ($bucket) {
                         $value = rtrim($value, '/');
