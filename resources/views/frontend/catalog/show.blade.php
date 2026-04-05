@@ -417,6 +417,7 @@
             const partialDates = @json($partialDates ?? []);
             const operationalDays = @json($operationalDays);
             const holidaysRaw = @json($holidays);
+            const operationalSchedule = @json($operationalSchedule ?? []);
             const holidays = [];
             holidaysRaw.forEach(h => {
                 if (h.start_date && h.end_date) {
@@ -449,6 +450,30 @@
                 if (holidays.includes(dateStr)) return true;
                 
                 return false;
+            };
+
+            // Returns {open, close, is_24h} for a date's day, or null if no schedule set
+            const getHoursForDate = function(date) {
+                const dayNum = date.getDay().toString();
+                const s = operationalSchedule[dayNum];
+                if (!s || !s.enabled) return null;
+                return { open: s.open || '00:00', close: s.close || '23:59', is_24h: !!s.is_24h };
+            };
+
+            // Apply min/max to a time input based on a date's operational hours
+            const applyTimeRestrictions = function(input, date) {
+                if (!date) { input.removeAttribute('min'); input.removeAttribute('max'); return; }
+                const hours = getHoursForDate(date);
+                if (!hours || hours.is_24h) {
+                    input.removeAttribute('min');
+                    input.removeAttribute('max');
+                    return;
+                }
+                input.min = hours.open;
+                input.max = hours.close;
+                // Clamp current value into valid range
+                if (input.value && input.value < hours.open) input.value = hours.open;
+                if (input.value && input.value > hours.close) input.value = hours.close;
             };
 
             const disableRules = [...bookedDates];
@@ -549,14 +574,8 @@
                             instance.clear();
                             return;
                         }
-                        
-                        const startDate = selectedDates[0];
-                        
-                        if (isPartialDate(startDate)) {
-                            // Partial dates have some bookings but are still available
-                            // No specific time restriction from the data, just note it's partial
-                        }
-                        pickupTimeInput.removeAttribute('min');
+
+                        applyTimeRestrictions(pickupTimeInput, selectedDates[0]);
                     }
 
                     if (selectedDates.length === 2) {
@@ -571,14 +590,16 @@
                             return;
                         }
 
+                        applyTimeRestrictions(returnTimeInput, selectedDates[1]);
+
                         selectedStart = instance.formatDate(selectedDates[0], "Y-m-d");
                         selectedEnd = instance.formatDate(selectedDates[1], "Y-m-d");
-                        
+
                         // Save to localStorage if changed
                         if (localStorage.getItem('gearent_rental_dates') !== dateStr) {
                             localStorage.setItem('gearent_rental_dates', dateStr);
                         }
-                        
+
                         updateHiddenDates();
                     }
                 },
@@ -586,6 +607,8 @@
                     if (selectedDates.length === 2) {
                         selectedStart = instance.formatDate(selectedDates[0], "Y-m-d");
                         selectedEnd = instance.formatDate(selectedDates[1], "Y-m-d");
+                        applyTimeRestrictions(pickupTimeInput, selectedDates[0]);
+                        applyTimeRestrictions(returnTimeInput, selectedDates[1]);
                         updateHiddenDates();
                     }
                 }

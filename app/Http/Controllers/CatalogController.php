@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Rental;
 use App\Models\ProductUnit;
 use App\Models\Setting;
+use App\Services\RentalValidationService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -117,10 +118,11 @@ class CatalogController extends Controller
             ->limit(4)
             ->get();
 
-        $operationalDays = array_map('strval', json_decode(Setting::get('operational_days'), true) ?? ['1', '2', '3', '4', '5', '6', '0']);
-        $holidays = json_decode(Setting::get('holidays'), true) ?? [];
+        $operationalDays     = array_map('strval', json_decode(Setting::get('operational_days'), true) ?? ['1', '2', '3', '4', '5', '6', '0']);
+        $holidays            = json_decode(Setting::get('holidays'), true) ?? [];
+        $operationalSchedule = json_decode(Setting::get('operational_schedule'), true) ?? [];
 
-        return view('frontend.catalog.show', compact('product', 'availableUnits', 'bookedDates', 'partialDates', 'relatedProducts', 'operationalDays', 'holidays'));
+        return view('frontend.catalog.show', compact('product', 'availableUnits', 'bookedDates', 'partialDates', 'relatedProducts', 'operationalDays', 'holidays', 'operationalSchedule'));
     }
 
     public function checkAvailability(Request $request, ProductUnit $unit)
@@ -132,6 +134,16 @@ class CatalogController extends Controller
 
         $startDate = \Carbon\Carbon::parse($request->start_date);
         $endDate = \Carbon\Carbon::parse($request->end_date);
+
+        $scheduleErrors = RentalValidationService::validateRentalPeriod($startDate, $endDate);
+        if (! empty($scheduleErrors)) {
+            return response()->json([
+                'available' => false,
+                'message'   => reset($scheduleErrors),
+                'errors'    => $scheduleErrors,
+            ], 422);
+        }
+
         $bufferHours = (int) Setting::get('rental_buffer_time', 0);
 
         // Check if unit is available for the given dates

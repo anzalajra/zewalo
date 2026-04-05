@@ -6,7 +6,6 @@ use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
@@ -35,18 +34,36 @@ class RentalSettings extends Page implements HasForms
 
     public array $holidays = [];
 
+    public array $operationalSchedule = [];
+
+    private const DAY_ORDER = ['1', '2', '3', '4', '5', '6', '0'];
+
+    private const DEFAULT_HOURS = ['open' => '08:00', 'close' => '17:00', 'is_24h' => false];
+
     public function mount(): void
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
 
-        // Decode JSON settings
-        if (isset($settings['operational_days'])) {
-            $settings['operational_days'] = json_decode($settings['operational_days'], true);
-        }
+        // Load holidays
         if (isset($settings['holidays'])) {
             $this->holidays = json_decode($settings['holidays'], true) ?? [];
-            unset($settings['holidays']);
         }
+
+        // Load operational schedule (new format)
+        if (isset($settings['operational_schedule'])) {
+            $this->operationalSchedule = json_decode($settings['operational_schedule'], true) ?? [];
+        } else {
+            // Migrate from old operational_days array
+            $enabledDays = array_map('strval', json_decode($settings['operational_days'] ?? '[]', true) ?? []);
+            foreach (self::DAY_ORDER as $day) {
+                $this->operationalSchedule[$day] = array_merge(self::DEFAULT_HOURS, [
+                    'enabled' => in_array($day, $enabledDays),
+                ]);
+            }
+        }
+
+        // Remove keys managed outside the Filament form
+        unset($settings['holidays'], $settings['operational_days'], $settings['operational_schedule']);
 
         $this->form->fill($settings);
     }
@@ -105,25 +122,18 @@ class RentalSettings extends Page implements HasForms
                                     ->prefix(fn ($get) => $get('late_fee_type') === 'fixed' ? 'Rp' : null)
                                     ->required(),
                             ])->columnSpanFull(),
-
-                        Section::make('Operational Schedule')
-                            ->schema([
-                                CheckboxList::make('operational_days')
-                                    ->label('Operational Days')
-                                    ->options([
-                                        '1' => 'Monday',
-                                        '2' => 'Tuesday',
-                                        '3' => 'Wednesday',
-                                        '4' => 'Thursday',
-                                        '5' => 'Friday',
-                                        '6' => 'Saturday',
-                                        '0' => 'Sunday',
-                                    ])
-                                    ->columns(3)
-                                    ->required(),
-                            ])->columnSpanFull(),
                     ]),
             ]);
+    }
+
+    public function updateSchedule(array $schedule): void
+    {
+        $this->operationalSchedule = $schedule;
+
+        $operationalDays = array_values(array_keys(array_filter($schedule, fn ($d) => $d['enabled'])));
+
+        Setting::set('operational_schedule', json_encode($schedule));
+        Setting::set('operational_days', json_encode($operationalDays));
     }
 
     public function addHoliday(string $name, string $startDate, string $endDate): void
@@ -148,13 +158,11 @@ class RentalSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        // Encode JSON fields
-        if (isset($data['operational_days'])) {
-            $data['operational_days'] = json_encode($data['operational_days']);
-        }
-
-        // Save holidays separately
-        $data['holidays'] = json_encode(array_values($this->holidays));
+        // Persist schedule and holidays alongside form data
+        $operationalDays = array_values(array_keys(array_filter($this->operationalSchedule, fn ($d) => $d['enabled'])));
+        $data['operational_schedule'] = json_encode($this->operationalSchedule);
+        $data['operational_days']     = json_encode($operationalDays);
+        $data['holidays']             = json_encode(array_values($this->holidays));
 
         foreach ($data as $key => $value) {
             Setting::set($key, $value);
