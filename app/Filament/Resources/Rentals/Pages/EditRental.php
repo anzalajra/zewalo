@@ -47,6 +47,16 @@ class EditRental extends EditRecord
         return $data;
     }
 
+    protected function handleRecordUpdate(\Illuminate\Database\Eloquent\Model $record, array $data): \Illuminate\Database\Eloquent\Model
+    {
+        // Save quietly to prevent Rental::saved event from triggering
+        // refreshUnitStatuses() — syncRentalItems() handles this more efficiently.
+        $record->fill($data);
+        $record->saveQuietly();
+
+        return $record;
+    }
+
     protected function afterSave(): void
     {
         // Sync rental items from grouped data
