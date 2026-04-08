@@ -5,6 +5,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomerDashboardController;
+use App\Http\Controllers\Frontend\ScheduleController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,10 @@ if (!$isInstalled) {
 
     // Public Routes
     Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    // Schedule
+    Route::get('/schedule', [ScheduleController::class, 'index'])->name('frontend.schedule');
+    Route::get('/schedule/events', [ScheduleController::class, 'events'])->name('frontend.schedule.events');
 
     // Catalog
     Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');

@@ -107,12 +107,16 @@
                         @endphp
 
                         @foreach($menuItems as $item)
-                            <a href="{{ $item['url'] }}" 
+                            <a href="{{ $item['url'] }}"
                                target="{{ $item['target'] }}"
                                class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium {{ request()->url() == $item['url'] ? 'text-primary-600' : '' }}">
                                 {{ $item['label'] }}
                             </a>
                         @endforeach
+                        <a href="{{ route('frontend.schedule') }}"
+                           class="text-gray-900 hover:text-primary-600 px-3 py-2 text-sm font-medium {{ request()->routeIs('frontend.schedule') ? 'text-primary-600' : '' }}">
+                            Schedule
+                        </a>
                     </div>
                 </div>
 
@@ -266,12 +270,16 @@
         <div x-show="mobileMenuOpen" class="sm:hidden" id="mobile-menu" style="display: none;">
             <div class="space-y-1 pt-2 pb-3">
                 @foreach($menuItems as $item)
-                    <a href="{{ $item['url'] }}" 
+                    <a href="{{ $item['url'] }}"
                        target="{{ $item['target'] }}"
                        class="block border-l-4 py-2 pl-3 pr-4 text-base font-medium {{ request()->url() == $item['url'] ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700' }}">
                         {{ $item['label'] }}
                     </a>
                 @endforeach
+                <a href="{{ route('frontend.schedule') }}"
+                   class="block border-l-4 py-2 pl-3 pr-4 text-base font-medium {{ request()->routeIs('frontend.schedule') ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700' }}">
+                    Schedule
+                </a>
             </div>
             <div class="border-t border-gray-200 pt-4 pb-3">
                 @auth('customer')
