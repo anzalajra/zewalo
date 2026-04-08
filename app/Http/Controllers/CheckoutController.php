@@ -398,6 +398,10 @@ class CheckoutController extends Controller
 
         $rental->load(['items.productUnit.product']);
 
-        return view('frontend.checkout.success', compact('rental'));
+        $warehousePhone = \App\Models\Setting::get('warehouse_whatsapp_number', \App\Models\Setting::get('whatsapp_number'));
+        $waMessage = "Halo admin warehouse, saya {$customer->name} ingin konfirmasi booking {$rental->rental_code}.\n\nMohon konfirmasi booking:\n" . route('filament.admin.resources.rentals.view', $rental);
+        $waLink = \App\Helpers\WhatsAppHelper::getLink($warehousePhone, $waMessage);
+
+        return view('frontend.checkout.success', compact('rental', 'waLink'));
     }
 }

@@ -81,6 +81,8 @@ if (!$isInstalled) {
         Route::put('/password', [CustomerDashboardController::class, 'updatePassword'])->name('password.update');
         Route::get('/rentals', [CustomerDashboardController::class, 'rentals'])->name('rentals');
         Route::get('/rentals/{id}', [CustomerDashboardController::class, 'rentalDetail'])->name('rental.detail');
+        Route::post('/rentals/{rental}/mark-checklist-downloaded', [CustomerDashboardController::class, 'markChecklistDownloaded'])->name('rental.mark-checklist-downloaded');
+        Route::post('/rentals/{rental}/mark-permit-clicked', [CustomerDashboardController::class, 'markPermitClicked'])->name('rental.mark-permit-clicked');
 
         // Notifications
         Route::get('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');

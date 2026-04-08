@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\WhatsAppHelper;
 use App\Models\DocumentType;
+use App\Models\Rental;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rules;
 
 class CustomerDashboardController extends Controller
@@ -145,6 +149,45 @@ class CustomerDashboardController extends Controller
             ->with(['items.productUnit.product', 'items.rentalItemKits.unitKit', 'deliveries'])
             ->findOrFail($id);
 
-        return view('frontend.dashboard.rental-detail', compact('rental'));
+        $checklistSteps = $rental->getChecklistSteps();
+        $warehousePhone = Setting::get('warehouse_whatsapp_number', Setting::get('whatsapp_number'));
+        $permitLink = Setting::get('permit_document_link', '#');
+
+        $waMessage = "Halo admin warehouse, saya {$customer->name} ingin konfirmasi booking {$rental->rental_code}.\n\nMohon konfirmasi booking:\n" . route('filament.admin.resources.rentals.view', $rental);
+        $waLink = WhatsAppHelper::getLink($warehousePhone, $waMessage);
+
+        $checklistPdfUrl = URL::signedRoute('public-documents.rental.checklist', ['rental' => $rental]);
+
+        return view('frontend.dashboard.rental-detail', compact(
+            'rental', 'checklistSteps', 'waLink', 'permitLink', 'checklistPdfUrl'
+        ));
+    }
+
+    public function markChecklistDownloaded(Rental $rental)
+    {
+        $customer = Auth::guard('customer')->user();
+        if ($rental->user_id != $customer->id) {
+            abort(403);
+        }
+
+        if (!$rental->checklist_downloaded_at) {
+            $rental->update(['checklist_downloaded_at' => now()]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function markPermitClicked(Rental $rental)
+    {
+        $customer = Auth::guard('customer')->user();
+        if ($rental->user_id != $customer->id) {
+            abort(403);
+        }
+
+        if (!$rental->permit_template_clicked_at) {
+            $rental->update(['permit_template_clicked_at' => now()]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

@@ -56,6 +56,17 @@
         @endif
     </div>
 
+    @if(!in_array($rental->status, ['completed', 'cancelled']))
+        @include('frontend.partials.administration-checklist', [
+            'steps' => $checklistSteps,
+            'waLink' => $waLink,
+            'checklistPdfUrl' => $checklistPdfUrl,
+            'permitLink' => $permitLink,
+            'rental' => $rental,
+            'context' => 'detail',
+        ])
+    @endif
+
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Rental Items</h2>
         

@@ -45,6 +45,8 @@ class Rental extends Model
         'pph_amount',
         'price_includes_tax',
         'is_taxable',
+        'checklist_downloaded_at',
+        'permit_template_clicked_at',
     ];
 
     protected $casts = [
@@ -65,6 +67,8 @@ class Rental extends Model
         'pph_amount' => 'decimal:2',
         'price_includes_tax' => 'boolean',
         'is_taxable' => 'boolean',
+        'checklist_downloaded_at' => 'datetime',
+        'permit_template_clicked_at' => 'datetime',
     ];
 
     public const STATUS_QUOTATION = 'quotation';
@@ -151,6 +155,57 @@ class Rental extends Model
         } while ($exists);
 
         return $code;
+    }
+
+    /**
+     * Get the current administration checklist step statuses.
+     * Each step returns 'completed', 'active', or 'locked'.
+     * Flow: Step 1 → Step 2 → Step 3 → Step 4 (sequential).
+     */
+    public function getChecklistSteps(): array
+    {
+        $statusOrder = [
+            self::STATUS_QUOTATION => 0,
+            self::STATUS_CONFIRMED => 1,
+            self::STATUS_ACTIVE => 2,
+            self::STATUS_COMPLETED => 3,
+            self::STATUS_CANCELLED => -1,
+            self::STATUS_LATE_PICKUP => 1,
+            self::STATUS_LATE_RETURN => 2,
+            self::STATUS_PARTIAL_RETURN => 2,
+        ];
+
+        $currentOrder = $statusOrder[$this->status] ?? 0;
+        $isCancelled = $this->status === self::STATUS_CANCELLED;
+        $isConfirmedOrAbove = $currentOrder >= 1;
+
+        // Step 1: Konfirmasi WA
+        $step1 = $isCancelled ? 'locked' : ($isConfirmedOrAbove ? 'completed' : 'active');
+
+        // Step 2: Download Checklist (requires step 1 completed)
+        $step2 = 'locked';
+        if (!$isCancelled && $isConfirmedOrAbove) {
+            $step2 = $this->checklist_downloaded_at ? 'completed' : 'active';
+        }
+
+        // Step 3: Surat Perizinan (requires step 2 completed)
+        $step3 = 'locked';
+        if (!$isCancelled && $step2 === 'completed') {
+            $step3 = $this->permit_template_clicked_at ? 'completed' : 'active';
+        }
+
+        // Step 4: Pengambilan Fisik (requires step 3 completed)
+        $step4 = 'locked';
+        if (!$isCancelled && $step3 === 'completed') {
+            $step4 = ($currentOrder >= 2) ? 'completed' : 'active';
+        }
+
+        return [
+            ['key' => 'wa_confirm', 'label' => 'Konfirmasi WA', 'status' => $step1],
+            ['key' => 'download_checklist', 'label' => 'Download Checklist', 'status' => $step2],
+            ['key' => 'permit_letter', 'label' => 'Surat Perizinan', 'status' => $step3],
+            ['key' => 'physical_pickup', 'label' => 'Pengambilan', 'status' => $step4],
+        ];
     }
 
     public function user(): BelongsTo

@@ -122,6 +122,20 @@ class RentalSettings extends Page implements HasForms
                                     ->prefix(fn ($get) => $get('late_fee_type') === 'fixed' ? 'Rp' : null)
                                     ->required(),
                             ])->columnSpanFull(),
+
+                        Section::make('Administration Checklist')
+                            ->description('Pengaturan untuk checklist administrasi customer (stepper 4 langkah).')
+                            ->schema([
+                                TextInput::make('warehouse_whatsapp_number')
+                                    ->label('Nomor WhatsApp Warehouse')
+                                    ->placeholder('6281234567890')
+                                    ->helperText('Nomor WA yang akan dihubungi customer untuk konfirmasi booking. Format: 62xxx (tanpa + atau spasi).'),
+                                TextInput::make('permit_document_link')
+                                    ->label('Link Template Surat Perizinan')
+                                    ->placeholder('https://docs.google.com/document/d/...')
+                                    ->url()
+                                    ->helperText('Link Google Docs template surat perizinan. Admin bisa mengubah link ini sewaktu-waktu.'),
+                            ])->columnSpanFull(),
                     ]),
             ]);
     }
