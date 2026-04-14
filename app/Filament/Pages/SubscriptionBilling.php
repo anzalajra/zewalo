@@ -11,6 +11,7 @@ use App\Services\Payment\SubscriptionCheckoutService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 
 class SubscriptionBilling extends Page
@@ -195,15 +196,14 @@ class SubscriptionBilling extends Page
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
-            $message = $e->getMessage();
-            // Strip raw JSON/API response from user-facing message (e.g. Duitku "500 response: {...}")
-            if (preg_match('/^(.+?):\s*\d{3}\s+response:/i', $message, $m)) {
-                $message = trim($m[1]);
-            }
+            Log::error('Subscription payment failed', [
+                'invoice' => $this->selectedInvoiceId,
+                'error' => $e->getMessage(),
+            ]);
 
             Notification::make()
                 ->title('Gagal membuat pembayaran')
-                ->body($message)
+                ->body($e->getMessage())
                 ->danger()
                 ->send();
         }

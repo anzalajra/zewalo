@@ -66,11 +66,17 @@ class DuitkuDriver implements PaymentGatewayInterface
             $result = json_decode($response, true);
 
             if (! $result || ($result['statusCode'] ?? '') !== '00') {
+                $statusCode = $result['statusCode'] ?? 'N/A';
+                $statusMessage = $result['statusMessage'] ?? $result['Message'] ?? 'Unknown error';
+
                 Log::error('Duitku createTransaction failed', [
                     'orderId' => $orderId,
+                    'statusCode' => $statusCode,
+                    'statusMessage' => $statusMessage,
                     'response' => $result,
                 ]);
-                throw new RuntimeException('Duitku payment creation failed: '.($result['statusMessage'] ?? 'Unknown error'));
+
+                throw new RuntimeException("Duitku [{$statusCode}]: {$statusMessage}");
             }
 
             return [
@@ -85,11 +91,33 @@ class DuitkuDriver implements PaymentGatewayInterface
         } catch (RuntimeException $e) {
             throw $e;
         } catch (\Throwable $e) {
+            $rawMessage = $e->getMessage();
+
+            // Parse Duitku SDK exception format: "Duitku Error: {httpCode} response: {json}"
+            $errorDetail = $rawMessage;
+            $httpCode = null;
+            if (preg_match('/^Duitku Error:\s*(\d{3})\s+response:\s*(.+)$/is', $rawMessage, $matches)) {
+                $httpCode = (int) $matches[1];
+                $responseBody = json_decode(trim($matches[2]), true);
+                if (is_array($responseBody)) {
+                    $errorDetail = $responseBody['Message']
+                        ?? $responseBody['message']
+                        ?? $responseBody['statusMessage']
+                        ?? $responseBody['error']
+                        ?? json_encode($responseBody, JSON_UNESCAPED_UNICODE);
+                } else {
+                    $errorDetail = trim($matches[2]);
+                }
+            }
+
             Log::error('Duitku createTransaction exception', [
                 'orderId' => $orderId,
-                'error' => $e->getMessage(),
+                'error' => $rawMessage,
+                'httpCode' => $httpCode,
+                'parsedDetail' => $errorDetail,
             ]);
-            throw new RuntimeException('Duitku payment creation failed: '.$e->getMessage(), 0, $e);
+
+            throw new RuntimeException('Duitku: '.$errorDetail, 0, $e);
         }
     }
 
