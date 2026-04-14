@@ -240,6 +240,8 @@ class AdminPanelProvider extends PanelProvider
                     ->applyThemeGlobally(true)
                     ->hidden(fn () => true),
                 \LaraZeus\Sky\SkyPlugin::make()
+                    ->uploadDisk('r2')
+                    ->uploadDirectory(fn () => \App\Services\Storage\TenantStorageService::getFilamentDirectory('cms'))
                     ->navigationGroupLabel('Page & Post')
                     ->hideResources([
                         \LaraZeus\Sky\Filament\Resources\PageResource::class,

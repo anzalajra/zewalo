@@ -39,7 +39,25 @@ class AppServiceProvider extends ServiceProvider
             $settings = Setting::where('key', 'like', 'doc_%')
                 ->pluck('value', 'key')
                 ->toArray();
-            
+
+            // Convert doc_logo path to base64 data URI for dompdf (can't access remote URLs)
+            if (! empty($settings['doc_logo'])) {
+                try {
+                    $logoContents = \Illuminate\Support\Facades\Storage::disk('r2')->get($settings['doc_logo']);
+                    if ($logoContents) {
+                        $mime = 'image/png';
+                        $ext = strtolower(pathinfo($settings['doc_logo'], PATHINFO_EXTENSION));
+                        $mimeMap = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'gif' => 'image/gif', 'svg' => 'image/svg+xml', 'webp' => 'image/webp'];
+                        if (isset($mimeMap[$ext])) {
+                            $mime = $mimeMap[$ext];
+                        }
+                        $settings['doc_logo_data_uri'] = 'data:' . $mime . ';base64,' . base64_encode($logoContents);
+                    }
+                } catch (\Exception $e) {
+                    // R2 not available, logo won't show in PDF
+                }
+            }
+
             $view->with('doc_settings', $settings);
         });
 

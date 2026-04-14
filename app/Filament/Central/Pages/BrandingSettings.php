@@ -75,6 +75,23 @@ class BrandingSettings extends Page implements HasForms
             $keywords = [];
         }
 
+        // Validate file paths exist on R2, clear if not found (prevents infinite loading)
+        $fileKeys = ['branding_logo', 'branding_favicon', 'branding_og_image'];
+        foreach ($fileKeys as $key) {
+            $path = $saved[$key] ?? null;
+            if ($path) {
+                try {
+                    if (! Storage::disk('r2')->exists($path)) {
+                        $saved[$key] = null;
+                        // Clean up stale setting
+                        CentralSetting::set($key, '', encrypted: false, group: 'branding');
+                    }
+                } catch (\Exception $e) {
+                    $saved[$key] = null;
+                }
+            }
+        }
+
         $this->form->fill([
             'branding_site_name'        => $saved['branding_site_name'] ?? 'Zewalo',
             'branding_site_description' => $saved['branding_site_description'] ?? '',
@@ -103,8 +120,9 @@ class BrandingSettings extends Page implements HasForms
                         FileUpload::make('branding_logo')
                             ->label('Logo')
                             ->image()
-                            ->disk('public')
-                            ->directory('branding')
+                            ->disk('r2')
+                            ->directory('central/branding')
+                            ->visibility('public')
                             ->imageResizeMode('contain')
                             ->imageCropAspectRatio(null)
                             ->maxSize(2048)
@@ -114,8 +132,9 @@ class BrandingSettings extends Page implements HasForms
                         FileUpload::make('branding_favicon')
                             ->label('Favicon')
                             ->image()
-                            ->disk('public')
-                            ->directory('branding')
+                            ->disk('r2')
+                            ->directory('central/branding')
+                            ->visibility('public')
                             ->maxSize(512)
                             ->helperText('Ikon kecil di tab browser. Rekomendasi: PNG/ICO 32x32px atau 64x64px.')
                             ->columnSpan(1),
@@ -141,8 +160,9 @@ class BrandingSettings extends Page implements HasForms
                         FileUpload::make('branding_og_image')
                             ->label('Open Graph Image')
                             ->image()
-                            ->disk('public')
-                            ->directory('branding')
+                            ->disk('r2')
+                            ->directory('central/branding')
+                            ->visibility('public')
                             ->maxSize(2048)
                             ->helperText('Gambar yang muncul saat link dibagikan di media sosial (Facebook, Twitter, WhatsApp). Rekomendasi: 1200x630px.')
                             ->columnSpanFull(),
@@ -164,7 +184,7 @@ class BrandingSettings extends Page implements HasForms
                 $newValue = $data[$key] ?? null;
 
                 if ($oldValue && $oldValue !== $newValue) {
-                    Storage::disk('public')->delete($oldValue);
+                    Storage::disk('r2')->delete($oldValue);
                 }
             }
 

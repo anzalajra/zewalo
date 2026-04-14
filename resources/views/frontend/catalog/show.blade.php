@@ -50,7 +50,7 @@
         <div>
             <div class="bg-white border border-gray-100 rounded-lg aspect-square flex items-center justify-center overflow-hidden p-4">
                 @if($product->image)
-                    <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain rounded-lg hover:scale-105 transition duration-500">
+                    <img src="{{ Storage::disk('r2')->url($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain rounded-lg hover:scale-105 transition duration-500">
                 @else
                     <span class="text-9xl">📷</span>
                 @endif
@@ -221,7 +221,7 @@
                     <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition">
                         <div class="aspect-square bg-white flex items-center justify-center p-4">
                             @if($related->image)
-                                <img src="{{ Storage::url($related->image) }}" alt="{{ $related->name }}" class="h-full w-full object-contain">
+                                <img src="{{ Storage::disk('r2')->url($related->image) }}" alt="{{ $related->name }}" class="h-full w-full object-contain">
                             @else
                                 <span class="text-4xl">📷</span>
                             @endif

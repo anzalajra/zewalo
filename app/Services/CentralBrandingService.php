@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CentralSetting;
+use Illuminate\Support\Facades\Storage;
 
 class CentralBrandingService
 {
@@ -20,21 +21,21 @@ class CentralBrandingService
     {
         $path = CentralSetting::get('branding_logo');
 
-        return $path ? asset('storage/' . $path) : null;
+        return $path ? Storage::disk('r2')->url($path) : null;
     }
 
     public static function faviconUrl(): ?string
     {
         $path = CentralSetting::get('branding_favicon');
 
-        return $path ? asset('storage/' . $path) : null;
+        return $path ? Storage::disk('r2')->url($path) : null;
     }
 
     public static function ogImageUrl(): ?string
     {
         $path = CentralSetting::get('branding_og_image');
 
-        return $path ? asset('storage/' . $path) : null;
+        return $path ? Storage::disk('r2')->url($path) : null;
     }
 
     public static function metaKeywords(): ?string

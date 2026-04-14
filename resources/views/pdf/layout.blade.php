@@ -184,8 +184,8 @@
     <header>
         <div class="header-content">
             <div class="logo-container">
-                @if(!empty($doc_settings['doc_show_logo']) && !empty($doc_settings['doc_logo']))
-                    <img src="{{ storage_path('app/public/' . $doc_settings['doc_logo']) }}" alt="Logo">
+                @if(!empty($doc_settings['doc_show_logo']) && !empty($doc_settings['doc_logo_data_uri']))
+                    <img src="{{ $doc_settings['doc_logo_data_uri'] }}" alt="Logo">
                 @else
                     <div class="company-name">{{ $doc_settings['doc_company_name'] ?? config('app.name') }}</div>
                 @endif

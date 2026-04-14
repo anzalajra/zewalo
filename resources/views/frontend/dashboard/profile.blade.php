@@ -306,7 +306,7 @@
                             <div class="ml-4">
                                 @if($uploadedDoc)
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ Storage::url($uploadedDoc->file_path) }}" target="_blank" class="text-primary-600 hover:underline text-sm">{{ __('portal.view') }}</a>
+                                        <a href="{{ Storage::disk('r2')->url($uploadedDoc->file_path) }}" target="_blank" class="text-primary-600 hover:underline text-sm">{{ __('portal.view') }}</a>
                                         @if($uploadedDoc->status !== 'approved')
                                             <button type="button" onclick="deleteDocument('{{ route('customer.documents.delete', $uploadedDoc) }}')" class="text-red-600 hover:underline text-sm">{{ __('portal.delete') }}</button>
                                         @endif

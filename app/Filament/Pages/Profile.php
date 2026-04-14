@@ -48,9 +48,7 @@ class Profile extends Page implements HasForms
                             ->label('Avatar')
                             ->image()
                             ->avatar()
-                            ->disk('public')
-                            ->directory('avatars')
-                            ->visibility('public')
+                            ->tenantDirectory('avatars')
                             ->columnSpanFull(),
 
                         TextInput::make('name')

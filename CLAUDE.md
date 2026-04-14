@@ -99,15 +99,36 @@ Defined in `config/tenancy.php`: `127.0.0.1`, `localhost`, `zewalo.test`, and `A
 ### Filament Resources (Tenant Admin Panel)
 Located in `app/Filament/Resources/` — Rentals, Products, ProductUnits, Customers, Invoices, Quotations, Deliveries, Discounts, Warehouses, etc.
 
-### Filament Clusters
+### Filament Central Admin Pages
+Located in `app/Filament/Central/Pages/` — System-level settings pages:
+- `BrandingSettings.php` — Logo, nama web, favicon, SEO meta (group: `branding`)
+- `EmailSettings.php` — SMTP/SES email config (group: `mail`)
+- `R2StorageSettings.php` — Cloudflare R2 credentials (group: `r2`)
+- `ServerSettings.php` — Read-only server health info
+- `DatabaseManagement.php` — Database operations
+- `R2FileBrowser.php` — Browse R2 storage
+- `StorageManagement.php` — Local storage management
+
+### Filament Central Admin Resources
+Located in `app/Filament/Central/Resources/`:
+- `TenantResource`, `TenantCategoryResource`, `UserResource`
+- `SubscriptionPlanResource`, `SaasInvoiceResource`
+- `PaymentGatewayResource`, `PaymentMethodResource`
+- `TranslationResource`
+
+### Filament Clusters (Tenant)
 - `app/Filament/Clusters/Finance/` — Double-entry accounting: journal entries, chart of accounts, finance transactions, tax reports, depreciation
-- `app/Filament/Clusters/Settings/` — Tenant-level settings
+- `app/Filament/Clusters/Settings/` — Tenant-level settings pages:
+  - `GeneralSettings.php` — site_name, site_logo, company info
+  - `AppearanceSettings.php` — theme_preset, theme_color, navigation_layout
+  - `DocumentLayoutSettings.php` — doc_logo, doc colors, fonts, PDF layout
 
 ### Key Services
 - `App\Services\JournalService` — Double-entry journal posting
 - `App\Services\TaxService` / `TaxReportService` — Tax calculations and reporting
 - `App\Services\PromotionService` — Discount/promotion logic
-- `App\Services\ThemeService` — Tenant theme customization
+- `App\Services\ThemeService` — Tenant theme customization (maps presets to Filament Color objects)
+- `App\Services\CentralBrandingService` — Static helper for central branding values (siteName, logoUrl, faviconUrl, ogImageUrl, metaKeywords)
 - `App\Services\Storage\` — R2/S3 storage integration
 
 ### Customer-Facing Routes (web.php)
@@ -117,10 +138,92 @@ The app has a setup wizard flow (checks `storage/installed` file). Once installe
 - Customer portal: dashboard, rentals, documents, cart, checkout
 - Tenant registration: `/register-tenant` (Livewire)
 - Central login portal: `/masuk` (Livewire)
+- Tenant login portal: `/login-tenant` (Livewire)
 
 ### Models
-Central models (`central` connection): `Tenant`, `Domain`, `SubscriptionPlan`
+Central models (`central` connection): `Tenant`, `Domain`, `SubscriptionPlan`, `CentralSetting`
 Tenant models (default connection): `Product`, `ProductUnit`, `Rental`, `RentalItem`, `Customer`, `Invoice`, `Quotation`, `Delivery`, `Cart`, `Warehouse`, `Setting`, and finance models under `App\Models\Finance\`
+
+### CentralSetting Model (`app/Models/CentralSetting.php`)
+Key-value store for platform-wide settings (central database).
+- **Table**: `central_settings` — columns: `id`, `group`, `key`, `value`, `is_encrypted`, `label`, `sort_order`
+- **Groups**: `branding` (logo, site name, SEO), `mail` (email config), `r2` (storage), `general`
+- **Methods**: `CentralSetting::get($key, $default)`, `CentralSetting::set($key, $value, $encrypted, $group)`, `CentralSetting::getGroup($group)`
+- **Caching**: 1-hour TTL per key, auto-cleared on save/delete
+- **Encryption**: Supports auto-encryption for sensitive fields (passwords, API keys)
+
+### Setting Model (`app/Models/Setting.php`) — Tenant-scoped
+Key-value store per tenant (tenant database).
+- **Table**: `settings` — columns: `id`, `group`, `key`, `value`, `type`, `label`, `description`, `sort_order`
+- **Methods**: `Setting::get($key, $default)`, `Setting::set($key, $value)`
+- **Caching**: 1-hour TTL, auto-invalidated
+- **Default groups**: `general` (site_name, site_tagline, etc.), `rental`, `whatsapp`
+
+### Providers
+- `AppServiceProvider` — Loads central migrations, registers observers, sets up View composers (PDF doc_settings, theme CSS, central branding), applies central mail & branding config, tenant-level overrides
+- `CentralSettingsServiceProvider` — Applies R2 storage settings to filesystem config at boot
+- `Filament/CentralPanelProvider` — Central admin panel config (dynamic brand from CentralSetting)
+- `Filament/AdminPanelProvider` — Tenant admin panel config (dynamic brand from Setting)
+- `TenancyServiceProvider` — Tenant lifecycle events (create/delete DB, storage folders)
+
+## Central Branding & SEO System
+
+Platform-wide branding dikelola via **Central Admin → System → Branding & SEO** (`BrandingSettings.php`), disimpan di `CentralSetting` group `branding`.
+
+### Settings Keys (group: `branding`)
+| Key | Keterangan |
+|-----|-----------|
+| `branding_site_name` | Nama platform (default: "Zewalo") |
+| `branding_site_description` | Meta description untuk SEO |
+| `branding_logo` | Logo utama (file path di disk `r2`, dir `central/branding`) |
+| `branding_favicon` | Favicon (file path di disk `r2`, dir `central/branding`) |
+| `branding_meta_keywords` | SEO keywords (comma-separated) |
+| `branding_og_image` | Open Graph image untuk social sharing (disk `r2`, dir `central/branding`) |
+
+### Hierarki Brand Name (terendah → tertinggi)
+1. `.env` `APP_NAME` / `config('app.name')` defaults
+2. `CentralSetting::get('branding_site_name')` — override `config('app.name')` di `AppServiceProvider` boot
+3. Tenant-specific `Setting::get('site_name')` — override lagi jika dalam tenant context
+
+### Bagaimana Branding Diterapkan
+- **View Composer** di `AppServiceProvider` inject `$centralBrandName`, `$centralBrandLogo`, `$centralBrandDesc`, `$centralFavicon` ke views: `layouts.landing`, `landing.partials.header`, `landing.partials.footer`, `livewire.register-tenant`, `livewire.tenant-login`
+- **Blade component** `<x-central-brand-logo>` (`resources/views/components/central-brand-logo.blade.php`) — reusable logo: tampilkan uploaded image jika ada, fallback ke inline SVG default. Props: `class`, `showName`, `nameClass`
+- **Email** otomatis ikut karena `config('app.name')` di-override dari `branding_site_name`
+- **Central Admin Panel** (`CentralPanelProvider`) — brand name, logo, favicon dinamis dari CentralSetting
+- **Landing layout** (`layouts/landing.blade.php`) — dynamic `<title>`, `<meta description>`, `<meta keywords>`, Open Graph tags, favicon
+- **Helper**: `App\Services\CentralBrandingService` — static methods: `siteName()`, `siteDescription()`, `logoUrl()`, `faviconUrl()`, `ogImageUrl()`, `metaKeywords()`, `hasLogo()`
+
+### Menambah Central Settings Page Baru
+Pattern (ikuti `EmailSettings.php` atau `BrandingSettings.php`):
+1. Buat class di `app/Filament/Central/Pages/` — extend `Page implements HasForms`, use `InteractsWithForms`
+2. Define `$navigationIcon`, `$navigationGroup = 'System'`, `$navigationSort`, `$navigationLabel`
+3. Set `$view` ke `filament.central.pages.{nama-page}`
+4. Implement `mount()` load via `CentralSetting::getGroup('group_name')`, `form()` define fields, `save()` persist via `CentralSetting::set()`
+5. Buat blade view di `resources/views/filament/central/pages/{nama-page}.blade.php` (form + submit button wrapped in `<x-filament-panels::page>`)
+6. No migration needed — `central_settings` table is flexible key-value
+
+## View Layouts & Templates
+
+### Layouts (`resources/views/layouts/`)
+| File | Digunakan Untuk |
+|------|----------------|
+| `landing.blade.php` | Landing pages (zewalo.com public pages) — SEO meta, OG tags |
+| `frontend.blade.php` | Tenant storefront (catalog, cart, checkout) — uses `Setting::get('site_name')` |
+| `guest.blade.php` | Customer auth pages (login, register) — tenant-scoped |
+| `app.blade.php` | Customer portal (dashboard, rentals) — tenant-scoped |
+
+### Landing Page Partials (`resources/views/landing/partials/`)
+- `header.blade.php` — Sticky navbar, mega menu (features, solutions), uses `<x-central-brand-logo>`
+- `footer.blade.php` — Footer links, social icons, uses `<x-central-brand-logo>`
+- `hero.blade.php` — Hero section
+
+### Livewire Auth Pages (`resources/views/livewire/`)
+- `register-tenant.blade.php` — Multi-step tenant registration form, uses `<x-central-brand-logo>`
+- `tenant-login.blade.php` — Tenant admin login, uses `<x-central-brand-logo>`
+
+### Custom Blade Components (`resources/views/components/`)
+- `central-brand-logo.blade.php` — Central platform logo (uploaded or SVG fallback)
+- `language-switcher.blade.php` — Language toggle (ID/EN)
 
 ## Adding New Public Landing Pages (Central Domain)
 
@@ -229,3 +332,7 @@ docker exec -it <container> php artisan queue:monitor redis:tenant-creation,redi
 - Products have Units (individual trackable items) and optional Variations and Components
 - Rental flow: Quotation → Confirmed → Active → Returned (with partial return support)
 - Custom customer auth system with middleware `customer.auth` and `customer.guest` (separate from admin `auth`)
+- File uploads: tenant files use `TenantFileUpload` component (`app/Filament/Components/TenantFileUpload.php`) which auto-prefixes tenant directory on R2. Central file uploads (branding) use standard `FileUpload` with `disk('r2')` and `directory('central/branding')`. **Jangan pakai `disk('public')` di production** — local storage tidak persisten di Docker, gunakan R2
+- Central vs tenant settings: use `CentralSetting` for platform-wide, `Setting` for per-tenant. Both have 1-hour cache with auto-invalidation
+- View composers in `AppServiceProvider::boot()` inject data into specific blade views (PDF settings, theme CSS vars, central branding). Wrap in try/catch for migration safety
+- `config('app.name')` is overridden at boot: first by `CentralSetting::get('branding_site_name')`, then by tenant `Setting::get('site_name')` — this cascade ensures emails and UI always show the correct name

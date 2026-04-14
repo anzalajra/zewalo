@@ -47,9 +47,7 @@ class GeneralSettings extends Page implements HasForms
                         FileUpload::make('site_logo')
                             ->label('Logo')
                             ->image()
-                            ->disk('public')
-                            ->directory('settings')
-                            ->visibility('public')
+                            ->tenantDirectory('settings')
                             ->columnSpanFull(),
                         TextInput::make('site_name')
                             ->label('Site Name')

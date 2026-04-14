@@ -44,8 +44,6 @@ class ProductForm
                     ->schema([
                         FileUpload::make('image')
                             ->image()
-                            ->disk('public')
-                            ->visibility('public')
                             ->tenantDirectory('products')
                             ->columnSpan(1),
 

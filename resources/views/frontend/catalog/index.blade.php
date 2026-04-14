@@ -149,7 +149,7 @@
                     <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition">
                         <div class="aspect-square bg-white flex items-center justify-center p-4">
                             @if($product->image)
-                                <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain">
+                                <img src="{{ Storage::disk('r2')->url($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-contain">
                             @else
                                 <span class="text-6xl">📷</span>
                             @endif

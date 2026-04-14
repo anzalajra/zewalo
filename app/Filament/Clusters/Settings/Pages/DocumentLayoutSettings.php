@@ -120,9 +120,7 @@ class DocumentLayoutSettings extends Page implements HasForms
                                                 FileUpload::make('doc_logo')
                                                     ->label('Document Logo')
                                                     ->image()
-                                                    ->disk('public')
-                                                    ->directory('settings')
-                                                    ->visibility('public'),
+                                                    ->tenantDirectory('settings'),
                                                 Toggle::make('doc_show_logo')
                                                     ->label('Show Logo on Documents')
                                                     ->default(true),

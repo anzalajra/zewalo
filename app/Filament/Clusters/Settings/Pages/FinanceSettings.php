@@ -215,8 +215,7 @@ class FinanceSettings extends Page implements HasForms
                                         FileUpload::make('digital_certificate')
                                             ->label('Digital Certificate (e-Faktur)')
                                             ->helperText('Upload your digital certificate (.p12/.pfx) for e-Faktur integration.')
-                                            ->disk('local')
-                                            ->directory('certificates')
+                                            ->tenantDirectory('certificates')
                                             ->visible(fn ($get) => $get('is_pkp')),
 
                                         Grid::make(2)->schema([
