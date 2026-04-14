@@ -3,8 +3,20 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Zewalo - Platform manajemen rental terbaik. Kelola bisnis penyewaan Anda dalam hitungan menit.">
-    <title>{{ $title ?? 'Zewalo - Platform Rental Management' }}</title>
+    <meta name="description" content="{{ $centralBrandDesc ?? 'Zewalo - Platform manajemen rental terbaik. Kelola bisnis penyewaan Anda dalam hitungan menit.' }}">
+    @if(\App\Services\CentralBrandingService::metaKeywords())
+        <meta name="keywords" content="{{ \App\Services\CentralBrandingService::metaKeywords() }}">
+    @endif
+    <meta property="og:title" content="{{ $title ?? ($centralBrandName ?? 'Zewalo') . ' - Platform Rental Management' }}">
+    <meta property="og:description" content="{{ $centralBrandDesc ?? 'Platform manajemen rental terbaik. Kelola bisnis penyewaan Anda dalam hitungan menit.' }}">
+    <meta property="og:type" content="website">
+    @if(\App\Services\CentralBrandingService::ogImageUrl())
+        <meta property="og:image" content="{{ \App\Services\CentralBrandingService::ogImageUrl() }}">
+    @endif
+    <title>{{ $title ?? ($centralBrandName ?? 'Zewalo') . ' - Platform Rental Management' }}</title>
+    @if(!empty($centralFavicon))
+        <link rel="icon" href="{{ $centralFavicon }}" type="image/png">
+    @endif
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:300,400,500,600,700,800,900|inter:300,400,500,600,700,800" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])

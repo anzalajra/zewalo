@@ -26,15 +26,36 @@ class CentralPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $brandName = 'Zewalo Central';
+        $brandLogo = null;
+        $favicon = null;
+
+        try {
+            $siteName = \App\Models\CentralSetting::get('branding_site_name');
+            if ($siteName) {
+                $brandName = $siteName . ' Central';
+            }
+            $logo = \App\Models\CentralSetting::get('branding_logo');
+            if ($logo) {
+                $brandLogo = asset('storage/' . $logo);
+            }
+            $fav = \App\Models\CentralSetting::get('branding_favicon');
+            if ($fav) {
+                $favicon = asset('storage/' . $fav);
+            }
+        } catch (\Exception $e) {
+            // Fallback to defaults if central_settings table doesn't exist yet
+        }
+
         return $panel
             ->id('central')
             ->domain('sa.'.config('app.domain', 'localhost'))
             ->path('admin')
             ->login()
             ->maxContentWidth(Width::Full)
-            ->brandName('Zewalo Central')
-            ->brandLogo(null)
-            ->favicon(null)
+            ->brandName($brandName)
+            ->brandLogo($brandLogo)
+            ->favicon($favicon)
             ->colors([
                 'primary' => Color::Indigo,
                 'danger' => Color::Red,

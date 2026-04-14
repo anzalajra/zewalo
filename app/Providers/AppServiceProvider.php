@@ -43,6 +43,23 @@ class AppServiceProvider extends ServiceProvider
             $view->with('doc_settings', $settings);
         });
 
+        // Inject Central Branding for landing/auth pages
+        View::composer(
+            ['layouts.landing', 'landing.partials.header', 'landing.partials.footer', 'livewire.register-tenant', 'livewire.tenant-login'],
+            function ($view) {
+                try {
+                    $view->with([
+                        'centralBrandName'  => \App\Services\CentralBrandingService::siteName(),
+                        'centralBrandLogo'  => \App\Services\CentralBrandingService::logoUrl(),
+                        'centralBrandDesc'  => \App\Services\CentralBrandingService::siteDescription(),
+                        'centralFavicon'    => \App\Services\CentralBrandingService::faviconUrl(),
+                    ]);
+                } catch (\Exception $e) {
+                    // central_settings table might not exist yet
+                }
+            }
+        );
+
         // Inject Theme Colors
         View::composer(['layouts.app', 'layouts.frontend', 'layouts.guest'], function ($view) {
             $primaryColor = \App\Services\ThemeService::getPrimaryColor();
@@ -56,8 +73,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         try {
+            // Apply central branding site name (base level, can be overridden by tenant)
+            $centralBrandName = \App\Models\CentralSetting::get('branding_site_name');
+            if ($centralBrandName) {
+                config(['app.name' => $centralBrandName]);
+            }
+
             if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-                // Global App Config
+                // Global App Config (tenant-level override)
                 $siteName = Setting::get('site_name');
                 if ($siteName) {
                     config(['app.name' => $siteName]);

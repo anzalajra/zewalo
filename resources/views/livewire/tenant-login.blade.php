@@ -18,10 +18,7 @@
         {{-- Logo --}}
         <div class="text-center mb-8">
             <a href="/" class="inline-flex items-center gap-2.5">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl text-white" style="background-color: #14B8A6;">
-                    <span class="material-symbols-outlined text-2xl">storefront</span>
-                </div>
-                <span class="text-2xl font-bold tracking-tight text-slate-900">Zewalo</span>
+                <x-central-brand-logo class="h-10 w-auto" :showName="true" nameClass="text-2xl font-bold tracking-tight text-slate-900" />
             </a>
         </div>
 
