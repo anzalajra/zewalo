@@ -140,7 +140,7 @@
                             @endif
                         </div>
                         @if ($method->icon)
-                            <img src="{{ $method->icon }}" alt="{{ $method->display_name }}" class="h-6">
+                            <img src="{{ $method->icon }}" alt="{{ $method->display_name }}" class="h-6" referrerpolicy="no-referrer">
                         @endif
                     </label>
                 @endforeach
@@ -186,34 +186,28 @@
                 @if (! empty($paymentInstructions['qrString']))
                     <div class="flex flex-col items-center rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
                         <p class="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">Scan QR Code</p>
-                        <div id="qrcode-container" class="rounded-lg bg-white p-3"></div>
+                        <div wire:ignore class="rounded-lg bg-white p-3">
+                            <div id="qrcode-container"></div>
+                        </div>
                     </div>
                     <p class="text-center text-sm text-gray-500 dark:text-gray-400">
                         Scan QR Code di atas menggunakan aplikasi e-wallet atau mobile banking yang mendukung QRIS.
                     </p>
                     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
                     <script>
-                        document.addEventListener('livewire:navigated', function() {
-                            const container = document.getElementById('qrcode-container');
-                            if (container) {
-                                container.innerHTML = '';
-                                new QRCode(container, {
-                                    text: @js($paymentInstructions['qrString']),
-                                    width: 200,
-                                    height: 200,
-                                });
+                        (function initQr() {
+                            var container = document.getElementById('qrcode-container');
+                            if (!container) return;
+                            if (typeof QRCode === 'undefined') {
+                                setTimeout(initQr, 100);
+                                return;
                             }
-                        });
-                        (function() {
-                            const container = document.getElementById('qrcode-container');
-                            if (container) {
-                                container.innerHTML = '';
-                                new QRCode(container, {
-                                    text: @js($paymentInstructions['qrString']),
-                                    width: 200,
-                                    height: 200,
-                                });
-                            }
+                            container.innerHTML = '';
+                            new QRCode(container, {
+                                text: @js($paymentInstructions['qrString']),
+                                width: 200,
+                                height: 200,
+                            });
                         })();
                     </script>
                 @endif
