@@ -1,7 +1,12 @@
 @props(['class' => 'h-8 w-auto', 'showName' => true, 'nameClass' => 'text-xl font-bold tracking-tight'])
 
-@if(!empty($centralBrandLogo))
-    <img src="{{ $centralBrandLogo }}" alt="{{ $centralBrandName ?? 'Zewalo' }}" class="{{ $class }}">
+@php
+    $logoUrl = \App\Services\CentralBrandingService::logoUrl();
+    $brandName = \App\Services\CentralBrandingService::siteName();
+@endphp
+
+@if($logoUrl)
+    <img src="{{ $logoUrl }}" alt="{{ $brandName }}" class="{{ $class }}">
 @else
     <div class="text-primary">
         <svg class="{{ $class }}" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -10,5 +15,5 @@
     </div>
 @endif
 @if($showName)
-    <span class="{{ $nameClass }}">{{ $centralBrandName ?? 'Zewalo' }}</span>
+    <span class="{{ $nameClass }}">{{ $brandName }}</span>
 @endif
