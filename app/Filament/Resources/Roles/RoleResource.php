@@ -36,7 +36,12 @@ class RoleResource extends Resource
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Admin & Roles';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.admin_roles');
+    }
 
     // protected static bool $shouldRegisterNavigation = false;
 

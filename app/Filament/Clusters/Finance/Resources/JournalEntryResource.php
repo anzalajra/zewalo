@@ -35,13 +35,28 @@ class JournalEntryResource extends Resource
 
     protected static ?string $cluster = FinanceCluster::class;
 
-    protected static ?string $navigationLabel = 'Journal Entries';
-    
-    protected static ?string $modelLabel = 'Journal Entry';
-    
-    protected static ?string $pluralModelLabel = 'Journal Entries';
+    protected static ?string $navigationLabel = null;
+
+    protected static ?string $modelLabel = null;
+
+    protected static ?string $pluralModelLabel = null;
     
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.journal_entry.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.journal_entry.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.journal_entry.plural_label');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

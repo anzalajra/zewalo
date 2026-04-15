@@ -24,7 +24,12 @@ class RentalSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationLabel = 'Rental Settings';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.rental_settings.nav_label');
+    }
 
     protected static ?int $navigationSort = 2;
 

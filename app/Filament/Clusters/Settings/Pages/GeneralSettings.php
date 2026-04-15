@@ -22,7 +22,12 @@ class GeneralSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-storefront';
 
-    protected static ?string $navigationLabel = 'Business Information';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.general_settings.nav_label');
+    }
 
     protected static ?int $navigationSort = 1;
 

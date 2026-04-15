@@ -31,7 +31,12 @@ class RegistrationSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-plus';
 
-    protected static ?string $navigationLabel = 'Registration & Verification';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.registration.nav_label');
+    }
 
     protected static ?int $navigationSort = 4;
 

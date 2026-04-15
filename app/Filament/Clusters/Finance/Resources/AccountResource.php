@@ -26,13 +26,28 @@ class AccountResource extends Resource
 
     protected static ?string $cluster = FinanceCluster::class;
 
-    protected static ?string $navigationLabel = 'Chart of Accounts';
-    
-    protected static ?string $modelLabel = 'Account';
-    
-    protected static ?string $pluralModelLabel = 'Chart of Accounts';
+    protected static ?string $navigationLabel = null;
+
+    protected static ?string $modelLabel = null;
+
+    protected static ?string $pluralModelLabel = null;
     
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.chart_of_accounts.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.chart_of_accounts.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.chart_of_accounts.plural_label');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

@@ -17,9 +17,24 @@ use UnitEnum;
 class R2FileBrowser extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-folder-open';
-    protected static string|UnitEnum|null $navigationGroup = 'System';
-    protected static ?string $navigationLabel = 'File Browser';
-    protected static ?string $title = 'R2 File Browser';
+    protected static string|UnitEnum|null $navigationGroup = null;
+    protected static ?string $navigationLabel = null;
+    protected static ?string $title = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.file_browser.nav_label');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.file_browser.title');
+    }
     protected static ?int $navigationSort = 101;
     protected string $view = 'filament.central.pages.r2-file-browser';
 

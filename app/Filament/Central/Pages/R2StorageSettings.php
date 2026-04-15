@@ -24,11 +24,26 @@ class R2StorageSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cloud';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?string $navigationLabel = 'R2 Storage';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $title = 'Cloudflare R2 Storage Settings';
+    protected static ?string $title = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.r2_storage.nav_label');
+    }
+
+    public function getTitle(): string
+    {
+        return __('admin.r2_storage.title');
+    }
 
     protected static ?int $navigationSort = 100;
 

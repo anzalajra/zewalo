@@ -34,11 +34,16 @@ class CustomerDeposits extends Page implements HasTable
 
     protected static ?string $cluster = FinanceCluster::class;
 
-    protected static ?string $navigationLabel = 'Customer Deposits';
+    protected static ?string $navigationLabel = null;
     
     protected static ?string $title = 'Customer Deposits Control';
 
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.customer_deposit.nav_label');
+    }
 
     protected function getHeaderWidgets(): array
     {

@@ -23,7 +23,12 @@ class NotificationSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-bell';
 
-    protected static ?string $navigationLabel = 'Notification & WhatsApp';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.notification_settings.nav_label');
+    }
 
     protected static ?int $navigationSort = 3;
 

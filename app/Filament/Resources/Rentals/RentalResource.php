@@ -28,11 +28,21 @@ class RentalResource extends Resource
     // Navigation Configuration
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
     
-    protected static string|UnitEnum|null $navigationGroup = 'Rentals';
-    
+    protected static string|UnitEnum|null $navigationGroup = null;
+
     protected static ?int $navigationSort = 1;
-    
-    protected static ?string $navigationLabel = 'Rentals';
+
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.rentals');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.rental.nav_label');
+    }
 
     public static function getNavigationBadge(): ?string
     {
@@ -56,8 +66,8 @@ class RentalResource extends Resource
         $late = static::getModel()::whereIn('status', [Rental::STATUS_LATE_PICKUP, Rental::STATUS_LATE_RETURN])->count();
         
         $parts = [];
-        if ($quotation > 0) $parts[] = "{$quotation} Quotation";
-        if ($late > 0) $parts[] = "{$late} Late Rental";
+        if ($quotation > 0) $parts[] = "{$quotation} " . __('admin.rental.badge_quotation');
+        if ($late > 0) $parts[] = "{$late} " . __('admin.rental.badge_late');
         
         return implode(' & ', $parts);
     }

@@ -22,7 +22,12 @@ class PaymentSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static ?string $navigationLabel = 'Payment';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.payment_settings.nav_label');
+    }
 
     protected static ?int $navigationSort = 3;
 

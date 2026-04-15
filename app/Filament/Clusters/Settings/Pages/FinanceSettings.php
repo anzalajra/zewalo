@@ -36,7 +36,12 @@ class FinanceSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
 
-    protected static ?string $navigationLabel = 'Finance';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.finance_settings.nav_label');
+    }
 
     protected static ?int $navigationSort = 2;
 

@@ -24,7 +24,12 @@ class CustomerCategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Customer Categories';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.customer_category.nav_group');
+    }
 
     protected static ?int $navigationSort = 4;
 

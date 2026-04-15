@@ -24,9 +24,19 @@ class TranslationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Content Management';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?string $navigationLabel = 'Translations';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.content_management');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.translation.nav_label');
+    }
 
     protected static ?int $navigationSort = 1;
 

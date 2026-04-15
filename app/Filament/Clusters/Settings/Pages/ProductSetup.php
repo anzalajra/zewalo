@@ -31,7 +31,12 @@ class ProductSetup extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static ?string $navigationLabel = 'Product Setup';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.product_setup.nav_label');
+    }
 
     protected static ?int $navigationSort = 6;
 

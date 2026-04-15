@@ -30,11 +30,16 @@ class FinancialReports extends Page
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-chart-pie';
 
-    protected static ?string $navigationLabel = 'Reports';
+    protected static ?string $navigationLabel = null;
     
     protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.clusters.finance.pages.financial-reports';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.financial_reports.nav_label');
+    }
 #[Url]
     public $activeTab = 'profit_loss';
 

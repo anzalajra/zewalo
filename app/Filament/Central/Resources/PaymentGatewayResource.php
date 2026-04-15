@@ -25,11 +25,21 @@ class PaymentGatewayResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-library';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $navigationLabel = 'Payment Gateways';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.payment_gateway.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -17,7 +17,12 @@ class DatabaseManagement extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-circle-stack';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
 
     protected static ?int $navigationSort = 12;
 

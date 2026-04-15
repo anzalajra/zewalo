@@ -21,9 +21,19 @@ class CustomerResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $modelLabel = 'Customer';
+    protected static ?string $modelLabel = null;
 
-    protected static ?string $pluralModelLabel = 'Customers';
+    protected static ?string $pluralModelLabel = null;
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.customer.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.customer.plural_label');
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -35,11 +45,21 @@ class CustomerResource extends Resource
     // Navigation Configuration
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Rentals';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 4;
 
-    protected static ?string $navigationLabel = 'Customers';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.rentals');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.customer.nav_label');
+    }
 
     public static function getNavigationBadge(): ?string
     {
@@ -48,7 +68,7 @@ class CustomerResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return static::getModel()::where('is_verified', false)->count().' need verification';
+        return static::getModel()::where('is_verified', false)->count().' '.__('admin.customer.badge_need_verification');
     }
 
     public static function form(Schema $schema): Schema

@@ -24,14 +24,24 @@ class FinanceAccountResource extends Resource
 
     protected static ?string $cluster = FinanceCluster::class;
 
-    protected static ?string $navigationLabel = 'Cash & Bank';
-    protected static ?string $modelLabel = 'Cash & Bank';
+    protected static ?string $navigationLabel = null;
+    protected static ?string $modelLabel = null;
     protected static ?string $slug = 'cash-and-bank';
     protected static ?int $navigationSort = 1;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wallet';
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.finance_account.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.finance_account.model_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

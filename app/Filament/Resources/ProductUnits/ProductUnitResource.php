@@ -44,11 +44,21 @@ class ProductUnitResource extends Resource
     // Navigation Configuration
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Inventory';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $navigationLabel = 'Product Unit';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.inventory');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.product_unit.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -25,9 +25,19 @@ class DocumentTypeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Setting';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?string $navigationLabel = 'Document Types';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.document_type.nav_group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.document_type.nav_label');
+    }
 
     protected static ?int $navigationSort = 2;
 

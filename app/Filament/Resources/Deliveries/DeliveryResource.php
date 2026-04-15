@@ -28,11 +28,21 @@ class DeliveryResource extends Resource
     // Navigation Configuration
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Rentals';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $navigationLabel = 'Deliveries';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.rentals');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.delivery.nav_label');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

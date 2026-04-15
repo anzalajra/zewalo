@@ -29,9 +29,19 @@ class DailyDiscountResource extends Resource
 
     protected static ?string $slug = 'daily-discounts';
 
-    protected static ?string $modelLabel = 'Daily Discount';
+    protected static ?string $modelLabel = null;
 
-    protected static ?string $pluralModelLabel = 'Daily Discounts';
+    protected static ?string $pluralModelLabel = null;
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.daily_discount.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.daily_discount.plural_label');
+    }
 
     public static function canAccess(): bool
     {

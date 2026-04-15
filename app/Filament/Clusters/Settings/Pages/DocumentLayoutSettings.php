@@ -38,7 +38,12 @@ class DocumentLayoutSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Document Layout';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.doc_layout.nav_label');
+    }
 
     protected static ?int $navigationSort = 7;
 

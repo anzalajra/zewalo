@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(xargs grep -l \"HasAvatars\\\\|getFilamentAvatarUrl\\\\|avatar_url\\\\|profile_photo\")",
-      "Bash(xargs grep -l \"filament\")"
+      "Bash(xargs grep -l \"filament\")",
+      "Bash(php -l app/Filament/Resources/Products/ProductResource.php)",
+      "Bash(php -l app/Filament/Resources/Rentals/RentalResource.php)",
+      "Bash(php -l app/Filament/Resources/Customers/CustomerResource.php)",
+      "Bash(php -l app/Filament/Central/Resources/TenantResource.php)",
+      "Bash(php -l app/Filament/Central/Pages/BrandingSettings.php)",
+      "Bash(php -l app/Providers/Filament/CentralPanelProvider.php)",
+      "Bash(php -l app/Providers/Filament/AdminPanelProvider.php)",
+      "Bash(php -l app/Filament/Clusters/Settings/Pages/AppearanceSettings.php)"
     ]
   }
 }

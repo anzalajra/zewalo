@@ -24,12 +24,17 @@ class FinanceTransactionResource extends Resource
 
     protected static ?string $slug = 'simple-transactions';
 
-    protected static ?string $navigationLabel = 'Journal Entries';
+    protected static ?string $navigationLabel = null;
     protected static ?int $navigationSort = 2;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
     protected static ?string $recordTitleAttribute = 'description';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.finance_transaction.nav_label');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

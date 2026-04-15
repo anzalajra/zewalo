@@ -29,7 +29,13 @@ class BackupAndRestore extends Page implements HasTable
 
     protected static ?string $cluster = SettingsCluster::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-path-rounded-square';
-    protected static ?string $navigationLabel = 'Backup & Restore';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.backup.nav_label');
+    }
+
     protected static ?int $navigationSort = 10;
     protected string $view = 'filament.clusters.settings.pages.backup-and-restore';
 

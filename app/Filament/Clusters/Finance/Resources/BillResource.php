@@ -27,11 +27,16 @@ class BillResource extends Resource
 
     protected static ?string $cluster = FinanceCluster::class;
 
-    protected static ?string $navigationLabel = 'Accounts Payable';
+    protected static ?string $navigationLabel = null;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.bill.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

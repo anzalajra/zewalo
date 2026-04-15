@@ -23,7 +23,12 @@ class AppearanceSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-paint-brush';
 
-    protected static ?string $navigationLabel = 'Appearance';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.appearance.nav_label');
+    }
 
     protected static ?int $navigationSort = 5;
 
@@ -43,7 +48,7 @@ class AppearanceSettings extends Page implements HasForms
             ->statePath('data')
             ->components([
                 ToggleButtons::make('theme_preset')
-                    ->label('Theme Preset')
+                    ->label(__('admin.appearance.theme_preset'))
                     ->options([
                         'default' => new HtmlString('<div class="w-6 h-6 rounded-full bg-gray-900 border border-gray-200" title="Default"></div>'),
                         'slate' => new HtmlString('<div class="w-6 h-6 rounded-full" style="background-color: #64748b;" title="Slate"></div>'),
@@ -75,23 +80,35 @@ class AppearanceSettings extends Page implements HasForms
                     ->live()
                     ->required(),
                 ColorPicker::make('theme_color')
-                    ->label('Custom Color')
+                    ->label(__('admin.appearance.custom_color'))
                     ->helperText('Select a custom primary color for the admin panel.')
                     ->visible(fn ($get) => $get('theme_preset') === 'custom')
                     ->required(fn ($get) => $get('theme_preset') === 'custom')
                     ->columnSpanFull(),
                 ToggleButtons::make('navigation_layout')
-                    ->label('Navigation Layout')
+                    ->label(__('admin.appearance.nav_layout'))
                     ->options([
-                        'sidebar' => 'Sidebar',
-                        'top' => 'Top Navigation',
+                        'sidebar' => __('admin.appearance.layout_sidebar'),
+                        'top' => __('admin.appearance.layout_top'),
                     ])
                     ->icons([
                         'sidebar' => 'heroicon-o-bars-3-bottom-left',
                         'top' => 'heroicon-o-bars-3',
                     ])
-                    ->helperText('Pilihan ini untuk tampilan desktop. Pada perangkat mobile, navigasi akan otomatis berubah ke Top Navigation.')
                     ->default('sidebar')
+                    ->inline()
+                    ->required(),
+                ToggleButtons::make('locale')
+                    ->label(__('admin.language.label'))
+                    ->options([
+                        'id' => '🇮🇩 ' . __('admin.language.indonesian'),
+                        'en' => '🇬🇧 ' . __('admin.language.english'),
+                    ])
+                    ->icons([
+                        'id' => 'heroicon-o-language',
+                        'en' => 'heroicon-o-language',
+                    ])
+                    ->default(app()->getLocale())
                     ->inline()
                     ->required(),
             ]);
@@ -100,13 +117,20 @@ class AppearanceSettings extends Page implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
-        
+
         foreach ($data as $key => $value) {
             Setting::set($key, $value);
         }
 
+        // Apply locale immediately if changed
+        if (isset($data['locale']) && in_array($data['locale'], ['id', 'en'])) {
+            app()->setLocale($data['locale']);
+            session(['locale' => $data['locale']]);
+            cookie()->queue('zewalo_locale', $data['locale'], 60 * 24 * 365);
+        }
+
         Notification::make()
-            ->title('Settings saved successfully')
+            ->title(__('admin.common.settings_saved'))
             ->success()
             ->send();
 

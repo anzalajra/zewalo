@@ -24,9 +24,19 @@ class WarehouseResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-building-office';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Inventory';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?string $navigationLabel = 'Warehouse';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.inventory');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.warehouse.nav_label');
+    }
 
     protected static ?string $recordTitleAttribute = 'warehouse';
 

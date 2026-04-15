@@ -101,6 +101,10 @@ class CentralPanelProvider extends PanelProvider
                     ->label('My Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => \App\Filament\Pages\Profile::getUrl()),
+                MenuItem::make()
+                    ->label(fn () => app()->getLocale() === 'id' ? '🇬🇧 English' : '🇮🇩 Bahasa Indonesia')
+                    ->icon('heroicon-o-language')
+                    ->url(fn () => request()->fullUrlWithQuery(['lang' => app()->getLocale() === 'id' ? 'en' : 'id'])),
             ]);
     }
 }

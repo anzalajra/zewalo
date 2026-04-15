@@ -30,14 +30,24 @@ class DatePromotionResource extends Resource
 
     protected static ?string $slug = 'date-promotions';
 
-    protected static ?string $modelLabel = 'Date Promotion';
+    protected static ?string $modelLabel = null;
 
     public static function canAccess(): bool
     {
         return static::tenantHasFeature(TenantFeature::Promotion);
     }
 
-    protected static ?string $pluralModelLabel = 'Date Promotions';
+    protected static ?string $pluralModelLabel = null;
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.date_promotion.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.date_promotion.plural_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

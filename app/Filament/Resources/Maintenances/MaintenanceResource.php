@@ -31,9 +31,19 @@ class MaintenanceResource extends Resource
 
     protected static ?string $model = ProductUnit::class;
 
-    protected static ?string $label = 'Maintenance';
+    protected static ?string $label = null;
 
-    protected static ?string $pluralLabel = 'Maintenance & QC';
+    protected static ?string $pluralLabel = null;
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.maintenance.label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.maintenance.plural_label');
+    }
     // protected static ?string $navigationGroup = 'Inventory';
     // protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
@@ -44,7 +54,7 @@ class MaintenanceResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Inventory';
+        return __('admin.nav.inventory');
     }
 
     public static function getNavigationSort(): ?int

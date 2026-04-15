@@ -39,7 +39,12 @@ class InvoiceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-currency-dollar';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sales';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.sales');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

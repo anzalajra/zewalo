@@ -23,11 +23,21 @@ class BrandingSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-paint-brush';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 9;
 
-    protected static ?string $navigationLabel = 'Branding & SEO';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.branding.nav_label');
+    }
 
     protected string $view = 'filament.central.pages.branding-settings';
 

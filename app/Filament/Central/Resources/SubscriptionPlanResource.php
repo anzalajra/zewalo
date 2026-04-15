@@ -30,7 +30,12 @@ class SubscriptionPlanResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-credit-card';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tenant Management';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.tenant_management');
+    }
 
     protected static ?int $navigationSort = 2;
 

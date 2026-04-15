@@ -29,11 +29,16 @@ class AccountsReceivable extends Page implements HasTable
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-trending-down';
 
-    protected static ?string $navigationLabel = 'Accounts Receivable';
+    protected static ?string $navigationLabel = null;
 
     protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.clusters.finance.pages.accounts-receivable';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.accounts_receivable.nav_label');
+    }
 
     public function table(Table $table): Table
     {

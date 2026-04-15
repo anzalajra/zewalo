@@ -29,9 +29,19 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Admin & Roles';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
-    protected static ?string $navigationLabel = 'Admins & Staff';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.admin_roles');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.staff.nav_label');
+    }
 
     protected static ?string $recordTitleAttribute = 'name';
 

@@ -25,11 +25,21 @@ class PaymentMethodResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
 
     protected static ?int $navigationSort = 11;
 
-    protected static ?string $navigationLabel = 'Payment Methods';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.payment_method_central.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

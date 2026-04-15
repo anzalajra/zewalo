@@ -173,7 +173,20 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Subscription & Billing')
                     ->icon('heroicon-o-credit-card')
                     ->url(fn (): string => \App\Filament\Pages\SubscriptionBilling::getUrl()),
-            ]);
+            ])
+            ->bootUsing(function () {
+                // Apply tenant locale setting if available
+                try {
+                    if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                        $tenantLocale = Setting::get('locale');
+                        if ($tenantLocale && in_array($tenantLocale, ['id', 'en'])) {
+                            app()->setLocale($tenantLocale);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Fallback silently
+                }
+            });
 
         // On mobile, always use top navigation for better UX
         // On desktop, use the user's preferred setting
@@ -257,12 +270,12 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             // Navigation Groups Order - mengatur urutan group di sidebar
             ->navigationGroups([
-                'Rentals',
-                'Sales',
-                'Inventory',
+                __('admin.nav.rentals'),
+                __('admin.nav.sales'),
+                __('admin.nav.inventory'),
                 'Page & Post',
-                'Setting',
-                'System',
+                __('admin.document_type.nav_group'),
+                __('admin.nav.system'),
             ])
             // Sidebar collapsible (opsional - bisa dihapus jika tidak perlu)
             ->sidebarCollapsibleOnDesktop();

@@ -29,15 +29,35 @@ class EmailLogResource extends Resource
     // Navigation Configuration
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
     
-    protected static string|UnitEnum|null $navigationGroup = 'System';
-    
+    protected static string|UnitEnum|null $navigationGroup = null;
+
     protected static ?int $navigationSort = 10;
-    
-    protected static ?string $navigationLabel = 'Email Logs';
 
-    protected static ?string $modelLabel = 'Email Log';
+    protected static ?string $navigationLabel = null;
 
-    protected static ?string $pluralModelLabel = 'Email Logs';
+    protected static ?string $modelLabel = null;
+
+    protected static ?string $pluralModelLabel = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.email_log.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.email_log.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.email_log.plural_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

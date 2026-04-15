@@ -30,14 +30,24 @@ class DiscountResource extends Resource
 
     protected static ?string $slug = 'discount-codes';
 
-    protected static ?string $modelLabel = 'Discount Code';
+    protected static ?string $modelLabel = null;
 
     public static function canAccess(): bool
     {
         return static::tenantHasFeature(TenantFeature::Promotion);
     }
 
-    protected static ?string $pluralModelLabel = 'Discount Codes';
+    protected static ?string $pluralModelLabel = null;
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.discount.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.discount.plural_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

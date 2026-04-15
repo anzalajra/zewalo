@@ -26,11 +26,21 @@ class TenantCategoryResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tenant Management';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.tenant_management');
+    }
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $navigationLabel = 'Tenant Categories';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.tenant_category.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

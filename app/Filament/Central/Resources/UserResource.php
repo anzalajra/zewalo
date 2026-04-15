@@ -28,11 +28,21 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
-    protected static string|UnitEnum|null $navigationGroup = 'System';
+    protected static string|UnitEnum|null $navigationGroup = null;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.system');
+    }
 
     protected static ?int $navigationSort = 90;
 
-    protected static ?string $navigationLabel = 'Admin Users';
+    protected static ?string $navigationLabel = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.admin_user.nav_label');
+    }
 
     public static function form(Schema $schema): Schema
     {
