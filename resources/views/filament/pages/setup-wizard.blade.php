@@ -1,9 +1,58 @@
 <x-filament-panels::page>
-    <form wire:submit="submit">
-        {{ $this->form }}
-    </form>
+    {{-- Fullscreen modal overlay --}}
+    <div
+        x-data="{ open: true }"
+        x-show="open"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4"
+        style="margin: 0 !important;"
+    >
+        <div
+            class="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-gray-900 ring-1 ring-gray-950/5 dark:ring-white/10"
+            @click.away=""
+        >
+            {{-- Header --}}
+            <div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/95 px-6 py-4 backdrop-blur dark:border-white/10 dark:bg-gray-900/95 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 dark:bg-primary-500/10">
+                        <x-heroicon-o-rocket-launch class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-950 dark:text-white">
+                            {{ __('admin.setup_wizard.title') }}
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ __('admin.setup_wizard.step1_description') }}
+                        </p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    wire:click="skip"
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
+                >
+                    <x-heroicon-o-forward class="h-4 w-4" />
+                    {{ __('admin.setup_wizard.skip_button') }}
+                </button>
+            </div>
 
-    {{-- Operational Schedule for Step 2 (reuses same Alpine pattern as rental-settings) --}}
+            {{-- Body --}}
+            <div class="p-6">
+                <form wire:submit="submit">
+                    {{ $this->form }}
+
+                    <div class="mt-6 flex justify-end">
+                        <x-filament::button type="submit" size="lg" icon="heroicon-o-check-circle">
+                            {{ __('admin.setup_wizard.complete_button') }}
+                        </x-filament::button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Operational Schedule for Tab 2 --}}
     <div
         wire:ignore
         id="wizard-operational-schedule"
@@ -126,7 +175,6 @@
                 dayOrder,
 
                 mountSchedule() {
-                    // Move the schedule UI into the wizard step 2 placeholder
                     const container = document.getElementById('wizard-schedule-container');
                     const scheduleEl = document.getElementById('wizard-operational-schedule');
 
