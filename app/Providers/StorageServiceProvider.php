@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Services\Storage\TenantStorageService;
 use App\Services\Storage\R2StorageService;
-use Filament\Forms\Components\FileUpload;
-use Stancl\Tenancy\Tenancy;
+use App\Services\Storage\TenantStorageService;
 use Closure;
+use Filament\Forms\Components\FileUpload;
+use Illuminate\Support\ServiceProvider;
+use Stancl\Tenancy\Tenancy;
 
 class StorageServiceProvider extends ServiceProvider
 {
@@ -19,11 +19,11 @@ class StorageServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantStorageService::class, function ($app) {
-            return new TenantStorageService();
+            return new TenantStorageService;
         });
 
         $this->app->singleton(R2StorageService::class, function ($app) {
-            return new R2StorageService();
+            return new R2StorageService;
         });
     }
 
@@ -44,16 +44,19 @@ class StorageServiceProvider extends ServiceProvider
         FileUpload::macro('tenantDirectory', function (string|Closure $directory) {
             /** @var FileUpload $this */
             $component = $this;
-            
-            // Set disk to R2
+
+            // Set disk to R2 (ensures R2 config is loaded from central settings)
             $component->disk(TenantStorageService::getFilamentDisk());
-            
+
             // Set default visibility
             $component->visibility(TenantStorageService::getFilamentVisibility());
-            
+
             // Set directory with tenant prefix
-            $component->directory(function () use ($directory, $component): string {
+            $component->directory(function () use ($directory): string {
+                // Ensure R2 config is loaded right before directory resolution (upload time)
+                CentralSettingsServiceProvider::ensureR2Config();
                 $dir = $directory instanceof Closure ? $directory() : $directory;
+
                 return TenantStorageService::getFilamentDirectory($dir);
             });
 
@@ -64,10 +67,10 @@ class StorageServiceProvider extends ServiceProvider
         FileUpload::macro('r2Directory', function (string|Closure $directory) {
             /** @var FileUpload $this */
             $component = $this;
-            
+
             $component->disk('r2');
             $component->visibility('private');
-            
+
             $component->directory(function () use ($directory): string {
                 return $directory instanceof Closure ? $directory() : $directory;
             });
@@ -82,10 +85,10 @@ class StorageServiceProvider extends ServiceProvider
 
             $component->disk('r2');
             $component->visibility('private');
-            
+
             $component->directory(function () use ($directory): string {
                 $tenantId = null;
-                
+
                 if (app()->bound(Tenancy::class)) {
                     $tenancy = app(Tenancy::class);
                     $tenantId = $tenancy->tenant?->getTenantKey();
@@ -93,7 +96,7 @@ class StorageServiceProvider extends ServiceProvider
 
                 $prefix = $tenantId ? "tenant_{$tenantId}" : 'central';
                 $dir = $directory instanceof Closure ? $directory() : $directory;
-                
+
                 return $dir ? "{$prefix}/{$dir}" : $prefix;
             });
 

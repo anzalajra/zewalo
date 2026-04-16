@@ -12,7 +12,9 @@
       "Bash(php -l app/Providers/Filament/AdminPanelProvider.php)",
       "Bash(php -l app/Filament/Clusters/Settings/Pages/AppearanceSettings.php)",
       "Bash(find \"d:/6. Kints/Projects/Zewalo\" -path \"*/vendor\" -prune -o -type f -name \"*.php\" -exec grep -l \"Steps\\\\|Wizard\\\\|wizard\" {} \\\\;)",
-      "Bash(grep -r '$table->json\\\\|data\\\\|feature' 'd:\\\\6. Kints\\\\Projects\\\\Zewalo\\\\database\\\\migrations\\\\central' '--include=*.php')"
+      "Bash(grep -r '$table->json\\\\|data\\\\|feature' 'd:\\\\6. Kints\\\\Projects\\\\Zewalo\\\\database\\\\migrations\\\\central' '--include=*.php')",
+      "Bash(./vendor/bin/pint --test app/Providers/CentralSettingsServiceProvider.php app/Providers/StorageServiceProvider.php app/Services/Storage/TenantStorageService.php)",
+      "Bash(./vendor/bin/pint app/Providers/CentralSettingsServiceProvider.php app/Providers/StorageServiceProvider.php app/Services/Storage/TenantStorageService.php)"
     ]
   }
 }

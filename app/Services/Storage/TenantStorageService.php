@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace App\Services\Storage;
 
-use Illuminate\Support\Facades\Storage;
+use App\Providers\CentralSettingsServiceProvider;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Stancl\Tenancy\Tenancy;
 
 class TenantStorageService
 {
     protected string $disk = 'r2';
+
     protected ?string $tenantId = null;
 
     public function __construct()
     {
         $this->tenantId = $this->getCurrentTenantId();
+        CentralSettingsServiceProvider::ensureR2Config();
     }
 
     /**
@@ -25,6 +28,7 @@ class TenantStorageService
     {
         if (app()->bound(Tenancy::class)) {
             $tenancy = app(Tenancy::class);
+
             return $tenancy->tenant?->getTenantKey();
         }
 
@@ -37,12 +41,12 @@ class TenantStorageService
     public function getTenantPrefix(?string $tenantId = null): string
     {
         $id = $tenantId ?? $this->tenantId;
-        
-        if (!$id) {
+
+        if (! $id) {
             return 'central';
         }
 
-        return 'tenant_' . $id;
+        return 'tenant_'.$id;
     }
 
     /**
@@ -51,7 +55,8 @@ class TenantStorageService
     public function getPath(string $path, ?string $tenantId = null): string
     {
         $prefix = $this->getTenantPrefix($tenantId);
-        return $prefix . '/' . ltrim($path, '/');
+
+        return $prefix.'/'.ltrim($path, '/');
     }
 
     /**
@@ -60,7 +65,7 @@ class TenantStorageService
     public function store(UploadedFile $file, string $directory = '', ?string $filename = null): string
     {
         $path = $this->getPath($directory);
-        
+
         if ($filename) {
             return Storage::disk($this->disk)->putFileAs($path, $file, $filename);
         }
@@ -74,6 +79,7 @@ class TenantStorageService
     public function put(string $path, $contents, array $options = []): bool
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->put($fullPath, $contents, $options);
     }
 
@@ -83,6 +89,7 @@ class TenantStorageService
     public function get(string $path): ?string
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->get($fullPath);
     }
 
@@ -94,6 +101,7 @@ class TenantStorageService
         $fullPath = $this->getPath($path);
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
         $disk = Storage::disk($this->disk);
+
         return $disk->url($fullPath);
     }
 
@@ -105,6 +113,7 @@ class TenantStorageService
         $fullPath = $this->getPath($path);
         /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
         $disk = Storage::disk($this->disk);
+
         return $disk->temporaryUrl($fullPath, $expiration);
     }
 
@@ -114,6 +123,7 @@ class TenantStorageService
     public function delete(string $path): bool
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->delete($fullPath);
     }
 
@@ -123,6 +133,7 @@ class TenantStorageService
     public function exists(string $path): bool
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->exists($fullPath);
     }
 
@@ -132,7 +143,7 @@ class TenantStorageService
     public function files(string $directory = '', bool $recursive = false): array
     {
         $fullPath = $this->getPath($directory);
-        
+
         if ($recursive) {
             return Storage::disk($this->disk)->allFiles($fullPath);
         }
@@ -146,7 +157,7 @@ class TenantStorageService
     public function directories(string $directory = '', bool $recursive = false): array
     {
         $fullPath = $this->getPath($directory);
-        
+
         if ($recursive) {
             return Storage::disk($this->disk)->allDirectories($fullPath);
         }
@@ -160,6 +171,7 @@ class TenantStorageService
     public function size(string $path): int
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->size($fullPath);
     }
 
@@ -169,6 +181,7 @@ class TenantStorageService
     public function lastModified(string $path): int
     {
         $fullPath = $this->getPath($path);
+
         return Storage::disk($this->disk)->lastModified($fullPath);
     }
 
@@ -179,6 +192,7 @@ class TenantStorageService
     {
         $fromPath = $this->getPath($from);
         $toPath = $this->getPath($to);
+
         return Storage::disk($this->disk)->copy($fromPath, $toPath);
     }
 
@@ -189,6 +203,7 @@ class TenantStorageService
     {
         $fromPath = $this->getPath($from);
         $toPath = $this->getPath($to);
+
         return Storage::disk($this->disk)->move($fromPath, $toPath);
     }
 
@@ -206,6 +221,7 @@ class TenantStorageService
     public function setDisk(string $disk): self
     {
         $this->disk = $disk;
+
         return $this;
     }
 
@@ -215,6 +231,7 @@ class TenantStorageService
     public function forTenant(?string $tenantId): self
     {
         $this->tenantId = $tenantId;
+
         return $this;
     }
 
@@ -224,6 +241,7 @@ class TenantStorageService
     public static function getFilamentDirectory(string $directory = ''): string
     {
         $service = app(self::class);
+
         return $service->getPath($directory);
     }
 
@@ -237,9 +255,12 @@ class TenantStorageService
 
     /**
      * Get the Filament disk setting.
+     * Ensures R2 config is loaded from central settings before returning.
      */
     public static function getFilamentDisk(): string
     {
+        CentralSettingsServiceProvider::ensureR2Config();
+
         return 'r2';
     }
 }

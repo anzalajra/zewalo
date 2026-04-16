@@ -3,10 +3,13 @@
 namespace App\Providers;
 
 use App\Models\CentralSetting;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 
 class CentralSettingsServiceProvider extends ServiceProvider
 {
+    protected static bool $r2Loaded = false;
+
     public function boot(): void
     {
         try {
@@ -16,11 +19,30 @@ class CentralSettingsServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Ensure R2 settings are loaded into config.
+     * Can be called multiple times safely — only queries DB once per request.
+     */
+    public static function ensureR2Config(): void
+    {
+        if (static::$r2Loaded) {
+            return;
+        }
+
+        try {
+            app(static::class)->loadR2Settings();
+        } catch (\Exception $e) {
+            // Silently fail if DB not available
+        }
+    }
+
     protected function loadR2Settings(): void
     {
         $r2Settings = CentralSetting::getGroup('r2');
 
         if (empty($r2Settings)) {
+            static::$r2Loaded = true;
+
             return;
         }
 
@@ -58,5 +80,10 @@ class CentralSettingsServiceProvider extends ServiceProvider
                 config([$configKey => $value]);
             }
         }
+
+        // Purge cached R2 disk instance so Storage::disk('r2') picks up new config
+        Storage::purge('r2');
+
+        static::$r2Loaded = true;
     }
 }
