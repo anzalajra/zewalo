@@ -172,10 +172,6 @@ class RoleResource extends Resource
         return SettingsCluster::class;
     }
 
-    public static function getNavigationGroup(): ?string
-    {
-        return 'Admin & Roles';
-    }
 
     public static function getEssentialsPlugin(): ?FilamentShieldPlugin
     {
