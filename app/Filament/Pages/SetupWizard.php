@@ -179,6 +179,19 @@ class SetupWizard extends Page implements HasForms
                                     ->label(__('admin.appearance.custom_color'))
                                     ->visible(fn ($get) => $get('theme_preset') === 'custom')
                                     ->required(fn ($get) => $get('theme_preset') === 'custom'),
+                                ToggleButtons::make('locale')
+                                    ->label(__('admin.language.label'))
+                                    ->options([
+                                        'id' => '🇮🇩 ' . __('admin.language.indonesian'),
+                                        'en' => '🇬🇧 ' . __('admin.language.english'),
+                                    ])
+                                    ->icons([
+                                        'id' => 'heroicon-o-language',
+                                        'en' => 'heroicon-o-language',
+                                    ])
+                                    ->default(app()->getLocale())
+                                    ->inline()
+                                    ->columnSpanFull(),
                             ])
                             ->columns(2),
 
@@ -267,7 +280,7 @@ class SetupWizard extends Page implements HasForms
         $settingKeys = [
             'site_logo', 'site_name', 'site_description',
             'company_address', 'company_phone', 'company_email',
-            'theme_preset', 'theme_color',
+            'theme_preset', 'theme_color', 'locale',
         ];
 
         foreach ($settingKeys as $key) {
@@ -342,6 +355,13 @@ class SetupWizard extends Page implements HasForms
                         ->send();
                 }
             }
+        }
+
+        // Apply locale immediately
+        if (isset($data['locale']) && in_array($data['locale'], ['id', 'en'])) {
+            app()->setLocale($data['locale']);
+            session(['locale' => $data['locale']]);
+            cookie()->queue('zewalo_locale', $data['locale'], 60 * 24 * 365);
         }
 
         // Mark setup as completed

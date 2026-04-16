@@ -192,6 +192,8 @@ class AdminPanelProvider extends PanelProvider
                         $tenantLocale = Setting::get('locale');
                         if ($tenantLocale && in_array($tenantLocale, ['id', 'en'])) {
                             app()->setLocale($tenantLocale);
+                            session(['locale' => $tenantLocale]);
+                            cookie()->queue('zewalo_locale', $tenantLocale, 60 * 24 * 365);
                         }
                     }
                 } catch (\Exception $e) {
