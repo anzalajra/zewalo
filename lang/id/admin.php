@@ -1125,4 +1125,43 @@ return [
         'add_document_type' => 'Tambah Tipe Dokumen',
     ],
 
+    // =============================================
+    // SETUP WIZARD
+    // =============================================
+    'setup_wizard' => [
+        'title' => 'Setup Toko',
+        'step1_title' => 'Informasi Toko',
+        'step1_description' => 'Atur identitas dan branding toko Anda',
+        'step2_title' => 'Jam Operasional',
+        'step2_description' => 'Konfigurasi jam buka toko Anda',
+        'step3_title' => 'Pembayaran',
+        'step3_description' => 'Atur metode pembayaran',
+        'step4_title' => 'Data Contoh',
+        'step4_description' => 'Import produk contoh sesuai kategori toko',
+        'skip_button' => 'Lewati Setup',
+        'skip_confirm_title' => 'Lewati Setup?',
+        'skip_confirm_desc' => 'Anda bisa mengatur semuanya nanti melalui menu Pengaturan.',
+        'complete_button' => 'Selesaikan Setup',
+        'banner_message' => 'Setup toko Anda belum selesai. Selesaikan untuk memaksimalkan penggunaan platform.',
+        'banner_button' => 'Lanjutkan Setup',
+        'import_prompt' => 'Apakah Anda ingin mengimport produk contoh untuk kategori ":category"?',
+        'import_description' => 'Sistem akan membuat 3 produk contoh dengan data lengkap untuk membantu Anda memulai.',
+        'import_label' => 'Import Data Template',
+        'completed_title' => 'Setup Selesai!',
+        'completed_body' => 'Toko Anda siap digunakan. Anda bisa mengubah pengaturan kapan saja melalui menu Pengaturan.',
+        'logo_label' => 'Logo Toko',
+        'store_name' => 'Nama Toko',
+        'store_category' => 'Kategori Toko',
+        'address' => 'Alamat',
+        'phone' => 'Nomor Telepon',
+        'email' => 'Email',
+        'theme_preset' => 'Tema Warna',
+        'enable_bank_transfer' => 'Aktifkan Transfer Bank',
+        'bank_name' => 'Nama Bank',
+        'account_number' => 'Nomor Rekening',
+        'account_holder' => 'Atas Nama',
+        'detected_category' => 'Kategori terdeteksi',
+        'no_category' => 'Tidak ada kategori dipilih',
+    ],
+
 ];

@@ -40,6 +40,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'current_rental_month',
         'region',
         'tenant_category_id',
+        'setup_status',
         'data',
     ];
 
@@ -71,7 +72,49 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'current_rental_month',
             'region',
             'tenant_category_id',
+            'setup_status',
         ];
+    }
+
+    /**
+     * Check if tenant needs to complete the setup wizard.
+     */
+    public function needsSetup(): bool
+    {
+        return $this->setup_status === 'pending';
+    }
+
+    /**
+     * Mark setup wizard as completed.
+     */
+    public function completeSetup(): void
+    {
+        $this->update(['setup_status' => 'completed']);
+    }
+
+    /**
+     * Mark setup wizard as skipped.
+     */
+    public function skipSetup(): void
+    {
+        $this->update(['setup_status' => 'skipped']);
+    }
+
+    /**
+     * Get the current wizard step from the data JSON column.
+     */
+    public function getSetupCurrentStep(): int
+    {
+        return (int) ($this->setup_current_step ?? 1);
+    }
+
+    /**
+     * Set the current wizard step in the data JSON column.
+     */
+    public function setSetupCurrentStep(int $step): void
+    {
+        $this->setup_current_step = $step;
+        $this->save();
     }
 
     /**

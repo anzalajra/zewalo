@@ -88,6 +88,24 @@ php artisan tenants:migrate --tenants={tenant-id}
 ### Tenant Lifecycle
 On `TenantCreated` event (see `TenancyServiceProvider`): CreateDatabase → MigrateDatabase → CreateTenantStorageFolder. On delete: DeleteDatabase → DeleteTenantStorageFolder.
 
+### Tenant Setup Wizard
+New tenants get `setup_status = 'pending'` on creation (set in `CreateTenantJob`). The `Tenant` model has `setup_status` as a custom column with helpers: `needsSetup()`, `completeSetup()`, `skipSetup()`, `getSetupCurrentStep()`, `setSetupCurrentStep()`.
+
+**Wizard Page:** `app/Filament/Pages/SetupWizard.php` — 4-step Filament Wizard:
+1. **Store Info** — logo, name, category, address, phone, email, theme preset → saves to `Setting` + syncs to DocumentLayout via `SettingsSyncService`
+2. **Operational Hours** — Alpine.js schedule table (same pattern as `RentalSettings`) → saves to `Setting` (operational_schedule, operational_days)
+3. **Payment** — bank transfer toggle + details → saves to `Setting` group `payment`
+4. **Seed Data** — optional import of category-specific template products via `TenantTemplateSeeder`
+
+**Flow Control:**
+- `RedirectToSetupWizard` middleware — auto-redirects to wizard on first admin login (once per session), then shows banner
+- Render hook banner at `panels::content.start` (blue, above subscription warning)
+- Skip button available → sets `setup_status = 'skipped'`
+
+**Template Seeders:** `database/seeders/tenant/TenantTemplateSeeder.php` dispatches to category-specific seeders in `database/seeders/tenant/templates/` (Photography, Automotive, Camping, Electronics, Wedding, Sports, Music, Default). Each creates 1-2 categories + 3 products with 1 unit each.
+
+**Backfill existing tenants:** `php artisan tenants:backfill-setup-status` — checks if tenant has site_logo or products, marks as `completed` if so.
+
 ### Central Domains
 Defined in `config/tenancy.php`: `127.0.0.1`, `localhost`, `zewalo.test`, and `APP_DOMAIN` env var. Any other domain triggers tenant resolution.
 

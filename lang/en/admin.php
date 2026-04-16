@@ -1125,4 +1125,43 @@ return [
         'add_document_type' => 'Add Document Type',
     ],
 
+    // =============================================
+    // SETUP WIZARD
+    // =============================================
+    'setup_wizard' => [
+        'title' => 'Store Setup',
+        'step1_title' => 'Store Information',
+        'step1_description' => 'Set up your store identity and branding',
+        'step2_title' => 'Operational Hours',
+        'step2_description' => 'Configure your business hours',
+        'step3_title' => 'Payment Setup',
+        'step3_description' => 'Set up payment methods',
+        'step4_title' => 'Sample Data',
+        'step4_description' => 'Import sample products for your store category',
+        'skip_button' => 'Skip Setup',
+        'skip_confirm_title' => 'Skip Setup?',
+        'skip_confirm_desc' => 'You can configure everything later from the Settings menu.',
+        'complete_button' => 'Complete Setup',
+        'banner_message' => 'Your store setup is incomplete. Complete it to get the most out of the platform.',
+        'banner_button' => 'Continue Setup',
+        'import_prompt' => 'Would you like to import sample products for ":category"?',
+        'import_description' => 'The system will create 3 sample products with complete data to help you get started.',
+        'import_label' => 'Import Template Data',
+        'completed_title' => 'Setup Complete!',
+        'completed_body' => 'Your store is ready. You can adjust settings anytime from the Settings menu.',
+        'logo_label' => 'Store Logo',
+        'store_name' => 'Store Name',
+        'store_category' => 'Store Category',
+        'address' => 'Address',
+        'phone' => 'Phone Number',
+        'email' => 'Email',
+        'theme_preset' => 'Theme Color',
+        'enable_bank_transfer' => 'Enable Bank Transfer',
+        'bank_name' => 'Bank Name',
+        'account_number' => 'Account Number',
+        'account_holder' => 'Account Holder',
+        'detected_category' => 'Detected category',
+        'no_category' => 'No category selected',
+    ],
+
 ];

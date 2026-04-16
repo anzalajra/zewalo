@@ -111,16 +111,26 @@ class AdminPanelProvider extends PanelProvider
                 'panels::content.start',
                 function () {
                     $tenant = tenant();
+                    $output = '';
+
+                    // Setup wizard banner
+                    if ($tenant && $tenant->needsSetup() && session()->has('setup_wizard_redirected')) {
+                        $output .= view('filament.hooks.setup-wizard-banner', [
+                            'wizardUrl' => \App\Filament\Pages\SetupWizard::getUrl(),
+                        ])->render();
+                    }
+
+                    // Subscription warning
                     if ($tenant && $tenant->isInGracePeriod()) {
                         $graceTo = $tenant->grace_period_ends_at?->format('d M Y') ?? '-';
 
-                        return view('filament.hooks.subscription-warning', [
+                        $output .= view('filament.hooks.subscription-warning', [
                             'message' => "Subscription Anda telah berakhir. Perpanjang sebelum {$graceTo} untuk menghindari suspend.",
                             'billingUrl' => \App\Filament\Pages\SubscriptionBilling::getUrl(),
-                        ]);
+                        ])->render();
                     }
 
-                    return '';
+                    return $output;
                 }
             )
             ->renderHook(
@@ -162,6 +172,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\RedirectToSetupWizard::class,
                 EnsureTenantSubscriptionActive::class,
             ])
             ->userMenuItems([

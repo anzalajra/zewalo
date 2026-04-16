@@ -15,6 +15,7 @@ class EnsureTenantSubscriptionActive
      */
     protected array $allowedPaths = [
         'admin/subscription-billing',
+        'admin/setup-wizard',
         'livewire/update',
         'subscription-expired',
     ];

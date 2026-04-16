@@ -116,6 +116,7 @@ class CreateTenantJob implements ShouldQueue
                 'subscription_ends_at' => null,
                 'current_rental_transactions_month' => 0,
                 'current_rental_month' => now()->format('Y-m'),
+                'setup_status' => 'pending',
             ]);
 
             Log::info("CreateTenantJob: Tenant record + DB created: {$tenant->id}");
