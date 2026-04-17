@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\CentralSetting;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,25 +16,38 @@ class CentralSettingsServiceProvider extends ServiceProvider
         try {
             $this->loadR2Settings();
         } catch (\Exception $e) {
-            // Table may not exist yet during migration
+            Log::warning('CentralSettingsServiceProvider: failed to load R2 settings at boot', [
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
     /**
      * Ensure R2 settings are loaded into config.
      * Can be called multiple times safely — only queries DB once per request.
+     * Pass force=true to bypass the per-request cache (e.g. after the credentials change).
      */
-    public static function ensureR2Config(): void
+    public static function ensureR2Config(bool $force = false): void
     {
-        if (static::$r2Loaded) {
+        if (static::$r2Loaded && ! $force) {
             return;
         }
 
         try {
             app(static::class)->loadR2Settings();
         } catch (\Exception $e) {
-            // Silently fail if DB not available
+            Log::warning('CentralSettingsServiceProvider: ensureR2Config failed', [
+                'error' => $e->getMessage(),
+            ]);
         }
+    }
+
+    /**
+     * Reset the loaded flag so the next ensureR2Config() reads fresh from DB.
+     */
+    public static function resetR2Cache(): void
+    {
+        static::$r2Loaded = false;
     }
 
     protected function loadR2Settings(): void

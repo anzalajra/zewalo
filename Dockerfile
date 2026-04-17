@@ -103,6 +103,8 @@ RUN mkdir -p /var/www/storage/logs \
     && mkdir -p /var/www/storage/framework/sessions \
     && mkdir -p /var/www/storage/framework/views \
     && mkdir -p /var/www/storage/app/public \
+    && mkdir -p /var/www/storage/app/private/livewire-tmp \
+    && mkdir -p /var/www/storage/app/livewire-tmp \
     && mkdir -p /var/www/bootstrap/cache \
     && mkdir -p /var/log/supervisor \
     && chown -R $user:www-data /var/www \

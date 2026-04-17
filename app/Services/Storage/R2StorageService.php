@@ -391,10 +391,111 @@ class R2StorageService
     public function isConfigured(): bool
     {
         $config = config('filesystems.disks.r2', []);
-        
-        return !empty($config['key']) 
-            && !empty($config['secret']) 
-            && !empty($config['bucket']) 
+
+        return !empty($config['key'])
+            && !empty($config['secret'])
+            && !empty($config['bucket'])
             && !empty($config['endpoint']);
+    }
+
+    /**
+     * Write-probe a prefix to verify R2 is writable from the current process context.
+     * Uploads a tiny probe file, verifies existence, then deletes it.
+     *
+     * Use cases:
+     *  - Central admin: probe('central') to check central writes work
+     *  - Tenant: probe("tenant_{$id}") to check tenant-scoped writes work
+     *
+     * Returns ['success' => bool, 'message' => string, 'latency_ms' => int]
+     */
+    public function probe(string $prefix = 'central'): array
+    {
+        \App\Providers\CentralSettingsServiceProvider::ensureR2Config();
+
+        if (! $this->isConfigured()) {
+            return [
+                'success' => false,
+                'message' => 'R2 belum dikonfigurasi.',
+                'latency_ms' => 0,
+            ];
+        }
+
+        $prefix = trim($prefix, '/');
+        $path = $prefix.'/.zewalo-probe-'.bin2hex(random_bytes(4));
+        $payload = 'probe '.now()->toIso8601String();
+
+        $start = microtime(true);
+
+        try {
+            Storage::disk($this->disk)->put($path, $payload);
+
+            if (! Storage::disk($this->disk)->exists($path)) {
+                throw new \RuntimeException('File tidak ditemukan setelah upload.');
+            }
+
+            $roundtrip = Storage::disk($this->disk)->get($path);
+
+            if ($roundtrip !== $payload) {
+                throw new \RuntimeException('Isi file tidak cocok setelah read-back.');
+            }
+
+            Storage::disk($this->disk)->delete($path);
+
+            return [
+                'success' => true,
+                'message' => "Write/read/delete berhasil di prefix '{$prefix}'.",
+                'latency_ms' => (int) ((microtime(true) - $start) * 1000),
+            ];
+        } catch (\Throwable $e) {
+            // Try to clean up on failure
+            try {
+                Storage::disk($this->disk)->delete($path);
+            } catch (\Throwable) {
+                // ignore
+            }
+
+            return [
+                'success' => false,
+                'message' => 'R2 write failed: '.$e->getMessage(),
+                'latency_ms' => (int) ((microtime(true) - $start) * 1000),
+            ];
+        }
+    }
+
+    /**
+     * Probe write access for central and all known tenants.
+     *
+     * @return array<int, array{scope: string, success: bool, message: string, latency_ms: int}>
+     */
+    public function probeAll(): array
+    {
+        $results = [];
+
+        $results[] = array_merge(
+            ['scope' => 'central'],
+            $this->probe('central')
+        );
+
+        try {
+            Tenant::query()
+                ->select('id')
+                ->chunk(50, function ($chunk) use (&$results) {
+                    foreach ($chunk as $tenant) {
+                        $results[] = array_merge(
+                            ['scope' => "tenant_{$tenant->id}"],
+                            $this->probe("tenant_{$tenant->id}")
+                        );
+                    }
+                });
+        } catch (\Throwable $e) {
+            $results[] = [
+                'scope' => 'tenants',
+                'success' => false,
+                'message' => 'Gagal memuat daftar tenant: '.$e->getMessage(),
+                'latency_ms' => 0,
+            ];
+        }
+
+        return $results;
     }
 }

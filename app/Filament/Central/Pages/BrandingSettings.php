@@ -76,6 +76,8 @@ class BrandingSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        \App\Providers\CentralSettingsServiceProvider::ensureR2Config();
+
         $saved = static::loadSettings();
 
         $keywords = $saved['branding_meta_keywords'] ?? '';
@@ -132,7 +134,6 @@ class BrandingSettings extends Page implements HasForms
                             ->image()
                             ->disk('r2')
                             ->directory('central/branding')
-                            ->visibility('public')
                             ->imageResizeMode('contain')
                             ->imageCropAspectRatio(null)
                             ->maxSize(2048)
@@ -144,7 +145,6 @@ class BrandingSettings extends Page implements HasForms
                             ->image()
                             ->disk('r2')
                             ->directory('central/branding')
-                            ->visibility('public')
                             ->maxSize(512)
                             ->helperText('Ikon kecil di tab browser. Rekomendasi: PNG/ICO 32x32px atau 64x64px.')
                             ->columnSpan(1),
@@ -172,7 +172,6 @@ class BrandingSettings extends Page implements HasForms
                             ->image()
                             ->disk('r2')
                             ->directory('central/branding')
-                            ->visibility('public')
                             ->maxSize(2048)
                             ->helperText('Gambar yang muncul saat link dibagikan di media sosial (Facebook, Twitter, WhatsApp). Rekomendasi: 1200x630px.')
                             ->columnSpanFull(),

@@ -53,6 +53,12 @@ php artisan route:cache
 php artisan event:cache
 php artisan icons:cache || true
 
+# Ensure Livewire temp upload directories exist (required for file uploads)
+echo "Ensuring upload temp directories..."
+mkdir -p /var/www/storage/app/private/livewire-tmp
+mkdir -p /var/www/storage/app/livewire-tmp
+mkdir -p /var/www/storage/app/public/livewire-tmp
+
 # Fix storage & log permissions (entrypoint runs as root, PHP-FPM runs as www)
 echo "Fixing storage permissions..."
 chown -R www:www-data /var/www/storage /var/www/bootstrap/cache

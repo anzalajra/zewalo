@@ -57,6 +57,9 @@ class R2StorageSettings extends Page implements HasForms
 
     public bool $isConfigured = false;
 
+    /** @var array<int, array{scope: string, success: bool, message: string, latency_ms: int}> */
+    public array $probeResults = [];
+
     public function mount(): void
     {
         $service = app(R2StorageService::class);
@@ -145,6 +148,18 @@ class R2StorageSettings extends Page implements HasForms
                 ->label('Test Koneksi')
                 ->color('info')
                 ->action('testConnection'),
+            Action::make('probeWrite')
+                ->label('Test Tulis (Central)')
+                ->color('info')
+                ->icon('heroicon-o-pencil-square')
+                ->action('probeWrite'),
+            Action::make('probeAllTenants')
+                ->label('Test Tulis Semua Tenant')
+                ->color('warning')
+                ->icon('heroicon-o-users')
+                ->requiresConfirmation()
+                ->modalDescription('Menulis file probe kecil ke prefix setiap tenant — aman, file dihapus setelah verifikasi.')
+                ->action('probeAllTenants'),
         ];
     }
 
@@ -249,6 +264,55 @@ class R2StorageSettings extends Page implements HasForms
             ->title('Statistik diperbarui')
             ->success()
             ->send();
+    }
+
+    public function probeWrite(): void
+    {
+        $service = app(R2StorageService::class);
+        $result = array_merge(
+            ['scope' => 'central'],
+            $service->probe('central'),
+        );
+
+        $this->probeResults = [$result];
+
+        if ($result['success']) {
+            Notification::make()
+                ->title('Central write OK')
+                ->body($result['message'].' ('.$result['latency_ms'].'ms)')
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('Central write FAILED')
+                ->body($result['message'])
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function probeAllTenants(): void
+    {
+        $service = app(R2StorageService::class);
+        $results = $service->probeAll();
+
+        $this->probeResults = $results;
+
+        $failed = array_filter($results, fn ($r) => ! $r['success']);
+
+        if (empty($failed)) {
+            Notification::make()
+                ->title('Semua scope OK')
+                ->body(count($results).' scope terverifikasi.')
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title(count($failed).' scope GAGAL')
+                ->body('Lihat hasil probe di bawah untuk detail.')
+                ->danger()
+                ->send();
+        }
     }
 
     public static function getNavigationBadge(): ?string

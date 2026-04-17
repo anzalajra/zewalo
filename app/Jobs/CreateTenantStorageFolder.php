@@ -26,16 +26,16 @@ class CreateTenantStorageFolder implements ShouldQueue
      */
     public function handle(): void
     {
-        // Skip if R2 bucket is not configured
-        if (!config('filesystems.disks.r2.bucket')) {
+        // Ensure R2 config is loaded from CentralSetting before any S3 call
+        \App\Providers\CentralSettingsServiceProvider::ensureR2Config();
+
+        if (! config('filesystems.disks.r2.bucket')) {
             Log::info("CreateTenantStorageFolder: R2 bucket not configured, skipping storage folder creation for tenant '{$this->tenant->id}'");
             return;
         }
 
         $tenantPrefix = "tenant_{$this->tenant->id}";
-        
-        // Create base tenant folder with a placeholder file
-        // R2/S3 doesn't have real folders, but we can create them by putting files
+
         $directories = [
             'products',
             'brands',
@@ -50,16 +50,28 @@ class CreateTenantStorageFolder implements ShouldQueue
         try {
             foreach ($directories as $dir) {
                 $path = "{$tenantPrefix}/{$dir}/.gitkeep";
-                
-                if (!Storage::disk('r2')->exists($path)) {
+
+                if (! Storage::disk('r2')->exists($path)) {
                     Storage::disk('r2')->put($path, '');
                 }
             }
-            
-            Log::info("CreateTenantStorageFolder: Created storage folders for tenant '{$this->tenant->id}'");
+
+            // Verify tenant prefix is writable by running a probe
+            $probe = app(\App\Services\Storage\R2StorageService::class)->probe($tenantPrefix);
+
+            if (! $probe['success']) {
+                Log::error("CreateTenantStorageFolder: R2 write probe FAILED for tenant '{$this->tenant->id}' — bucket may not be writable", [
+                    'message' => $probe['message'],
+                ]);
+            } else {
+                Log::info("CreateTenantStorageFolder: Created & verified storage folders for tenant '{$this->tenant->id}' ({$probe['latency_ms']}ms)");
+            }
         } catch (\Throwable $e) {
-            Log::warning("CreateTenantStorageFolder: Failed to create storage folders for tenant '{$this->tenant->id}': {$e->getMessage()}");
-            // Don't throw - this is not critical for tenant creation
+            Log::error("CreateTenantStorageFolder: Failed to create storage folders for tenant '{$this->tenant->id}': {$e->getMessage()}", [
+                'exception' => get_class($e),
+                'tenant_id' => $this->tenant->id,
+            ]);
+            // Don't rethrow — tenant DB exists; admin can fix R2 later via Central Admin
         }
     }
 }

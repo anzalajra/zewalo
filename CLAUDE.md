@@ -126,6 +126,7 @@ Located in `app/Filament/Central/Pages/` — System-level settings pages:
 - `DatabaseManagement.php` — Database operations
 - `R2FileBrowser.php` — Browse R2 storage
 - `StorageManagement.php` — Local storage management
+- `LogViewer.php` — Aggregated log viewer (Laravel, queue worker, scheduler, PHP errors). Backed by `LogViewerService` which reads every `*.log` under `storage/logs/`, parses Laravel-format entries (`[date] env.LEVEL: message + context`), supports filtering by file / level / keyword, download, and truncate.
 
 ### Filament Central Admin Resources
 Located in `app/Filament/Central/Resources/`:
@@ -326,6 +327,8 @@ Beberapa env var yang **wajib** di-set di production (Dokploy) agar fitur berjal
 |-----|-------|-----------|
 | `QUEUE_CONNECTION` | `redis` | **Wajib.** Default-nya `database`, tapi queue worker berjalan di Redis. Tanpa ini, job seperti `CreateTenantJob` tidak pernah diproses dan tenant registration stuck di "Menunggu antrian.. 5%". |
 | `REDIS_HOST` | nama service Redis | Nama container Redis di Dokploy, contoh: `zewalo-redis-gnumoa`. Otomatis di-set oleh Dokploy. |
+| `LIVEWIRE_TMP_DISK` | `local` | **Wajib** untuk upload file. Livewire menaruh file sementara di disk ini sebelum dipindah ke R2. Harus disk lokal yang selalu writable — **jangan set ke `r2` atau `public`**, karena menyebabkan upload stuck di "uploading" (file upload foto logo, produk, dll tidak pernah selesai). Default di `config/livewire.php` sekarang adalah `local`. |
+| `FILESYSTEM_DISK` | `local` | Default filesystem disk. Di production gunakan `local` (bukan `public`) — file user-upload tetap ke R2 via `TenantFileUpload` / `disk('r2')` eksplisit. |
 
 ### Tenant Registration Queue
 
@@ -351,6 +354,9 @@ docker exec -it <container> php artisan queue:monitor redis:tenant-creation,redi
 - Rental flow: Quotation → Confirmed → Active → Returned (with partial return support)
 - Custom customer auth system with middleware `customer.auth` and `customer.guest` (separate from admin `auth`)
 - File uploads: tenant files use `TenantFileUpload` component (`app/Filament/Components/TenantFileUpload.php`) which auto-prefixes tenant directory on R2. Central file uploads (branding) use standard `FileUpload` with `disk('r2')` and `directory('central/branding')`. **Jangan pakai `disk('public')` di production** — local storage tidak persisten di Docker, gunakan R2
+- **Jangan set `->visibility('public')` pada FileUpload di R2** — Cloudflare R2 tidak mendukung ACL per-object, `public-read` header akan ditolak dan menyebabkan upload gagal. Gunakan bucket public URL (`CLOUDFLARE_R2_URL`) untuk akses publik; default `'private'` dari disk config sudah cukup.
+- **Verifikasi R2 write dari CLI**: `php artisan r2:probe` (central + semua tenant), `--central` atau `--tenant=xxx` untuk scope tertentu. Ini menulis file kecil dan menghapusnya untuk memastikan kredensial + permission benar. Tersedia juga di Central Admin → R2 Storage Settings tombol "Test Tulis Semua Tenant".
+- **R2 config caching**: `CentralSettingsServiceProvider` memuat R2 creds dari `CentralSetting` ke `config('filesystems.disks.r2.*')` saat boot. Untuk force reload di runtime (setelah ganti kredensial): `CentralSettingsServiceProvider::ensureR2Config(force: true)`.
 - Central vs tenant settings: use `CentralSetting` for platform-wide, `Setting` for per-tenant. Both have 1-hour cache with auto-invalidation
 - View composers in `AppServiceProvider::boot()` inject data into specific blade views (PDF settings, theme CSS vars, central branding). Wrap in try/catch for migration safety
 - `config('app.name')` is overridden at boot: first by `CentralSetting::get('branding_site_name')`, then by tenant `Setting::get('site_name')` — this cascade ensures emails and UI always show the correct name

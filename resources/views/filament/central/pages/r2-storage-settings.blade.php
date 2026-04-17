@@ -70,6 +70,53 @@
         </x-filament::section>
         @endif
 
+        {{-- Write Probe Results --}}
+        @if(!empty($probeResults))
+            @php
+                $probeFailed = collect($probeResults)->where('success', false)->count();
+                $probeOk = collect($probeResults)->where('success', true)->count();
+            @endphp
+            <x-filament::section>
+                <x-slot name="heading">
+                    <div class="flex items-center gap-2">
+                        @if($probeFailed === 0)
+                            <x-heroicon-o-check-circle class="w-5 h-5 text-success-500" />
+                        @else
+                            <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-danger-500" />
+                        @endif
+                        Hasil Probe Tulis R2
+                    </div>
+                </x-slot>
+                <x-slot name="description">
+                    {{ $probeOk }} berhasil, {{ $probeFailed }} gagal dari {{ count($probeResults) }} scope.
+                </x-slot>
+
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    @foreach($probeResults as $r)
+                        <div @class([
+                            'flex items-start gap-3 p-3 rounded-lg border text-sm',
+                            'border-success-300 bg-success-50 dark:bg-success-900/20 dark:border-success-700' => $r['success'],
+                            'border-danger-300 bg-danger-50 dark:bg-danger-900/20 dark:border-danger-700' => ! $r['success'],
+                        ])>
+                            @if($r['success'])
+                                <x-heroicon-o-check-circle class="w-5 h-5 text-success-600 dark:text-success-400 shrink-0 mt-0.5" />
+                            @else
+                                <x-heroicon-o-x-circle class="w-5 h-5 text-danger-600 dark:text-danger-400 shrink-0 mt-0.5" />
+                            @endif
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-mono text-xs font-semibold">{{ $r['scope'] }}</span>
+                                    <span class="text-xs text-gray-500">{{ $r['latency_ms'] }}ms</span>
+                                </div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 mt-1 break-words">{{ $r['message'] }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </x-filament::section>
+        @endif
+
         {{-- Configuration Form --}}
         <x-filament::section>
             <x-slot name="heading">
@@ -82,15 +129,30 @@
             <form wire:submit="save">
                 {{ $this->form }}
 
-                <div class="mt-6 flex gap-3">
+                <div class="mt-6 flex gap-3 flex-wrap">
                     <x-filament::button type="submit">
                         <x-heroicon-m-check class="w-4 h-4 mr-1" />
                         Simpan Konfigurasi
                     </x-filament::button>
-                    
+
                     <x-filament::button type="button" wire:click="testConnection" color="info">
                         <x-heroicon-m-signal class="w-4 h-4 mr-1" />
                         Test Koneksi
+                    </x-filament::button>
+
+                    <x-filament::button type="button" wire:click="probeWrite" color="info">
+                        <x-heroicon-m-pencil-square class="w-4 h-4 mr-1" />
+                        Test Tulis (Central)
+                    </x-filament::button>
+
+                    <x-filament::button
+                        type="button"
+                        wire:click="probeAllTenants"
+                        wire:confirm="Menulis file probe kecil ke prefix setiap tenant — aman, file dihapus setelah verifikasi. Lanjutkan?"
+                        color="warning"
+                    >
+                        <x-heroicon-m-users class="w-4 h-4 mr-1" />
+                        Test Tulis Semua Tenant
                     </x-filament::button>
                 </div>
             </form>
