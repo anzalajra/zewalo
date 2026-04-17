@@ -38,8 +38,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->reportable(function (\Throwable $e) {
             // Skip non-critical exceptions
             if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) return;
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException) return;
             if ($e instanceof \Illuminate\Validation\ValidationException) return;
             if ($e instanceof \Illuminate\Auth\AuthenticationException) return;
+            if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) return;
+            if ($e instanceof \Illuminate\Session\TokenMismatchException) return;
+
+            // Persist tenant-side errors to the central tenant_issues table so
+            // superadmins can see what broke and for which tenant.
+            try {
+                if (function_exists('tenant') && tenant()) {
+                    \App\Services\TenantIssueReporter::reportException(
+                        e: $e,
+                        code: 'UNCAUGHT_TENANT_EXCEPTION',
+                        title: class_basename($e) . ': ' . $e->getMessage(),
+                        area: 'tenant',
+                        severity: 'error',
+                    );
+                }
+            } catch (\Throwable $t) {
+                // Squelch to avoid recursive failures
+            }
 
             try {
                 $admins = \App\Models\User::role(['super_admin'])->get();

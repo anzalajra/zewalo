@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Models\Setting;
 use App\Models\TenantCategory;
 use App\Services\SettingsSyncService;
+use App\Services\TenantIssueReporter;
 use BackedEnum;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -346,12 +347,26 @@ class SetupWizard extends Page implements HasForms
                         $seeder->run($category->slug);
                     }
                 } catch (\Throwable $e) {
-                    Log::warning("SetupWizard: Template seeder failed: {$e->getMessage()}");
+                    $ref = TenantIssueReporter::reportException(
+                        e: $e,
+                        code: 'SETUP_WIZARD_SEED_FAILED',
+                        title: 'Template seeder failed during Setup Wizard',
+                        area: 'setup_wizard',
+                        severity: 'error',
+                        context: [
+                            'category_id' => $categoryId,
+                            'category_slug' => isset($category) ? $category?->slug : null,
+                            'tenant_id' => $tenant->id,
+                        ],
+                    );
+
+                    Log::warning("SetupWizard: Template seeder failed [{$ref}]: {$e->getMessage()}");
 
                     Notification::make()
                         ->title('Data contoh gagal diimport')
-                        ->body('Anda bisa menambahkan produk secara manual.')
+                        ->body("Kode error: {$ref}. Tim kami sudah menerima laporan otomatis. Anda tetap bisa menambahkan produk secara manual.")
                         ->warning()
+                        ->persistent()
                         ->send();
                 }
             }

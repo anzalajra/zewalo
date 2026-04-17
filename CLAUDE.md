@@ -346,6 +346,106 @@ docker exec -it <container> php artisan config:show queue | grep "^  default"
 docker exec -it <container> php artisan queue:monitor redis:tenant-creation,redis:default
 ```
 
+## File Upload & R2 Storage (Critical)
+
+Sistem upload file di Zewalo punya 2 tahap: **Livewire temp** (lokal) → **R2 permanen**. Memahami ini penting karena bug "uploading stuck" di production biasanya di step pertama, bukan R2.
+
+### Upload Flow
+```
+Filament FileUpload
+  ↓ [step 1] Livewire POST /livewire/upload-file
+  ↓           → simpan ke LIVEWIRE_TMP_DISK (local)
+  ↓           → return TemporaryUploadedFile
+  ↓ [step 2] Form save() → Filament storeFiles()
+  ↓           → move dari temp disk ke target disk (r2)
+  ↓           → return final path (disimpan di DB)
+```
+
+### Komponen File Upload
+| Komponen | File | Kegunaan |
+|---------|------|----------|
+| `TenantFileUpload` | `app/Filament/Components/TenantFileUpload.php` | Auto-prefix tenant: `tenant_<id>/<dir>/file.ext`. Default disk=`r2`, visibility=`private`. |
+| `FileUpload->tenantDirectory()` | macro di `StorageServiceProvider` | Sama dengan di atas, versi fluent API. |
+| `FileUpload->r2Directory()` | macro di `StorageServiceProvider` | R2 tanpa prefix tenant — untuk central admin (branding, central docs). |
+| `FileUpload->r2Tenant()` | macro di `StorageServiceProvider` | Auto-detect: prefix `tenant_<id>/` jika dalam tenant context, `central/` jika tidak. |
+| `HasTenantStorage` trait | `app/Filament/Concerns/HasTenantStorage.php` | Static helpers: `tenantFileUpload()`, `tenantMultipleFileUpload()`, `tenantDocumentUpload()`. |
+| Central branding: raw `FileUpload->disk('r2')->directory('central/branding')` | `BrandingSettings.php` | Logo/favicon/og image — tanpa macro. |
+
+### R2 Disk Behavior
+- **Default visibility**: `'private'` (di `config/filesystems.php`). R2 tidak support ACL per-object — **jangan set `->visibility('public')`** karena R2 akan reject header `x-amz-acl: public-read` dan upload gagal.
+- **Public access** via bucket public URL (`CLOUDFLARE_R2_URL` env / `r2_url` setting), bukan ACL. Asset yang disimpan private tetap bisa diakses publik kalau bucket-nya public.
+- **`r2` disk BUKAN bagian dari `tenancy.filesystem.disks`** — tidak di-suffix per tenant oleh `FilesystemTenancyBootstrapper`. Prefix tenant ditangani manual oleh `TenantStorageService::getPath()`.
+
+### R2 Config Loading
+`CentralSettingsServiceProvider` memuat R2 creds dari `CentralSetting` group `r2` ke `config('filesystems.disks.r2.*')` saat boot. Kredensial disimpan di DB (bukan `.env`) karena bisa diubah via Central Admin UI tanpa redeploy.
+
+- **Per-request cache**: `static $r2Loaded = true` setelah load pertama di request → panggilan berikutnya no-op.
+- **Force reload**: `CentralSettingsServiceProvider::ensureR2Config(force: true)` — dipakai setelah ganti kredensial di runtime, atau di CLI command.
+- **Reset flag**: `CentralSettingsServiceProvider::resetR2Cache()` — reset `$r2Loaded = false` tanpa langsung reload.
+- **Storage::purge('r2')** dipanggil di `loadR2Settings()` supaya disk instance di-recreate dengan config baru.
+- **Di queue worker**: R2 config ter-load sekali saat worker boot. Kalau kredensial diubah saat worker jalan, restart worker (`supervisorctl restart queue-worker`) atau panggil `ensureR2Config(force: true)` di awal job.
+
+### Livewire Temp Upload (Penyebab Umum "Uploading Stuck")
+`config/livewire.php` → `temporary_file_upload.disk` = `LIVEWIRE_TMP_DISK` env, **harus `local`** (bukan `r2` / `public` / `s3`). Alasan:
+- Livewire temp disk harus writable dalam single-container (Docker Alpine).
+- Kalau set ke `r2`: tiap chunk upload jadi round-trip ke R2 via signed URL → lambat, tidak reliable, sering timeout.
+- Kalau set ke `public`: `storage/app/public/livewire-tmp` tidak auto-created di Dockerfile + permissions rawan bentrok antara root (entrypoint) dan www-data (php-fpm).
+
+**Direktori wajib ada** di container (pre-created di Dockerfile + re-ensured di entrypoint):
+- `storage/app/private/livewire-tmp/` — untuk `local` disk (Laravel 11+ private root)
+- `storage/app/livewire-tmp/` — backup location
+- `storage/app/public/livewire-tmp/` — jika fallback ke `public`
+
+Semua dengan `chown www:www-data` + `chmod 775`.
+
+### Verifikasi R2 Writable
+**Problem umum**: R2 credentials valid saat `testConnection()` (yang hanya list directories) tapi gagal saat PUT karena permission scope token R2 hanya "Read". Probe menulis file kecil untuk catch ini.
+
+```bash
+# CLI — paling reliable, runs dengan env production
+docker exec -it <container> php artisan r2:probe                 # central + semua tenant
+docker exec -it <container> php artisan r2:probe --central       # central only
+docker exec -it <container> php artisan r2:probe --tenant=<id>   # satu tenant
+```
+
+Via UI: **Central Admin → System → R2 Storage Settings** → tombol **"Test Tulis (Central)"** atau **"Test Tulis Semua Tenant"**. Hasil tampil di section dengan latency + error message per scope.
+
+Probe otomatis juga jalan di `CreateTenantStorageFolder` job setelah tenant baru dibuat — kalau gagal, log ke level `error` (visible di Log Viewer).
+
+### Debugging "Uploading Stuck"
+Urutan diagnosis:
+1. Buka DevTools → Network → lihat request `POST /livewire/upload-file`. Kalau tidak ada response / timeout → step 1 (Livewire temp) bermasalah.
+2. Cek `LIVEWIRE_TMP_DISK` env: `docker exec ... php artisan config:show livewire.temporary_file_upload.disk` — harus `local`.
+3. Cek writable: `docker exec ... ls -la storage/app/private/livewire-tmp/` — harus ada, owner `www:www-data`.
+4. Kalau step 1 OK tapi tetap stuck di progress 95%+: step 2 (move ke R2) bermasalah. Jalankan `php artisan r2:probe` — biasanya ketemu error kredensial/permission di sini.
+5. Lihat **Central Admin → System → Log Viewer** untuk error detail dari `laravel.log` / `php-errors.log`.
+
+## Log Viewer (Central Admin)
+
+**Central Admin → System → Log Viewer** — aggregated viewer untuk semua file `*.log` di `storage/logs/`.
+
+### Arsitektur
+- `app/Services/LogViewerService.php` — parse `*.log` files, support format Laravel standar (`[date] env.LEVEL: message\ncontext`) + fallback raw-line untuk log non-Laravel.
+- `app/Filament/Central/Pages/LogViewer.php` — Filament page dengan filter (file / level / keyword), URL-persistent via `#[Url]` Livewire attributes.
+- `resources/views/filament/central/pages/log-viewer.blade.php` — UI dengan summary cards (error/warning/critical/info count), file sidebar, expandable entries dengan stack trace, copy button, download raw file, truncate file.
+
+### File Log yang Tampil
+Semua `*.log` dan `*.txt` di `storage/logs/`:
+- `laravel.log` — aplikasi Laravel (central + semua tenant; shared container storage)
+- `queue-worker.log` / `queue-worker-error.log` — queue worker (supervisord)
+- `scheduler.log` / `scheduler-error.log` — scheduler loop (supervisord)
+- `php-errors.log` — error dari `error_log` di `php.ini`
+- `backup-restore.log` — backup-restore operations (tenant channel)
+
+### Cara Pakai untuk Support
+1. User report error → bukak Log Viewer → filter `level:error` + search keyword.
+2. Klik entry untuk expand → lihat full stack trace → click **Copy** button untuk share ke support.
+3. Atau download raw file via tombol **Download** untuk attach ke tiket.
+4. **Clear** button untuk truncate file (misal setelah issue resolved, agar log tidak bloat).
+
+### Menambah Log Channel Baru
+Kalau tambah channel di `config/logging.php` dengan `'path' => storage_path('logs/xxx.log')`, otomatis tampil di Log Viewer tanpa perubahan kode — `LogViewerService::listFiles()` scan direktori `storage/logs/`.
+
 ## Key Conventions
 
 - The app uses Indonesian language for some user-facing routes and labels (e.g., `/masuk` for login)
@@ -353,10 +453,7 @@ docker exec -it <container> php artisan queue:monitor redis:tenant-creation,redi
 - Products have Units (individual trackable items) and optional Variations and Components
 - Rental flow: Quotation → Confirmed → Active → Returned (with partial return support)
 - Custom customer auth system with middleware `customer.auth` and `customer.guest` (separate from admin `auth`)
-- File uploads: tenant files use `TenantFileUpload` component (`app/Filament/Components/TenantFileUpload.php`) which auto-prefixes tenant directory on R2. Central file uploads (branding) use standard `FileUpload` with `disk('r2')` and `directory('central/branding')`. **Jangan pakai `disk('public')` di production** — local storage tidak persisten di Docker, gunakan R2
-- **Jangan set `->visibility('public')` pada FileUpload di R2** — Cloudflare R2 tidak mendukung ACL per-object, `public-read` header akan ditolak dan menyebabkan upload gagal. Gunakan bucket public URL (`CLOUDFLARE_R2_URL`) untuk akses publik; default `'private'` dari disk config sudah cukup.
-- **Verifikasi R2 write dari CLI**: `php artisan r2:probe` (central + semua tenant), `--central` atau `--tenant=xxx` untuk scope tertentu. Ini menulis file kecil dan menghapusnya untuk memastikan kredensial + permission benar. Tersedia juga di Central Admin → R2 Storage Settings tombol "Test Tulis Semua Tenant".
-- **R2 config caching**: `CentralSettingsServiceProvider` memuat R2 creds dari `CentralSetting` ke `config('filesystems.disks.r2.*')` saat boot. Untuk force reload di runtime (setelah ganti kredensial): `CentralSettingsServiceProvider::ensureR2Config(force: true)`.
+- File uploads: lihat bagian **File Upload & R2 Storage** di atas untuk detail lengkap (komponen, macro, visibility, probe, debugging).
 - Central vs tenant settings: use `CentralSetting` for platform-wide, `Setting` for per-tenant. Both have 1-hour cache with auto-invalidation
 - View composers in `AppServiceProvider::boot()` inject data into specific blade views (PDF settings, theme CSS vars, central branding). Wrap in try/catch for migration safety
 - `config('app.name')` is overridden at boot: first by `CentralSetting::get('branding_site_name')`, then by tenant `Setting::get('site_name')` — this cascade ensures emails and UI always show the correct name
