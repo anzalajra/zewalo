@@ -102,7 +102,29 @@ New tenants get `setup_status = 'pending'` on creation (set in `CreateTenantJob`
 - Render hook banner at `panels::content.start` (blue, above subscription warning)
 - Skip button available → sets `setup_status = 'skipped'`
 
-**Template Seeders:** `database/seeders/tenant/TenantTemplateSeeder.php` dispatches to category-specific seeders in `database/seeders/tenant/templates/` (Photography, Automotive, Camping, Electronics, Wedding, Sports, Music, Default). Each creates 1-2 categories + 3 products with 1 unit each.
+**Template Data Source:** Template data **lives in the central database** (tables `tenant_templates`, `tenant_template_brands`, `tenant_template_product_categories`, `tenant_template_products`, `tenant_template_product_units`, `tenant_template_product_variations`, `tenant_template_product_components`). Manage via **Central Admin → Tenant Management → Tenant Templates** (`TenantTemplateResource`). One active template per `TenantCategory`.
+
+**Seeder entry point:** `database/seeders/Tenant/TenantTemplateSeeder.php::run($categorySlug, $tenantId)` queries `TenantCategory::on('central')->activeTemplate` and delegates to `App\Services\TemplateImporter`. If no active template exists → no-op (logged at info). Legacy PHP seeders under `database/seeders/tenant/Templates/` are retained ONLY for the one-off `templates:import-legacy` command that backfills existing data into the central DB; they are not invoked at runtime.
+
+**TemplateImporter service** (`App\Services\TemplateImporter::import($template, $tenantId)`):
+- Wrapped in `DB::transaction` on the tenant connection. Multi-pass:
+  1. Create `Brand` per template brand — fallback to existing active brand or "Umum" (`products.brand_id` NOT NULL).
+  2. Create `Category` per template product category.
+  3. Create `Product` — copy image from central R2 to tenant R2 prefix (see below).
+  4. Create `ProductUnit` (`serial_number = TMPL-{SLUG}-{suffix}`) + `ProductVariation`.
+  5. Create `ProductComponent` (kit/bundle) resolving parent/child via product map.
+- **Image copy**: `TenantStorageService::copyFromCentral($absoluteCentralPath, $tenantRelativePath, $tenantId)` — uses raw `Storage::disk('r2')->copy()`. Source is absolute (e.g. `central/templates/<template_id>/foo.jpg`), target gets auto-prefixed to `tenant_<id>/products/...`. Retries 3x with exponential backoff (100/300/900ms) on failure. Final failure = **soft-fail**: log + `TenantIssueReporter::report()` with code `TEMPLATE_IMAGE_COPY_FAILED`, set `image = null`, continue import. Structural failures (brand/category/product/component inserts) hard-fail the whole transaction.
+
+**Adding template data via Central Admin:**
+1. Navigate to `sa.{domain}/admin/tenant-templates`
+2. Create template → select `Tenant Category` (unique, 1:1) → save
+3. Add Brands (mark one as "default"), then Product Categories, then Products
+4. In each Product: set image (uploaded to `central/templates/<template_id>/`, R2 private visibility), define Units (Tab), Variations (Tab), Components/Kit (Tab — child must be another product in the same template)
+
+**Legacy import command:** `php artisan templates:import-legacy` (add `--fresh` to wipe & reimport). Reads `$legacySeederMap` in `TenantTemplateSeeder`, reflects into `categories()` + `products()` of each legacy PHP seeder, inserts into central template tables with default "Umum" brand. Skips categories that already have a template.
+
+- **Known limitations (v1)**: single `image_path` per template product (no gallery); no template-level warehouses/variations-per-unit support yet.
+- **Error handling**: if the seeder throws, `SetupWizard::submit()` reports it via `TenantIssueReporter` (code `SETUP_WIZARD_SEED_FAILED`) and shows the reference `ZWL-ERR-XXXXXX` to the user. See the **Tenant Issues** section below.
 
 **Backfill existing tenants:** `php artisan tenants:backfill-setup-status` — checks if tenant has site_logo or products, marks as `completed` if so.
 
@@ -130,10 +152,12 @@ Located in `app/Filament/Central/Pages/` — System-level settings pages:
 
 ### Filament Central Admin Resources
 Located in `app/Filament/Central/Resources/`:
-- `TenantResource`, `TenantCategoryResource`, `UserResource`
+- `TenantResource`, `TenantCategoryResource`, `TenantTemplateResource`, `UserResource`
 - `SubscriptionPlanResource`, `SaasInvoiceResource`
 - `PaymentGatewayResource`, `PaymentMethodResource`
 - `TranslationResource`
+
+`TenantTemplateResource` backs **Central Admin → Tenant Management → Tenant Templates**. Template data (brands, product categories, products with images, units, variations, kit components) is stored in central DB tables (`tenant_templates` + children) and imported into tenant DB on Setup Wizard step 4. See **Tenant Setup Wizard** section for the full flow.
 
 ### Filament Clusters (Tenant)
 - `app/Filament/Clusters/Finance/` — Double-entry accounting: journal entries, chart of accounts, finance transactions, tax reports, depreciation
@@ -470,6 +494,62 @@ Semua `*.log` dan `*.txt` di `storage/logs/`:
 
 ### Menambah Log Channel Baru
 Kalau tambah channel di `config/logging.php` dengan `'path' => storage_path('logs/xxx.log')`, otomatis tampil di Log Viewer tanpa perubahan kode — `LogViewerService::listFiles()` scan direktori `storage/logs/`.
+
+## Tenant Issues (Central Admin Error Reporting)
+
+**Central Admin → System → Tenant Issues** — persistent error tracker untuk error yang terjadi di tenant context. Lebih struktur daripada Log Viewer: setiap error dapat reference code (`ZWL-ERR-000123`), bisa di-resolve/reopen, punya status tracking, dan terfilter per tenant.
+
+### Kapan Pakai Tenant Issues vs Log Viewer
+- **Tenant Issues**: error yang perlu action (bug, config salah, seed gagal). User bisa kasih kode `ZWL-ERR-XXXXXX` ke support untuk lookup langsung.
+- **Log Viewer**: raw log files untuk debugging mendalam (stack trace, SQL, cache warnings). Tidak punya state resolved/unresolved.
+
+Keduanya komplementer — unhandled tenant exception masuk ke **keduanya** (Log Viewer via Laravel logger, Tenant Issues via reportable hook).
+
+### Arsitektur
+- **Table** `tenant_issues` (central DB) — `tenant_id`, `tenant_name`, `code`, `area`, `severity`, `title`, `message`, `exception_class`, `file`, `line`, `stack_trace`, `context` (JSON), `url`, `user_email`, `resolved_at`, `resolved_by`, `resolution_note`.
+- **Model**: `App\Models\TenantIssue` — connection `central`, scope `unresolved()`, `markResolved($by, $note)`.
+- **Service**: `App\Services\TenantIssueReporter` — dua method utama:
+  - `reportException(Throwable $e, string $code, string $title, string $area = 'tenant', string $severity = 'error', array $context = []): string` — catat exception (auto capture file/line/trace). Return reference `ZWL-ERR-000123`.
+  - `report(string $code, string $title, string $message, string $area, string $severity, array $context): string` — catat issue non-exception (config salah, validasi bisnis gagal).
+- **Filament Resource**: `App\Filament\Central\Resources\TenantIssueResource` — list/view/edit + aksi **Resolve** / **Reopen**, sidebar badge shows unresolved count.
+
+### Global Reporter (Auto-Capture)
+`bootstrap/app.php` `withExceptions()` reportable hook otomatis catat setiap exception dalam tenant context dengan code `UNCAUGHT_TENANT_EXCEPTION`. Skipped: `NotFoundHttpException`, `MethodNotAllowedHttpException`, `ValidationException`, `AuthenticationException`, `AuthorizationException`, `TokenMismatchException` (non-critical / user error).
+
+### Convention untuk Error Code
+Format: `SCREAMING_SNAKE_CASE`, 64 char max. Pola rekomendasi: `{AREA}_{WHAT_FAILED}`, misal:
+- `SETUP_WIZARD_SEED_FAILED` — seeder error di wizard
+- `R2_UPLOAD_FAILED` — file upload gagal ke R2
+- `TENANT_MIGRATION_FAILED` — tenant migration error
+- `UNCAUGHT_TENANT_EXCEPTION` — fallback untuk unhandled exception
+
+### Pola Pakai di Code
+```php
+use App\Services\TenantIssueReporter;
+
+try {
+    // ... code yang bisa gagal
+} catch (\Throwable $e) {
+    $ref = TenantIssueReporter::reportException(
+        e: $e,
+        code: 'MY_FEATURE_FAILED',
+        title: 'Human-readable description',
+        area: 'my_feature',
+        severity: 'error', // 'critical' | 'error' | 'warning'
+        context: ['extra' => 'data'],
+    );
+
+    // Tampilkan reference ke user supaya bisa lapor ke support
+    Notification::make()
+        ->title('Terjadi error')
+        ->body("Kode error: {$ref}")
+        ->warning()
+        ->send();
+}
+```
+
+### Navigation Badge
+Sidebar navigation menampilkan badge jumlah issue yang unresolved. Warna **danger** kalau ada severity `critical`, **warning** untuk lainnya. Helps superadmin spot issue baru tanpa polling halaman.
 
 ## Key Conventions
 

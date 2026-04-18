@@ -2,36 +2,63 @@
 
 namespace Database\Seeders\Tenant;
 
-use Database\Seeders\Tenant\Templates\AutomotiveTemplateSeeder;
-use Database\Seeders\Tenant\Templates\CampingTemplateSeeder;
-use Database\Seeders\Tenant\Templates\DefaultTemplateSeeder;
-use Database\Seeders\Tenant\Templates\ElectronicsTemplateSeeder;
-use Database\Seeders\Tenant\Templates\MusicTemplateSeeder;
-use Database\Seeders\Tenant\Templates\PhotographyTemplateSeeder;
-use Database\Seeders\Tenant\Templates\SportsTemplateSeeder;
-use Database\Seeders\Tenant\Templates\WeddingTemplateSeeder;
+use App\Models\TenantCategory;
+use App\Services\TemplateImporter;
+use Illuminate\Support\Facades\Log;
 
 class TenantTemplateSeeder
 {
-    protected static array $seederMap = [
-        'photography' => PhotographyTemplateSeeder::class,
-        'automotive' => AutomotiveTemplateSeeder::class,
-        'camping' => CampingTemplateSeeder::class,
-        'electronics' => ElectronicsTemplateSeeder::class,
-        'wedding' => WeddingTemplateSeeder::class,
-        'sports' => SportsTemplateSeeder::class,
-        'music' => MusicTemplateSeeder::class,
-        'other' => DefaultTemplateSeeder::class,
+    /**
+     * Legacy file-based seeder map — retained only for the one-off
+     * `templates:import-legacy` command that seeds existing template data
+     * into the new central database tables. Not used at runtime.
+     *
+     * @deprecated Template data now lives in the central DB. Edit via
+     *             Central Admin → Tenant Management → Tenant Templates.
+     */
+    protected static array $legacySeederMap = [
+        'photography' => \Database\Seeders\Tenant\Templates\PhotographyTemplateSeeder::class,
+        'automotive' => \Database\Seeders\Tenant\Templates\AutomotiveTemplateSeeder::class,
+        'camping' => \Database\Seeders\Tenant\Templates\CampingTemplateSeeder::class,
+        'electronics' => \Database\Seeders\Tenant\Templates\ElectronicsTemplateSeeder::class,
+        'wedding' => \Database\Seeders\Tenant\Templates\WeddingTemplateSeeder::class,
+        'sports' => \Database\Seeders\Tenant\Templates\SportsTemplateSeeder::class,
+        'music' => \Database\Seeders\Tenant\Templates\MusicTemplateSeeder::class,
+        'other' => \Database\Seeders\Tenant\Templates\DefaultTemplateSeeder::class,
     ];
 
-    public static function resolveSeeder(string $categorySlug): string
+    public static function getLegacySeederMap(): array
     {
-        return static::$seederMap[$categorySlug] ?? DefaultTemplateSeeder::class;
+        return static::$legacySeederMap;
     }
 
-    public function run(string $categorySlug): void
+    /**
+     * Import the central template for a given tenant category into the
+     * currently-active tenant database.
+     *
+     * Expects tenancy to already be initialized for the target tenant.
+     * If no active template exists for the category, this is a no-op.
+     */
+    public function run(string $categorySlug, ?string $tenantId = null): void
     {
-        $seederClass = static::resolveSeeder($categorySlug);
-        (new $seederClass)->run();
+        $category = TenantCategory::on('central')
+            ->where('slug', $categorySlug)
+            ->first();
+
+        if (! $category) {
+            Log::info("TenantTemplateSeeder: no tenant_category found for slug [{$categorySlug}] — skipping import");
+
+            return;
+        }
+
+        $template = $category->activeTemplate;
+
+        if (! $template) {
+            Log::info("TenantTemplateSeeder: no active template for category [{$categorySlug}] — skipping import");
+
+            return;
+        }
+
+        app(TemplateImporter::class)->import($template, $tenantId);
     }
 }

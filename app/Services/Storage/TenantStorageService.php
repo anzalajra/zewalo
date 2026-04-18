@@ -197,6 +197,20 @@ class TenantStorageService
     }
 
     /**
+     * Copy a file from an absolute R2 path (e.g. `central/templates/...`)
+     * into a tenant-prefixed path (`tenant_<id>/<relative>`).
+     *
+     * Unlike `copy()`, the source is used verbatim — no tenant prefix is prepended
+     * to it. Used for central → tenant asset transfers (template images, etc).
+     */
+    public function copyFromCentral(string $centralAbsolutePath, string $tenantRelativePath, ?string $tenantId = null): bool
+    {
+        $toPath = $this->getPath($tenantRelativePath, $tenantId);
+
+        return Storage::disk($this->disk)->copy($centralAbsolutePath, $toPath);
+    }
+
+    /**
      * Move a file to a new location.
      */
     public function move(string $from, string $to): bool

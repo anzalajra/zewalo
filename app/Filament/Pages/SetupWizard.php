@@ -344,7 +344,7 @@ class SetupWizard extends Page implements HasForms
                     $category = TenantCategory::find($categoryId);
                     if ($category) {
                         $seeder = new \Database\Seeders\Tenant\TenantTemplateSeeder;
-                        $seeder->run($category->slug);
+                        $seeder->run($category->slug, $tenant->id);
                     }
                 } catch (\Throwable $e) {
                     $ref = TenantIssueReporter::reportException(
