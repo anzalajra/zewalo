@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\ProductUnits\Tables;
 
+use App\Models\Category;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -119,6 +121,17 @@ class ProductUnitsTable
                     ->label('Category')
                     ->searchable()
                     ->preload(),
+                TernaryFilter::make('show_kits')
+                    ->label('Accessories & Kits')
+                    ->placeholder('Hide kits (default)')
+                    ->trueLabel('Show kits only')
+                    ->falseLabel('Hide kits')
+                    ->default(false)
+                    ->queries(
+                        true: fn (Builder $q) => $q->whereHas('product.category', fn ($c) => $c->where('slug', Category::SYSTEM_SLUG_ACCESSORIES_KITS)),
+                        false: fn (Builder $q) => $q->whereDoesntHave('product.category', fn ($c) => $c->where('slug', Category::SYSTEM_SLUG_ACCESSORIES_KITS)),
+                        blank: fn (Builder $q) => $q->whereDoesntHave('product.category', fn ($c) => $c->where('slug', Category::SYSTEM_SLUG_ACCESSORIES_KITS)),
+                    ),
             ])
             ->recordActions([
                 EditAction::make(),

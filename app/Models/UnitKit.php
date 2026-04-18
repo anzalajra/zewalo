@@ -10,6 +10,7 @@ class UnitKit extends Model
     protected $fillable = [
         'unit_id',
         'linked_unit_id',
+        'track_by_serial',
         'name',
         'serial_number',
         'condition',
@@ -20,6 +21,11 @@ class UnitKit extends Model
 
     protected $casts = [
         'last_checked_at' => 'datetime',
+        'track_by_serial' => 'boolean',
+    ];
+
+    protected $attributes = [
+        'track_by_serial' => true,
     ];
 
     public function productUnit(): BelongsTo

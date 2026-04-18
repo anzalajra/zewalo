@@ -2,10 +2,8 @@
 
 namespace App\Filament\Resources\Products\RelationManagers;
 
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Product;
 use App\Models\ProductUnit;
+use App\Models\UnitKit;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -19,11 +17,11 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Support\Str;
 
 class UnitsRelationManager extends RelationManager
 {
@@ -32,66 +30,6 @@ class UnitsRelationManager extends RelationManager
     protected static ?string $title = 'Product Units';
 
     protected static ?string $recordTitleAttribute = 'serial_number';
-
-    // Helper to ensure Product and Unit exist for a Kit item
-    protected function ensureKitIsUnit(array $data): array
-    {
-        if (!empty($data['name'])) {
-            // 1. Ensure Default Category & Brand
-            $category = Category::firstOrCreate(
-                ['slug' => 'accessories-kits'],
-                ['name' => 'Accessories & Kits']
-            );
-            
-            $brand = Brand::firstOrCreate(
-                ['slug' => 'generic'],
-                ['name' => 'Generic']
-            );
-
-            // 2. Find or Create Product
-            $productSlug = Str::slug($data['name']);
-            $product = Product::where('name', $data['name'])->first();
-            
-            if (!$product) {
-                if (Product::where('slug', $productSlug)->exists()) {
-                     $productSlug .= '-' . Str::random(4);
-                }
-                
-                $product = Product::create([
-                    'name' => $data['name'],
-                    'slug' => $productSlug,
-                    'category_id' => $category->id,
-                    'brand_id' => $brand->id,
-                    'daily_rate' => 0, // Default 0 for kits
-                    'is_active' => true,
-                ]);
-            }
-
-            // 3. Find or Create Unit
-            $serial = $data['serial_number'] ?? ('KIT-' . strtoupper(Str::random(8)));
-            $unit = ProductUnit::where('serial_number', $serial)->first();
-
-            if (!$unit) {
-                $unit = ProductUnit::create([
-                    'product_id' => $product->id,
-                    'serial_number' => $serial,
-                    'status' => ProductUnit::STATUS_AVAILABLE,
-                    'condition' => $data['condition'] ?? 'good',
-                ]);
-            }
-            
-            // 4. Update ALL existing kits with this serial to link to this unit
-            // This fixes "ghost" kits that were created before the ProductUnit existed
-            \App\Models\UnitKit::where('serial_number', $serial)
-                ->whereNull('linked_unit_id')
-                ->update(['linked_unit_id' => $unit->id]);
-
-            // 5. Update data to link to this unit
-            $data['linked_unit_id'] = $unit->id;
-        }
-        
-        return $data;
-    }
 
     public function form(Schema $schema): Schema
     {
@@ -165,123 +103,48 @@ class UnitsRelationManager extends RelationManager
                     ]),
 
                 Section::make('Kits / Accessories')
-                    ->description('Add accessories or link other product units to create a Bundle.')
+                    ->description('Add accessories. Enable "Track by serial" to mirror the kit as a ProductUnit that can be rented and shared across units with the same serial.')
                     ->schema([
                         Repeater::make('kits')
                             ->relationship('kits')
                             ->schema([
-                                \Filament\Forms\Components\Hidden::make('linked_unit_id')
-                                    ->dehydrateStateUsing(function ($state, callable $get) {
-                                        $name = $get('name');
-                                        if (empty($name)) {
-                                            return $state;
-                                        }
-
-                                        // 1. Ensure Default Category & Brand
-                                        $category = Category::firstOrCreate(
-                                            ['slug' => 'accessories-kits'],
-                                            ['name' => 'Accessories & Kits']
-                                        );
-                                        
-                                        $brand = Brand::firstOrCreate(
-                                            ['slug' => 'generic'],
-                                            ['name' => 'Generic']
-                                        );
-
-                                        // 2. Find or Create Product
-                                        $productSlug = Str::slug($name);
-                                        $product = Product::where('name', $name)->first();
-                                        
-                                        if (!$product) {
-                                            if (Product::where('slug', $productSlug)->exists()) {
-                                                 $productSlug .= '-' . Str::random(4);
-                                            }
-                                            
-                                            $product = Product::create([
-                                                'name' => $name,
-                                                'slug' => $productSlug,
-                                                'category_id' => $category->id,
-                                                'brand_id' => $brand->id,
-                                                'daily_rate' => 0, // Default 0 for kits
-                                                'is_active' => true,
-                                            ]);
-                                        }
-
-                                        // 3. Find or Create Unit
-                                        $serial = $get('serial_number') ?? ('KIT-' . strtoupper(Str::random(8)));
-                                        $unit = ProductUnit::where('serial_number', $serial)->first();
-
-                                        if (!$unit) {
-                                            $unit = ProductUnit::create([
-                                                'product_id' => $product->id,
-                                                'serial_number' => $serial,
-                                                'status' => ProductUnit::STATUS_AVAILABLE,
-                                                'condition' => $get('condition') ?? 'good',
-                                            ]);
-                                        }
-                                        
-                                        // 4. Update ALL existing kits with this serial to link to this unit
-                                        // This fixes "ghost" kits that were created before the ProductUnit existed
-                                        \App\Models\UnitKit::where('serial_number', $serial)
-                                            ->whereNull('linked_unit_id')
-                                            ->update(['linked_unit_id' => $unit->id]);
-
-                                        return $unit->id;
-                                    }),
-
                                 TextInput::make('name')
                                     ->required()
-                                    ->maxLength(255)
-                                    ->dehydrated(),
+                                    ->maxLength(255),
+
+                                Toggle::make('track_by_serial')
+                                    ->label('Track by serial')
+                                    ->default(true)
+                                    ->live(),
 
                                 TextInput::make('serial_number')
                                     ->maxLength(255)
-                                    ->dehydrated()
+                                    ->required(fn (callable $get) => (bool) $get('track_by_serial'))
+                                    ->visible(fn (callable $get) => (bool) $get('track_by_serial'))
                                     ->live(onBlur: true)
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get, $livewire) {
-                                        // Check if Serial Number matches an existing Product Unit or Kit
-                                        if (filled($state)) {
-                                            $existingUnit = \App\Models\ProductUnit::where('serial_number', $state)->first();
-                                            
-                                            if ($existingUnit) {
-                                                $set('name', $existingUnit->product->name);
-                                                $set('condition', $existingUnit->condition);
-                                                
-                                                \Filament\Notifications\Notification::make()
-                                                    ->title('Existing Unit Found')
-                                                    ->body("Found unit '{$existingUnit->product->name}' with serial '{$state}'. It will be linked automatically.")
-                                                    ->success()
-                                                    ->send();
-                                                return;
-                                            }
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                        if (! filled($state)) {
+                                            return;
+                                        }
 
-                                            // Check if Serial Number matches a Kit in another Unit
-                                            $currentUnitId = $livewire->getOwnerRecord()->id;
-                                            $existingKit = \App\Models\UnitKit::where('serial_number', $state)
-                                                ->where('unit_id', '!=', $currentUnitId)
-                                                ->with('unit.product')
-                                                ->first();
+                                        $existingUnit = ProductUnit::where('serial_number', $state)->with('product')->first();
 
-                                            if ($existingKit && $existingKit->unit) {
-                                                 \Filament\Notifications\Notification::make()
-                                                     ->title('Existing Kit Found')
-                                                     ->body("This serial number is also used in '{$existingKit->unit->product->name}' (Unit: {$existingKit->unit->serial_number}). It will be automatically converted to a trackable unit and linked.")
-                                                     ->info()
-                                                     ->send();
-                                                 
-                                                 // Pre-fill name if empty
-                                                 if (!filled($get('name'))) {
-                                                     $set('name', $existingKit->name);
-                                                 }
-                                             }
+                                        if ($existingUnit) {
+                                            $set('name', $existingUnit->product->name);
+                                            $set('condition', $existingUnit->condition);
+
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Existing Unit Found')
+                                                ->body("Unit '{$existingUnit->product->name}' with serial '{$state}' will be linked automatically.")
+                                                ->success()
+                                                ->send();
                                         }
                                     }),
 
                                 Select::make('condition')
-                                    ->options(\App\Models\UnitKit::getConditionOptions())
+                                    ->options(UnitKit::getConditionOptions())
                                     ->required()
-                                    ->default('excellent')
-                                    ->dehydrated(),
+                                    ->default('excellent'),
 
                                 Textarea::make('notes')
                                     ->rows(1)
