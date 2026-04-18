@@ -37,11 +37,11 @@ class CentralPanelProvider extends PanelProvider
             }
             $logo = \App\Models\CentralSetting::get('branding_logo');
             if ($logo) {
-                $brandLogo = \Illuminate\Support\Facades\Storage::disk('r2')->url($logo);
+                $brandLogo = \App\Services\Storage\R2Url::signed($logo);
             }
             $fav = \App\Models\CentralSetting::get('branding_favicon');
             if ($fav) {
-                $favicon = \Illuminate\Support\Facades\Storage::disk('r2')->url($fav);
+                $favicon = \App\Services\Storage\R2Url::signed($fav);
             }
         } catch (\Exception $e) {
             // Fallback to defaults if central_settings table doesn't exist yet

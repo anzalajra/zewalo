@@ -89,7 +89,7 @@
                             <div class="flex gap-4">
                                 <div class="h-20 w-20 bg-gray-200 rounded flex-shrink-0 flex items-center justify-center">
                                     @if($product->image)
-                                        <img src="{{ Storage::disk('r2')->url($product->image) }}" alt="" class="h-full w-full object-cover rounded">
+                                        <img src="{{ \App\Services\Storage\R2Url::signed($product->image) }}" alt="" class="h-full w-full object-cover rounded">
                                     @else
                                         <span class="text-2xl">📷</span>
                                     @endif
@@ -166,7 +166,7 @@
                                         <div class="flex items-center">
                                             <div class="h-16 w-16 bg-gray-200 rounded flex items-center justify-center mr-4">
                                                 @if($product->image)
-                                                    <img src="{{ Storage::disk('r2')->url($product->image) }}" alt="" class="h-full w-full object-cover rounded">
+                                                    <img src="{{ \App\Services\Storage\R2Url::signed($product->image) }}" alt="" class="h-full w-full object-cover rounded">
                                                 @else
                                                     <span class="text-2xl">📷</span>
                                                 @endif

@@ -50,10 +50,10 @@ class AdminPanelProvider extends PanelProvider
                 if ($siteName) {
                     $brandName = $siteName;
                 }
-                $logo = Setting::get('logo');
+                $logo = Setting::get('site_logo') ?: Setting::get('logo');
                 if ($logo) {
-                    $brandLogo = asset('storage/'.$logo);
-                    $favicon = asset('storage/'.$logo);
+                    $brandLogo = \App\Services\Storage\R2Url::signed($logo);
+                    $favicon = $brandLogo;
                 }
 
                 $navigationLayout = Setting::get('navigation_layout', 'sidebar');

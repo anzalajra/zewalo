@@ -8,6 +8,8 @@ use App\Services\Storage\R2StorageService;
 use App\Services\Storage\TenantStorageService;
 use Closure;
 use Filament\Forms\Components\FileUpload;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Support\ServiceProvider;
 use Stancl\Tenancy\Tenancy;
 
@@ -33,6 +35,26 @@ class StorageServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->extendFilamentFileUpload();
+        $this->forceSignedUrlsOnR2Images();
+    }
+
+    /**
+     * Force Filament's image components to emit signed temporary URLs for the private R2 disk,
+     * since direct url() calls return 404 when the bucket isn't public.
+     */
+    protected function forceSignedUrlsOnR2Images(): void
+    {
+        if (class_exists(ImageColumn::class)) {
+            ImageColumn::configureUsing(function (ImageColumn $column): void {
+                $column->visibility('private');
+            });
+        }
+
+        if (class_exists(ImageEntry::class)) {
+            ImageEntry::configureUsing(function (ImageEntry $entry): void {
+                $entry->visibility('private');
+            });
+        }
     }
 
     /**

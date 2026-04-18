@@ -41,7 +41,7 @@
                 <div class="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition">
                     <div class="h-48 bg-gray-200 flex items-center justify-center">
                         @if($product->image)
-                            <img src="{{ Storage::disk('r2')->url($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
+                            <img src="{{ \App\Services\Storage\R2Url::signed($product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-cover">
                         @else
                             <span class="text-6xl">📷</span>
                         @endif

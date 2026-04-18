@@ -34,7 +34,7 @@
             <div>
                 <a href="/">
                     @if(\App\Models\Setting::get('site_logo'))
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url(\App\Models\Setting::get('site_logo')) }}" alt="{{ \App\Models\Setting::get('site_name', 'Zewalo') }}" class="w-20 h-20 object-contain">
+                        <img src="{{ \App\Services\Storage\R2Url::signed(\App\Models\Setting::get('site_logo')) }}" alt="{{ \App\Models\Setting::get('site_name', 'Zewalo') }}" class="w-20 h-20 object-contain">
                     @else
                         <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
                     @endif

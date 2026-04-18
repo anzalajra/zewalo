@@ -55,7 +55,7 @@
 
                     <a href="{{ url('/') }}" class="flex items-center gap-2 text-xl font-bold text-primary-600">
                         @if(\App\Models\Setting::get('site_logo'))
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('r2')->url(\App\Models\Setting::get('site_logo')) }}" alt="{{ \App\Models\Setting::get('site_name', 'Zewalo') }}" class="h-10 w-auto">
+                            <img src="{{ \App\Services\Storage\R2Url::signed(\App\Models\Setting::get('site_logo')) }}" alt="{{ \App\Models\Setting::get('site_name', 'Zewalo') }}" class="h-10 w-auto">
                         @endif
                         @if(\App\Models\Setting::get('site_name_in_header', true))
                             <span>{{ \App\Models\Setting::get('site_name', 'Zewalo') }}</span>

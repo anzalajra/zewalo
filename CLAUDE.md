@@ -373,7 +373,7 @@ Filament FileUpload
 
 ### R2 Disk Behavior
 - **Default visibility**: `'private'` (di `config/filesystems.php`). R2 tidak support ACL per-object — **jangan set `->visibility('public')`** karena R2 akan reject header `x-amz-acl: public-read` dan upload gagal.
-- **Public access** via bucket public URL (`CLOUDFLARE_R2_URL` env / `r2_url` setting), bukan ACL. Asset yang disimpan private tetap bisa diakses publik kalau bucket-nya public.
+- **Display URL**: **selalu pakai signed URL** via `\App\Services\Storage\R2Url::signed($path)` — `Storage::disk('r2')->url()` mengembalikan direct public URL yang 404 di bucket private. Lihat subseksi *Menampilkan File R2* di bawah.
 - **`r2` disk BUKAN bagian dari `tenancy.filesystem.disks`** — tidak di-suffix per tenant oleh `FilesystemTenancyBootstrapper`. Prefix tenant ditangani manual oleh `TenantStorageService::getPath()`.
 
 ### R2 Config Loading
@@ -384,6 +384,31 @@ Filament FileUpload
 - **Reset flag**: `CentralSettingsServiceProvider::resetR2Cache()` — reset `$r2Loaded = false` tanpa langsung reload.
 - **Storage::purge('r2')** dipanggil di `loadR2Settings()` supaya disk instance di-recreate dengan config baru.
 - **Di queue worker**: R2 config ter-load sekali saat worker boot. Kalau kredensial diubah saat worker jalan, restart worker (`supervisorctl restart queue-worker`) atau panggil `ensureR2Config(force: true)` di awal job.
+
+### Menampilkan File R2 (Signed URLs — Penyebab Umum "Foto 404")
+R2 bucket kita **private** (`visibility => 'private'` di `config/filesystems.php`) — **jangan pernah pakai `Storage::disk('r2')->url($path)` langsung untuk display** karena hasilnya direct public URL yang selalu 404 di bucket private.
+
+**Gunakan helper signed URL**:
+```php
+// Blade / controller — berlaku untuk semua file R2 (logo, produk, dokumen)
+{{ \App\Services\Storage\R2Url::signed($path) }}
+
+// Central branding (logo/favicon/og image) sudah pakai signed di dalam service
+\App\Services\CentralBrandingService::logoUrl()
+\App\Services\CentralBrandingService::faviconUrl()
+\App\Services\CentralBrandingService::ogImageUrl()
+
+// Tenant-prefixed (auto prefix `tenant_{id}/`)
+app(\App\Services\Storage\TenantStorageService::class)->temporaryUrl($path, now()->addHour())
+```
+
+**Filament image components** (`ImageColumn` / `ImageEntry`): `StorageServiceProvider::forceSignedUrlsOnR2Images()` memanggil `configureUsing()` yang memaksa `->visibility('private')` di semua instance — Filament lalu otomatis pakai `temporaryUrl()` saat render. Tidak perlu set manual di setiap resource.
+
+**Filament `FileUpload`**: upload tetap pakai disk `r2` dengan visibility `private` (jangan set `public` — R2 reject ACL). Preview thumbnail di form edit sudah otomatis pakai signed URL karena visibility `private`.
+
+**Kalau suatu saat bucket diubah jadi public** (misal mau pakai CDN): tinggal ganti implementation `R2Url::signed()` jadi `Storage::disk('r2')->url($path)` — semua callsite tidak perlu berubah.
+
+**Kenapa signed, bukan public bucket?** Private + signed URL default: (1) lebih aman, file rental/invoice/KTP customer tidak bisa di-crawl, (2) tidak tergantung config `r2_url` yang sering salah (trailing slash, bucket name duplicate), (3) tiap tenant ter-isolate di level object access — kalaupun URL bocor, expired dalam 60 menit.
 
 ### Livewire Temp Upload (Penyebab Umum "Uploading Stuck")
 `config/livewire.php` → `temporary_file_upload.disk` = `LIVEWIRE_TMP_DISK` env, **harus `local`** (bukan `r2` / `public` / `s3`). Alasan:
