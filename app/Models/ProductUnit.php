@@ -276,28 +276,98 @@ class ProductUnit extends Model
             return;
         }
 
-        $newStatus = self::STATUS_AVAILABLE;
-
-        // Check if currently rented
-        $activeRental = $this->rentalItems()
+        // Check for active rentals (Rented)
+        // 1. Direct Rental
+        $isRented = $this->rentalItems()
             ->whereHas('rental', function ($query) {
                 $query->whereIn('status', [
                     Rental::STATUS_ACTIVE,
-                    Rental::STATUS_LATE_RETURN
+                    Rental::STATUS_LATE_RETURN,
+                    Rental::STATUS_PARTIAL_RETURN,
                 ]);
+            })
+            ->whereDoesntHave('deliveryItems', function ($q) {
+                $q->whereHas('delivery', function ($d) {
+                    $d->where('type', 'in')
+                      ->where('status', 'completed');
+                });
             })
             ->exists();
 
-        if ($activeRental) {
+        // 2. Component of a Rented Bundle (via RentalItemKit)
+        if (!$isRented) {
+            $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
+
+            if ($unitKitIds->isNotEmpty()) {
+                $isComponentRented = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
+                    ->whereHas('rentalItem', function ($ri) {
+                        $ri->whereHas('rental', function ($r) {
+                            $r->whereIn('status', [
+                                Rental::STATUS_ACTIVE,
+                                Rental::STATUS_LATE_RETURN,
+                                Rental::STATUS_PARTIAL_RETURN,
+                            ]);
+                        });
+                    })
+                    ->where('is_returned', false)
+                    ->exists();
+
+                if ($isComponentRented) {
+                    $isRented = true;
+                }
+            }
+        }
+
+        if ($isRented) {
             $newStatus = self::STATUS_RENTED;
         } else {
-            // Check if in maintenance
-            $maintenance = $this->maintenanceRecords()
+            // Preserve MAINTENANCE — only rental activity above can override it.
+            if ($this->status === self::STATUS_MAINTENANCE) {
+                return;
+            }
+
+            // Not currently in maintenance status, but open maintenance records exist → set maintenance.
+            $hasMaintenance = $this->maintenanceRecords()
                 ->whereIn('status', ['pending', 'in_progress'])
                 ->exists();
-            
-            if ($maintenance) {
+
+            if ($hasMaintenance) {
                 $newStatus = self::STATUS_MAINTENANCE;
+            } else {
+                // Check for scheduled rentals
+                // 1. Direct Scheduled
+                $isScheduled = $this->rentalItems()
+                    ->whereHas('rental', function ($query) {
+                        $query->whereIn('status', [
+                            Rental::STATUS_QUOTATION,
+                            Rental::STATUS_CONFIRMED,
+                            Rental::STATUS_LATE_PICKUP,
+                        ]);
+                    })->exists();
+
+                // 2. Component Scheduled (via RentalItemKit)
+                if (!$isScheduled) {
+                    $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
+                    if ($unitKitIds->isNotEmpty()) {
+                        $isComponentScheduled = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
+                            ->whereHas('rentalItem', function ($ri) {
+                                $ri->whereHas('rental', function ($r) {
+                                    $r->whereIn('status', [
+                                        Rental::STATUS_QUOTATION,
+                                        Rental::STATUS_CONFIRMED,
+                                        Rental::STATUS_LATE_PICKUP,
+                                    ]);
+                                });
+                            })
+                            ->exists();
+
+                        if ($isComponentScheduled) {
+                            $isScheduled = true;
+                        }
+                    }
+                }
+
+                $newStatus = $isScheduled ? self::STATUS_SCHEDULED : self::STATUS_AVAILABLE;
             }
         }
 
