@@ -8,6 +8,7 @@ use App\Models\Rental;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Database\Eloquent\Model;
 
 class EditRental extends EditRecord
 {
@@ -47,9 +48,20 @@ class EditRental extends EditRecord
         return $data;
     }
 
+    protected function handleRecordUpdate(Model $record, array $data): Model
+    {
+        // Use saveQuietly to prevent Rental::saved → refreshUnitStatuses from firing here.
+        // syncRentalItems() runs immediately after in afterSave() and performs a single
+        // batch refresh of all unit statuses, so the per-save refresh is redundant and
+        // causes a memory-exhausting cascade when combined with RentalItem events.
+        $record->fill($data);
+        $record->saveQuietly();
+        return $record;
+    }
+
     protected function afterSave(): void
     {
-        // Sync rental items from grouped data
+        // Sync rental items from grouped data (does its own batch unit-status refresh)
         RentalForm::syncRentalItems($this->record, $this->groupedItemsData);
         $this->record->refresh();
     }

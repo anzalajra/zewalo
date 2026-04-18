@@ -733,46 +733,60 @@ class RentalForm
     {
         $existingItems = $rental->items()->whereNull('parent_item_id')->with('productUnit')->get();
         $processedIds = [];
+        $newlyCreatedItems = [];
 
-        foreach ($groupedItems as $group) {
-            $unitIds = json_decode($group['unit_ids'] ?? '[]', true);
-            $days = (int) ($group['days'] ?? 1);
-            $dailyRate = (float) ($group['daily_rate'] ?? 0);
-            $discount = (float) ($group['discount'] ?? 0);
+        RentalItem::withoutEvents(function () use ($rental, $groupedItems, $existingItems, &$processedIds, &$newlyCreatedItems) {
+            foreach ($groupedItems as $group) {
+                $unitIds = json_decode($group['unit_ids'] ?? '[]', true);
+                $days = (int) ($group['days'] ?? 1);
+                $dailyRate = (float) ($group['daily_rate'] ?? 0);
+                $discount = (float) ($group['discount'] ?? 0);
 
-            $gross = $dailyRate * $days;
-            $perUnitSubtotal = max(0, $gross - ($gross * $discount / 100));
+                $gross = $dailyRate * $days;
+                $perUnitSubtotal = max(0, $gross - ($gross * $discount / 100));
 
-            foreach ($unitIds as $unitId) {
-                $existing = $existingItems->where('product_unit_id', $unitId)->first();
+                foreach ($unitIds as $unitId) {
+                    $existing = $existingItems->where('product_unit_id', $unitId)->first();
 
-                if ($existing) {
-                    $existing->update([
-                        'daily_rate' => $dailyRate,
-                        'days' => $days,
-                        'discount' => $discount,
-                        'subtotal' => $perUnitSubtotal,
-                    ]);
-                    $processedIds[] = $existing->id;
-                } else {
-                    $newItem = $rental->items()->create([
-                        'product_unit_id' => $unitId,
-                        'daily_rate' => $dailyRate,
-                        'days' => $days,
-                        'discount' => $discount,
-                        'subtotal' => $perUnitSubtotal,
-                    ]);
-                    $processedIds[] = $newItem->id;
+                    if ($existing) {
+                        $existing->update([
+                            'daily_rate' => $dailyRate,
+                            'days' => $days,
+                            'discount' => $discount,
+                            'subtotal' => $perUnitSubtotal,
+                        ]);
+                        $processedIds[] = $existing->id;
+                    } else {
+                        $newItem = $rental->items()->create([
+                            'product_unit_id' => $unitId,
+                            'daily_rate' => $dailyRate,
+                            'days' => $days,
+                            'discount' => $discount,
+                            'subtotal' => $perUnitSubtotal,
+                        ]);
+                        $processedIds[] = $newItem->id;
+                        $newlyCreatedItems[] = $newItem;
+                    }
                 }
             }
+
+            // Delete items no longer present
+            $toDelete = $existingItems->pluck('id')->diff($processedIds)->toArray();
+            if (!empty($toDelete)) {
+                $rental->items()->whereIn('parent_item_id', $toDelete)->delete();
+                $rental->items()->whereIn('id', $toDelete)->delete();
+            }
+        });
+
+        // Attach kits for newly-created items only (replicates the `created` event behavior
+        // that was suppressed above). Existing items already have their kits.
+        foreach ($newlyCreatedItems as $newItem) {
+            $newItem->attachKitsFromUnit();
         }
 
-        // Delete items no longer present
-        $toDelete = $existingItems->pluck('id')->diff($processedIds)->toArray();
-        if (!empty($toDelete)) {
-            $rental->items()->whereIn('parent_item_id', $toDelete)->delete();
-            $rental->items()->whereIn('id', $toDelete)->delete();
-        }
+        // Single batch refresh of all affected unit statuses instead of per-item cascades.
+        $rental->load('items.productUnit.kits');
+        $rental->refreshUnitStatuses();
     }
 
     // ═══════════════════════════════════════════════
