@@ -81,11 +81,13 @@ class SubscriptionInvoiceDetail extends Page
     {
         $invoice = $this->invoice->loadMissing(['tenantSubscription.subscriptionPlan', 'paymentMethod', 'tenant']);
 
+        $pdfSettings = \App\Filament\Central\Pages\InvoicePdfSettings::loadSettings();
+
         $pdf = Pdf::loadView('pdf.saas-invoice', [
             'invoice' => $invoice,
             'logoUrl' => $this->resolveCentralLogoDataUri(),
             'siteName' => \App\Services\CentralBrandingService::siteName(),
-        ])->setPaper('a4');
+        ])->setPaper($pdfSettings['invoice_pdf_paper_size'] ?? 'a4');
 
         $filename = 'Invoice-'.$invoice->invoice_number.'.pdf';
 

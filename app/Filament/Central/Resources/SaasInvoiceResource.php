@@ -7,7 +7,9 @@ use App\Filament\Central\Resources\SaasInvoiceResource\Pages;
 use App\Models\PaymentGateway;
 use App\Models\PaymentMethod;
 use App\Models\SaasInvoice;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Services\Payment\PaymentService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -56,18 +58,97 @@ class SaasInvoiceResource extends Resource
                         ->label('Tenant')
                         ->options(Tenant::pluck('name', 'id'))
                         ->searchable()
-                        ->required(),
+                        ->required()
+                        ->live(),
 
                     TextInput::make('invoice_number')
                         ->label('Invoice Number')
                         ->placeholder('Auto-generated if left blank')
                         ->unique(ignoreRecord: true),
 
+                    Select::make('subscription_plan_id')
+                        ->label('Subscription Plan')
+                        ->options(SubscriptionPlan::orderBy('sort_order')->pluck('name', 'id'))
+                        ->searchable()
+                        ->required()
+                        ->live()
+                        ->dehydrated(false)
+                        ->afterStateUpdated(function ($state, $set) {
+                            if (! $state) {
+                                return;
+                            }
+                            $plan = SubscriptionPlan::find($state);
+                            if (! $plan) {
+                                return;
+                            }
+                            // Default amount to monthly price; recompute total
+                            $set('amount', (float) ($plan->price_monthly ?? 0));
+                            $set('total', (float) ($plan->price_monthly ?? 0));
+                        })
+                        ->helperText('Paket yang ditagihkan. Subscription akan otomatis dibuat.'),
+
+                    Select::make('billing_cycle')
+                        ->label('Billing Cycle')
+                        ->options([
+                            'monthly' => 'Bulanan',
+                            'yearly' => 'Tahunan',
+                        ])
+                        ->default('monthly')
+                        ->required()
+                        ->live()
+                        ->dehydrated(false)
+                        ->afterStateUpdated(function ($state, $get, $set) {
+                            $planId = $get('subscription_plan_id');
+                            if (! $planId) {
+                                return;
+                            }
+                            $plan = SubscriptionPlan::find($planId);
+                            if (! $plan) {
+                                return;
+                            }
+                            $price = $state === 'yearly'
+                                ? (float) ($plan->price_yearly ?? 0)
+                                : (float) ($plan->price_monthly ?? 0);
+                            $set('amount', $price);
+                            $set('total', $price);
+                        }),
+
                     Select::make('tenant_subscription_id')
-                        ->label('Subscription')
-                        ->relationship('tenantSubscription', 'id')
+                        ->label('Subscription (existing)')
+                        ->options(function ($get) {
+                            $tenantId = $get('tenant_id');
+                            if (! $tenantId) {
+                                return [];
+                            }
+
+                            return TenantSubscription::query()
+                                ->where('tenant_id', $tenantId)
+                                ->with('subscriptionPlan')
+                                ->latest('started_at')
+                                ->get()
+                                ->mapWithKeys(function (TenantSubscription $sub) {
+                                    $planName = $sub->subscriptionPlan?->name ?? 'Plan #'.$sub->subscription_plan_id;
+                                    $cycle = match ($sub->billing_cycle) {
+                                        'monthly' => 'Bulanan',
+                                        'yearly' => 'Tahunan',
+                                        default => $sub->billing_cycle ?? '—',
+                                    };
+                                    $period = $sub->started_at && $sub->ends_at
+                                        ? $sub->started_at->format('d M Y').' – '.$sub->ends_at->format('d M Y')
+                                        : 'tanpa periode';
+                                    $status = ucfirst($sub->status ?? '—');
+
+                                    return [$sub->id => "{$planName} · {$cycle} · {$period} · [{$status}]"];
+                                })
+                                ->all();
+                        })
+                        ->searchable()
                         ->nullable()
-                        ->placeholder('Optional'),
+                        ->placeholder(fn ($get) => $get('tenant_id')
+                            ? 'Auto-create dari plan di atas'
+                            : 'Pilih tenant dulu')
+                        ->disabled(fn ($get) => ! $get('tenant_id'))
+                        ->helperText('Kosongkan untuk auto-create subscription baru dari plan + cycle di atas. Pilih existing untuk renewal/koreksi tagihan tambahan ke subscription yang sudah ada.'),
 
                     Select::make('status')
                         ->options([

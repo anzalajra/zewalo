@@ -343,6 +343,73 @@ Sistem menggunakan **Laravel Notification** (bukan Mailable class terpisah). Sem
 3. `toMail()` return `(new MailMessage)->markdown('emails.[area].[name]', [...data...])`
 4. Buat blade template di `resources/views/emails/[area]/[name].blade.php` menggunakan `<x-mail::message>`, `<x-mail::panel>`, `<x-mail::button>`
 
+## SaaS Subscription Billing (Tenant Admin)
+
+Halaman tenant **Admin → Subscription & Billing** (`/admin/subscription-billing`) menampilkan plan, usage, dan invoice history. Hidden dari sidebar — diakses via user menu "Subscription & Billing".
+
+### Halaman & File
+| File | Kegunaan |
+|------|----------|
+| `app/Filament/Pages/SubscriptionBilling.php` | List page (plan card, usage stats, invoice history) |
+| `app/Filament/Pages/SubscriptionInvoiceDetail.php` | Detail invoice + Download PDF + Bayar (route `/admin/subscription-billing/invoices/{record}`) |
+| `app/Filament/Concerns/InteractsWithSubscriptionPayment.php` | Trait shared payment-modal logic (pilih metode, polling status) — dipakai oleh kedua page di atas |
+| `resources/views/filament/partials/subscription-payment-modal.blade.php` | Modal reusable (pilih metode + instruksi VA/QR/payment URL) |
+
+### Authorization Detail Page
+`SubscriptionInvoiceDetail::mount()` validasi `invoice->tenant_id === tenant()->id` — kalau tidak match → 404. Trait `InteractsWithSubscriptionPayment::initiatePayment()` ada defence-in-depth check yang sama.
+
+### Flow Pembayaran
+1. User klik **Bayar** di list atau di detail page → trait method `selectInvoice($id)` → buka modal
+2. User pilih payment method (filter: `SubscriptionCheckoutService::getPaymentMethodsForTenant()` — region tenant + active gateway + active method)
+3. `initiatePayment()` → `PaymentService::createPayment($invoice, $method)` → store `payment_data` di invoice → tampilkan instruksi
+4. Modal `wire:poll.5s="checkPaymentStatus"` — auto-refresh, atau user klik tombol manual
+5. Saat success: `handlePaymentSuccess()` aktifkan subscription + tenant status
+
+### PDF Invoice
+- **Template**: `resources/views/pdf/saas-invoice.blade.php` — standalone (tidak extend `pdf.layout` yang dipakai untuk dokumen tenant)
+- **Logo**: `CentralBrandingService` → di-embed sebagai base64 data URI via `SubscriptionInvoiceDetail::resolveCentralLogoDataUri()` (dompdf tidak bisa fetch signed R2 URL secara reliable). Fallback teks "Zewalo App" kalau logo tidak ada.
+- **Plan detail**: dibaca dari `$invoice->tenantSubscription->subscriptionPlan` — nama plan, deskripsi, fitur, billing cycle, periode start–end
+- **Settings**: lihat seksi *Pengaturan Invoice PDF* di bawah
+
+### Membuat SaaS Invoice Manual (Central Admin)
+**URL**: `sa.{domain}/admin/saas-invoices/create`
+
+Form **wajib** isi `subscription_plan_id` + `billing_cycle` saat create. Saat submit:
+1. Kalau `tenant_subscription_id` kosong (default), `CreateSaasInvoice::mutateFormDataBeforeCreate()` auto-create `TenantSubscription` baru dengan plan + cycle yang dipilih, status `pending`, periode dari `issued_at` + 1 month/year sesuai cycle
+2. SaasInvoice di-link ke subscription yang baru dibuat → `tenantSubscription.subscriptionPlan` ke-resolve di detail page tenant + di PDF
+
+Field `subscription_plan_id` & `billing_cycle` adalah `dehydrated(false)` → tidak dikirim ke `SaasInvoice::create()`, hanya dipakai untuk auto-create subscription. Diambil dari raw form state via `$this->form->getRawState()`.
+
+**Alasan field plan wajib**: tanpa subscription, PDF cuma tampil "Langganan {brandName} — Paket Standar" tanpa detail (deskripsi, fitur, limit). Sumber kebenaran nama plan ada di `TenantSubscription->subscriptionPlan`, BUKAN di kolom langsung `SaasInvoice`.
+
+## Pengaturan Invoice PDF (Central Admin)
+
+**Central Admin → System → Invoice PDF** (`InvoicePdfSettings.php`) — atur tampilan & konten PDF invoice SaaS, disimpan di `CentralSetting` group `invoice_pdf`.
+
+### Settings Keys (group: `invoice_pdf`)
+| Key | Tipe | Default | Keterangan |
+|-----|------|---------|-----------|
+| `invoice_pdf_primary_color` | hex | `#2563eb` | Warna utama (border, header table, accent line) |
+| `invoice_pdf_text_color` | hex | `#111827` | Warna teks utama |
+| `invoice_pdf_muted_color` | hex | `#6b7280` | Warna teks sekunder/muted |
+| `invoice_pdf_accent_bg` | hex | `#f9fafb` | Background meta box & footer |
+| `invoice_pdf_font_size` | int (9–16) | `12` | Font size body (px) |
+| `invoice_pdf_paper_size` | enum | `a4` | `a4` atau `letter` |
+| `invoice_pdf_show_logo` | bool | `true` | Tampilkan logo central di header (fallback teks) |
+| `invoice_pdf_show_plan_description` | bool | `true` | Tampilkan deskripsi plan di item description |
+| `invoice_pdf_show_plan_features` | bool | `true` | Tampilkan daftar fitur + limit (users, storage, dll) |
+| `invoice_pdf_header_note` | text | `''` | Catatan tambahan di bawah logo (misal alamat, NPWP) |
+| `invoice_pdf_footer_text` | text | `'Terima kasih...'` | Teks footer |
+| `invoice_pdf_terms_text` | text | `''` | Syarat & ketentuan di bawah invoice (kosong = hidden) |
+
+### Akses dari Code
+```php
+$pdfSettings = \App\Filament\Central\Pages\InvoicePdfSettings::loadSettings();
+// Returns array merged dengan defaults — aman dipakai langsung di blade
+```
+
+`loadSettings()` selalu merge dengan `defaults()` jadi template tidak pernah pecah karena key kosong. `paper_size` dipakai oleh `SubscriptionInvoiceDetail::downloadPdf()` saat `Pdf::setPaper()`.
+
 ## Production Environment Variables (Critical)
 
 Beberapa env var yang **wajib** di-set di production (Dokploy) agar fitur berjalan:
