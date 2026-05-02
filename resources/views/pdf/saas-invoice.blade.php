@@ -13,9 +13,17 @@
         $showLogo = (bool) $pdfSettings['invoice_pdf_show_logo'];
         $showPlanDesc = (bool) $pdfSettings['invoice_pdf_show_plan_description'];
         $showPlanFeatures = (bool) $pdfSettings['invoice_pdf_show_plan_features'];
-        $headerNote = $pdfSettings['invoice_pdf_header_note'] ?? '';
-        $footerText = $pdfSettings['invoice_pdf_footer_text'] ?? '';
+        $headerNote = trim($pdfSettings['invoice_pdf_header_note'] ?? '');
+        $footerText = trim($pdfSettings['invoice_pdf_footer_text'] ?? '');
         $termsText = $pdfSettings['invoice_pdf_terms_text'] ?? '';
+
+        // Dynamic header height: count lines in header note, allocate space accordingly.
+        // Base header (logo + spacing) = 2.0cm. Each note line ≈ 0.35cm.
+        $headerNoteLines = $headerNote === '' ? 0 : (substr_count($headerNote, "\n") + 1);
+        $baseHeaderCm = 2.0;
+        $extraHeaderCm = $headerNoteLines > 0 ? min($headerNoteLines * 0.35, 1.8) : 0;
+        $headerHeightCm = $baseHeaderCm + $extraHeaderCm;
+        $bodyTopMarginCm = $headerHeightCm + 0.6; // breathing room between header & content
     @endphp
     <style>
         @page {
@@ -26,7 +34,7 @@
             font-size: {{ $fontSize }}px;
             line-height: 1.5;
             color: {{ $textColor }};
-            margin: 4.2cm 1.8cm 2.2cm 1.8cm;
+            margin: {{ $bodyTopMarginCm }}cm 1.8cm 2.2cm 1.8cm;
         }
 
         header {
@@ -34,8 +42,8 @@
             top: 0cm;
             left: 0cm;
             right: 0cm;
-            height: 2.2cm;
-            padding: 0.45cm 1.8cm 0 1.8cm;
+            height: {{ $headerHeightCm }}cm;
+            padding: 0.45cm 1.8cm 0.3cm 1.8cm;
             background-color: white;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -255,11 +263,10 @@
     </header>
 
     <footer>
-        @if ($footerText)
-            {!! nl2br(e($footerText)) !!}
-            <br>
-        @endif
-        <span class="small">Invoice ini dibuat secara otomatis oleh sistem {{ $brandName }}.</span>
+@if ($footerText)
+<div style="text-align: center;">{!! nl2br(e($footerText)) !!}</div>
+@endif
+<div class="small" style="text-align: center;">Invoice ini dibuat secara otomatis oleh sistem {{ $brandName }}.</div>
     </footer>
 
     <main>
