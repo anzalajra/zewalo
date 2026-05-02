@@ -2,20 +2,17 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\PaymentMethod;
+use App\Filament\Concerns\InteractsWithSubscriptionPayment;
 use App\Models\Product;
 use App\Models\SaasInvoice;
 use App\Models\User;
-use App\Services\Payment\PaymentService;
-use App\Services\Payment\SubscriptionCheckoutService;
 use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\Log;
-use Livewire\Attributes\Computed;
 
 class SubscriptionBilling extends Page
 {
+    use InteractsWithSubscriptionPayment;
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $title = 'Subscription & Billing';
@@ -35,15 +32,6 @@ class SubscriptionBilling extends Page
     public array $usageStats = [];
 
     public $invoices = [];
-
-    // Payment flow properties
-    public ?int $selectedInvoiceId = null;
-
-    public ?int $selectedPaymentMethodId = null;
-
-    public ?array $paymentInstructions = null;
-
-    public bool $showPaymentModal = false;
 
     protected function getHeaderActions(): array
     {
@@ -121,135 +109,10 @@ class SubscriptionBilling extends Page
             ->get();
     }
 
-    #[Computed]
-    public function paymentMethods(): \Illuminate\Support\Collection
+    protected function refreshAfterPayment(): void
     {
-        $tenant = tenant();
-
-        if ($tenant) {
-            return app(SubscriptionCheckoutService::class)->getPaymentMethodsForTenant($tenant);
-        }
-
-        return PaymentMethod::active()
-            ->whereHas('paymentGateway', fn ($q) => $q->where('is_active', true))
-            ->with('paymentGateway')
-            ->orderBy('sort_order')
-            ->get();
-    }
-
-    public function selectInvoice(int $invoiceId): void
-    {
-        $this->selectedInvoiceId = $invoiceId;
-        $this->selectedPaymentMethodId = null;
-        $this->paymentInstructions = null;
-        $this->showPaymentModal = true;
-    }
-
-    public function closePaymentModal(): void
-    {
-        $this->showPaymentModal = false;
-        $this->selectedInvoiceId = null;
-        $this->selectedPaymentMethodId = null;
-        $this->paymentInstructions = null;
-    }
-
-    public function initiatePayment(): void
-    {
-        if (! $this->selectedInvoiceId || ! $this->selectedPaymentMethodId) {
-            Notification::make()
-                ->title('Pilih metode pembayaran terlebih dahulu.')
-                ->warning()
-                ->send();
-
-            return;
-        }
-
-        $invoice = SaasInvoice::find($this->selectedInvoiceId);
-        $method = PaymentMethod::find($this->selectedPaymentMethodId);
-
-        if (! $invoice || ! $method) {
-            Notification::make()
-                ->title('Invoice atau metode pembayaran tidak ditemukan.')
-                ->danger()
-                ->send();
-
-            return;
-        }
-
-        if ($invoice->isPaid()) {
-            Notification::make()
-                ->title('Invoice ini sudah dibayar.')
-                ->info()
-                ->send();
-            $this->closePaymentModal();
-
-            return;
-        }
-
-        try {
-            $result = app(PaymentService::class)->createPayment($invoice, $method);
-            $this->paymentInstructions = $result;
-            $this->loadInvoices();
-
-            Notification::make()
-                ->title('Pembayaran berhasil dibuat. Silakan ikuti instruksi di bawah.')
-                ->success()
-                ->send();
-        } catch (\Throwable $e) {
-            Log::error('Subscription payment failed', [
-                'invoice' => $this->selectedInvoiceId,
-                'error' => $e->getMessage(),
-            ]);
-
-            Notification::make()
-                ->title('Gagal membuat pembayaran')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
-    }
-
-    public function checkPaymentStatus(): void
-    {
-        if (! $this->selectedInvoiceId) {
-            return;
-        }
-
-        $invoice = SaasInvoice::find($this->selectedInvoiceId);
-        if (! $invoice) {
-            return;
-        }
-
-        $invoice->refresh();
-
-        if ($invoice->isPaid()) {
-            Notification::make()
-                ->title('Pembayaran berhasil! Subscription Anda telah diaktifkan.')
-                ->success()
-                ->send();
-
-            $this->closePaymentModal();
-            $this->loadInvoices();
-            $this->mount();
-
-            return;
-        }
-
-        // Try polling gateway status
-        if ($invoice->gateway_reference_id && $invoice->payment_gateway_id) {
-            try {
-                $status = app(PaymentService::class)->checkPaymentStatus($invoice);
-
-                if (($status['statusCode'] ?? '') === '00') {
-                    $this->closePaymentModal();
-                    $this->loadInvoices();
-                    $this->mount();
-
-                    return;
-                }
-            } catch (\Throwable $e) {
-                // Silent fail on status check
-            }
-        }
+        $this->loadInvoices();
+        // Re-run mount to refresh plan/usage state after a successful payment
+        $this->mount();
     }
 }
