@@ -66,9 +66,4 @@ class TenantTemplateProduct extends Model
     {
         return $this->hasMany(TenantTemplateProductVariation::class);
     }
-
-    public function components(): HasMany
-    {
-        return $this->hasMany(TenantTemplateProductComponent::class, 'parent_template_product_id');
-    }
 }

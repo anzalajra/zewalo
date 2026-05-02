@@ -102,7 +102,7 @@ New tenants get `setup_status = 'pending'` on creation (set in `CreateTenantJob`
 - Render hook banner at `panels::content.start` (blue, above subscription warning)
 - Skip button available → sets `setup_status = 'skipped'`
 
-**Template Data Source:** Template data **lives in the central database** (tables `tenant_templates`, `tenant_template_brands`, `tenant_template_product_categories`, `tenant_template_products`, `tenant_template_product_units`, `tenant_template_product_variations`, `tenant_template_product_components`). Manage via **Central Admin → Tenant Management → Tenant Templates** (`TenantTemplateResource`). One active template per `TenantCategory`.
+**Template Data Source:** Template data **lives in the central database** (tables `tenant_templates`, `tenant_template_brands`, `tenant_template_product_categories`, `tenant_template_products`, `tenant_template_product_units`, `tenant_template_product_variations`, `tenant_template_unit_kits`). Manage via **Central Admin → Tenant Management → Tenant Templates** (`TenantTemplateResource`). One active template per `TenantCategory`. Note: Kit dimodelkan **per-unit** (mirror tenant `unit_kits`), bukan product-level bundle. Tabel lama `tenant_template_product_components` sudah di-drop.
 
 **Seeder entry point:** `database/seeders/Tenant/TenantTemplateSeeder.php::run($categorySlug, $tenantId)` queries `TenantCategory::on('central')->activeTemplate` and delegates to `App\Services\TemplateImporter`. If no active template exists → no-op (logged at info). Legacy PHP seeders under `database/seeders/tenant/Templates/` are retained ONLY for the one-off `templates:import-legacy` command that backfills existing data into the central DB; they are not invoked at runtime.
 
@@ -112,14 +112,14 @@ New tenants get `setup_status = 'pending'` on creation (set in `CreateTenantJob`
   2. Create `Category` per template product category.
   3. Create `Product` — copy image from central R2 to tenant R2 prefix (see below).
   4. Create `ProductUnit` (`serial_number = TMPL-{SLUG}-{suffix}`) + `ProductVariation`.
-  5. Create `ProductComponent` (kit/bundle) resolving parent/child via product map.
-- **Image copy**: `TenantStorageService::copyFromCentral($absoluteCentralPath, $tenantRelativePath, $tenantId)` — uses raw `Storage::disk('r2')->copy()`. Source is absolute (e.g. `central/templates/<template_id>/foo.jpg`), target gets auto-prefixed to `tenant_<id>/products/...`. Retries 3x with exponential backoff (100/300/900ms) on failure. Final failure = **soft-fail**: log + `TenantIssueReporter::report()` with code `TEMPLATE_IMAGE_COPY_FAILED`, set `image = null`, continue import. Structural failures (brand/category/product/component inserts) hard-fail the whole transaction.
+  5. Per Unit: create `UnitKit` dari template kits. Kalau `track_by_serial=true` dan kit `serial_suffix` cocok dengan ProductUnit yang baru dibuat (`TMPL-{SLUG}-{suffix}`) → `linked_unit_id` di-set otomatis.
+- **Image copy**: `TenantStorageService::copyFromCentral($absoluteCentralPath, $tenantRelativePath, $tenantId)` — uses raw `Storage::disk('r2')->copy()`. Source is absolute (e.g. `central/templates/<template_id>/foo.jpg`), target gets auto-prefixed to `tenant_<id>/products/...`. Retries 3x with exponential backoff (100/300/900ms) on failure. Final failure = **soft-fail**: log + `TenantIssueReporter::report()` with code `TEMPLATE_IMAGE_COPY_FAILED`, set `image = null`, continue import. Structural failures (brand/category/product/unit/kit inserts) hard-fail the whole transaction.
 
 **Adding template data via Central Admin:**
 1. Navigate to `sa.{domain}/admin/tenant-templates`
 2. Create template → select `Tenant Category` (unique, 1:1) → save
 3. Add Brands (mark one as "default"), then Product Categories, then Products
-4. In each Product: set image (uploaded to `central/templates/<template_id>/`, R2 private visibility), define Units (Tab), Variations (Tab), Components/Kit (Tab — child must be another product in the same template)
+4. In each Product: set image (uploaded to `central/templates/<template_id>/`, R2 private visibility), define Units & Kit (Tab — kit nested di dalam tiap unit, mirror pola tenant), Variations (Tab)
 
 **Legacy import command:** `php artisan templates:import-legacy` (add `--fresh` to wipe & reimport). Reads `$legacySeederMap` in `TenantTemplateSeeder`, reflects into `categories()` + `products()` of each legacy PHP seeder, inserts into central template tables with default "Umum" brand. Skips categories that already have a template.
 

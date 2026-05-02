@@ -7,9 +7,9 @@ use App\Models\Category;
 use App\Models\Central\TenantTemplate;
 use App\Models\Central\TenantTemplateProduct;
 use App\Models\Product;
-use App\Models\ProductComponent;
 use App\Models\ProductUnit;
 use App\Models\ProductVariation;
+use App\Models\UnitKit;
 use App\Services\Storage\TenantStorageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,9 +33,8 @@ class TemplateImporter
         $template->loadMissing([
             'brands',
             'productCategories',
-            'products.units',
+            'products.units.kits',
             'products.variations',
-            'products.components',
         ]);
 
         DB::transaction(function () use ($template, $tenantId) {
@@ -43,7 +42,6 @@ class TemplateImporter
             $categoryMap = $this->importCategories($template);
             $productMap = $this->importProducts($template, $brandMap, $categoryMap, $defaultBrandId, $tenantId);
             $this->importUnitsAndVariations($template, $productMap);
-            $this->importComponents($template, $productMap);
         });
     }
 
@@ -178,7 +176,7 @@ class TemplateImporter
                 $suffix = trim($tmplUnit->serial_suffix) ?: '001';
                 $serial = "TMPL-{$productSlugUpper}-{$suffix}";
 
-                ProductUnit::firstOrCreate(
+                $unit = ProductUnit::firstOrCreate(
                     ['serial_number' => $serial],
                     [
                         'product_id' => $tenantProductId,
@@ -187,32 +185,39 @@ class TemplateImporter
                         'status' => $tmplUnit->status,
                     ]
                 );
+
+                $this->importKitsForUnit($tmplUnit, $unit, $productSlugUpper);
             }
         }
     }
 
-    protected function importComponents(TenantTemplate $template, array $productMap): void
+    protected function importKitsForUnit($tmplUnit, ProductUnit $unit, string $productSlugUpper): void
     {
-        foreach ($template->products as $tmplProduct) {
-            $parentTenantId = $productMap[$tmplProduct->id] ?? null;
-            if (! $parentTenantId) {
-                continue;
-            }
+        foreach ($tmplUnit->kits as $tmplKit) {
+            $trackBySerial = (bool) $tmplKit->track_by_serial;
+            $kitSerial = null;
+            $linkedUnitId = null;
 
-            foreach ($tmplProduct->components as $component) {
-                $childTenantId = $productMap[$component->child_template_product_id] ?? null;
-                if (! $childTenantId || $childTenantId === $parentTenantId) {
-                    continue;
+            if ($trackBySerial) {
+                $kitSuffix = trim((string) $tmplKit->serial_suffix);
+                if ($kitSuffix !== '') {
+                    $kitSerial = "TMPL-{$productSlugUpper}-{$kitSuffix}";
+                    $linked = ProductUnit::where('serial_number', $kitSerial)->first();
+                    if ($linked) {
+                        $linkedUnitId = $linked->id;
+                    }
                 }
-
-                ProductComponent::firstOrCreate(
-                    [
-                        'parent_product_id' => $parentTenantId,
-                        'child_product_id' => $childTenantId,
-                    ],
-                    ['quantity' => $component->quantity ?? 1]
-                );
             }
+
+            UnitKit::create([
+                'unit_id' => $unit->id,
+                'linked_unit_id' => $linkedUnitId,
+                'track_by_serial' => $trackBySerial,
+                'name' => $tmplKit->name,
+                'serial_number' => $kitSerial,
+                'condition' => $tmplKit->condition,
+                'notes' => $tmplKit->notes,
+            ]);
         }
     }
 

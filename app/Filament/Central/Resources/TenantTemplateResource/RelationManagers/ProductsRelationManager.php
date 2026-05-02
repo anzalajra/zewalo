@@ -2,7 +2,6 @@
 
 namespace App\Filament\Central\Resources\TenantTemplateResource\RelationManagers;
 
-use App\Models\Central\TenantTemplateProduct;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -115,40 +114,90 @@ class ProductsRelationManager extends RelationManager
                                     ]),
                             ]),
 
-                        Tab::make('Units')
+                        Tab::make('Units & Kit')
                             ->icon('heroicon-o-cube')
                             ->schema([
                                 Repeater::make('units')
                                     ->relationship('units')
                                     ->label('Template Units')
                                     ->schema([
-                                        TextInput::make('serial_suffix')
-                                            ->required()
-                                            ->maxLength(100)
-                                            ->placeholder('001')
-                                            ->helperText('Suffix serial. Saat import: TMPL-{PRODUCT-SLUG}-{suffix}'),
+                                        Section::make('Unit Information')
+                                            ->columns(3)
+                                            ->schema([
+                                                TextInput::make('serial_suffix')
+                                                    ->required()
+                                                    ->maxLength(100)
+                                                    ->placeholder('001')
+                                                    ->helperText('Suffix serial. Saat import: TMPL-{PRODUCT-SLUG}-{suffix}'),
 
-                                        Select::make('condition')
-                                            ->options([
-                                                'excellent' => 'Excellent',
-                                                'good' => 'Good',
-                                                'fair' => 'Fair',
-                                                'poor' => 'Poor',
-                                            ])
-                                            ->default('good')
-                                            ->required(),
+                                                Select::make('condition')
+                                                    ->options([
+                                                        'excellent' => 'Excellent',
+                                                        'good' => 'Good',
+                                                        'fair' => 'Fair',
+                                                        'poor' => 'Poor',
+                                                    ])
+                                                    ->default('good')
+                                                    ->required(),
 
-                                        Select::make('status')
-                                            ->options([
-                                                'available' => 'Available',
-                                                'rented' => 'Rented',
-                                                'maintenance' => 'Maintenance',
-                                                'retired' => 'Retired',
-                                            ])
-                                            ->default('available')
-                                            ->required(),
+                                                Select::make('status')
+                                                    ->options([
+                                                        'available' => 'Available',
+                                                        'rented' => 'Rented',
+                                                        'maintenance' => 'Maintenance',
+                                                        'retired' => 'Retired',
+                                                    ])
+                                                    ->default('available')
+                                                    ->required(),
+                                            ]),
+
+                                        Section::make('Kits / Accessories')
+                                            ->description('Kit adalah aksesori yang menempel pada unit ini. Saat import, kit dibuat sebagai UnitKit di tenant DB. Aktifkan "Track by serial" supaya kit di-link ke ProductUnit dengan serial yang sama.')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema([
+                                                Repeater::make('kits')
+                                                    ->relationship('kits')
+                                                    ->label('')
+                                                    ->schema([
+                                                        TextInput::make('name')
+                                                            ->required()
+                                                            ->maxLength(255),
+
+                                                        Toggle::make('track_by_serial')
+                                                            ->label('Track by serial')
+                                                            ->default(true)
+                                                            ->live(),
+
+                                                        TextInput::make('serial_suffix')
+                                                            ->label('Serial Suffix')
+                                                            ->maxLength(100)
+                                                            ->placeholder('001')
+                                                            ->helperText('Saat import: TMPL-{PRODUCT-SLUG}-{suffix}. Kalau cocok dengan ProductUnit existing → auto-link.')
+                                                            ->required(fn (callable $get) => (bool) $get('track_by_serial'))
+                                                            ->visible(fn (callable $get) => (bool) $get('track_by_serial')),
+
+                                                        Select::make('condition')
+                                                            ->options([
+                                                                'excellent' => 'Excellent',
+                                                                'good' => 'Good',
+                                                                'fair' => 'Fair',
+                                                                'poor' => 'Poor',
+                                                            ])
+                                                            ->default('excellent')
+                                                            ->required(),
+
+                                                        Textarea::make('notes')
+                                                            ->rows(2)
+                                                            ->columnSpanFull(),
+                                                    ])
+                                                    ->columns(2)
+                                                    ->defaultItems(0)
+                                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Kit baru')
+                                                    ->addActionLabel('+ Tambah Kit'),
+                                            ]),
                                     ])
-                                    ->columns(3)
+                                    ->columns(1)
                                     ->defaultItems(1)
                                     ->itemLabel(fn (array $state): ?string => $state['serial_suffix'] ?? 'Unit baru')
                                     ->addActionLabel('+ Tambah Unit'),
@@ -176,41 +225,6 @@ class ProductsRelationManager extends RelationManager
                                     ->defaultItems(0)
                                     ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Variasi baru')
                                     ->addActionLabel('+ Tambah Variasi'),
-                            ]),
-
-                        Tab::make('Components / Kit')
-                            ->icon('heroicon-o-squares-plus')
-                            ->schema([
-                                Repeater::make('components')
-                                    ->relationship('components')
-                                    ->label('Kit Components (produk ini sebagai bundle)')
-                                    ->schema([
-                                        Select::make('child_template_product_id')
-                                            ->label('Child Product')
-                                            ->options(function ($livewire, $record) {
-                                                $templateId = $livewire->getOwnerRecord()->id;
-                                                $parentId = $record?->parent_template_product_id;
-
-                                                return TenantTemplateProduct::query()
-                                                    ->where('tenant_template_id', $templateId)
-                                                    ->when($parentId, fn ($q) => $q->where('id', '!=', $parentId))
-                                                    ->pluck('name', 'id');
-                                            })
-                                            ->searchable()
-                                            ->required()
-                                            ->helperText('Produk yang termasuk dalam kit ini. Harus produk lain dalam template yang sama.'),
-
-                                        TextInput::make('quantity')
-                                            ->numeric()
-                                            ->default(1)
-                                            ->minValue(1)
-                                            ->required(),
-                                    ])
-                                    ->columns(2)
-                                    ->defaultItems(0)
-                                    ->itemLabel(fn (array $state): ?string => isset($state['child_template_product_id']) ? TenantTemplateProduct::find($state['child_template_product_id'])?->name : 'Component baru')
-                                    ->addActionLabel('+ Tambah Component')
-                                    ->helperText('Hanya perlu diisi kalau produk ini adalah paket / kit yang terdiri dari beberapa produk lain.'),
                             ]),
                     ]),
             ]);
@@ -247,11 +261,14 @@ class ProductsRelationManager extends RelationManager
                     ->label('Vars')
                     ->badge()
                     ->toggleable(),
-                TextColumn::make('components_count')
-                    ->counts('components')
-                    ->label('Kit')
+                TextColumn::make('kits_total')
+                    ->label('Kits')
                     ->badge()
                     ->color('info')
+                    ->state(fn ($record) => $record->units()
+                        ->withCount('kits')
+                        ->get()
+                        ->sum('kits_count'))
                     ->toggleable(),
             ])
             ->headerActions([
