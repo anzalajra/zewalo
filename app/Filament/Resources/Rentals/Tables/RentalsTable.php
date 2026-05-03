@@ -28,6 +28,13 @@ class RentalsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query, $livewire) {
+                if ($livewire instanceof \App\Filament\Resources\Rentals\Pages\ListRentals) {
+                    return $livewire->applyWidgetFilter($query);
+                }
+
+                return $query;
+            })
             ->columns([
                 TextColumn::make('rental_code')
                     ->searchable()

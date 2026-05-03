@@ -19,8 +19,8 @@
 
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
-            <button 
-                wire:click="setView('list')" 
+            <button
+                wire:click="setView('list')"
                 class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $currentView === 'list' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
             >
                 <div class="flex items-center gap-2">
@@ -28,8 +28,8 @@
                     <span>List View</span>
                 </div>
             </button>
-            <button 
-                wire:click="setView('kanban')" 
+            <button
+                wire:click="setView('kanban')"
                 class="px-4 py-2 text-sm font-medium rounded-md transition-colors {{ $currentView === 'kanban' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
             >
                 <div class="flex items-center gap-2">
@@ -41,6 +41,221 @@
     </div>
 
     @if($currentView === 'list')
+        @php
+            $availableWidgets = $this->getAvailableWidgets();
+            $defaultKeys = $this->getDefaultWidgetKeys();
+            $counts = $this->getWidgetCounts();
+            $colorClasses = [
+                'success' => [
+                    'bg' => 'bg-green-50 dark:bg-green-950/40',
+                    'border' => 'border-green-200 dark:border-green-800',
+                    'iconBg' => 'bg-green-100 dark:bg-green-900/50',
+                    'icon' => 'text-green-600 dark:text-green-400',
+                    'value' => 'text-green-700 dark:text-green-300',
+                    'activeBorder' => 'ring-green-500 border-green-500',
+                ],
+                'info' => [
+                    'bg' => 'bg-blue-50 dark:bg-blue-950/40',
+                    'border' => 'border-blue-200 dark:border-blue-800',
+                    'iconBg' => 'bg-blue-100 dark:bg-blue-900/50',
+                    'icon' => 'text-blue-600 dark:text-blue-400',
+                    'value' => 'text-blue-700 dark:text-blue-300',
+                    'activeBorder' => 'ring-blue-500 border-blue-500',
+                ],
+                'warning' => [
+                    'bg' => 'bg-amber-50 dark:bg-amber-950/40',
+                    'border' => 'border-amber-200 dark:border-amber-800',
+                    'iconBg' => 'bg-amber-100 dark:bg-amber-900/50',
+                    'icon' => 'text-amber-600 dark:text-amber-400',
+                    'value' => 'text-amber-700 dark:text-amber-300',
+                    'activeBorder' => 'ring-amber-500 border-amber-500',
+                ],
+                'danger' => [
+                    'bg' => 'bg-red-50 dark:bg-red-950/40',
+                    'border' => 'border-red-200 dark:border-red-800',
+                    'iconBg' => 'bg-red-100 dark:bg-red-900/50',
+                    'icon' => 'text-red-600 dark:text-red-400',
+                    'value' => 'text-red-700 dark:text-red-300',
+                    'activeBorder' => 'ring-red-500 border-red-500',
+                ],
+                'gray' => [
+                    'bg' => 'bg-gray-50 dark:bg-gray-900/40',
+                    'border' => 'border-gray-200 dark:border-gray-800',
+                    'iconBg' => 'bg-gray-100 dark:bg-gray-800',
+                    'icon' => 'text-gray-600 dark:text-gray-400',
+                    'value' => 'text-gray-700 dark:text-gray-300',
+                    'activeBorder' => 'ring-gray-500 border-gray-500',
+                ],
+            ];
+        @endphp
+
+        <div
+            x-data="{
+                open: false,
+                maxWidgets: 4,
+                allKeys: @js(array_keys($availableWidgets)),
+                defaultKeys: @js($defaultKeys),
+                visible: [],
+                draft: [],
+                init() {
+                    let saved = null;
+                    try { saved = JSON.parse(localStorage.getItem('rental_visible_widgets') || 'null'); } catch (e) {}
+                    if (Array.isArray(saved) && saved.length > 0) {
+                        this.visible = saved.filter(k => this.allKeys.includes(k)).slice(0, this.maxWidgets);
+                    } else {
+                        this.visible = [...this.defaultKeys];
+                    }
+                },
+                openCustomizer() {
+                    this.draft = [...this.visible];
+                    this.open = true;
+                },
+                toggleDraft(key) {
+                    const idx = this.draft.indexOf(key);
+                    if (idx >= 0) {
+                        this.draft.splice(idx, 1);
+                    } else if (this.draft.length < this.maxWidgets) {
+                        this.draft.push(key);
+                    }
+                },
+                saveCustomizer() {
+                    this.visible = [...this.draft];
+                    localStorage.setItem('rental_visible_widgets', JSON.stringify(this.visible));
+                    this.open = false;
+                },
+                resetDefault() {
+                    this.draft = [...this.defaultKeys];
+                },
+                isVisible(key) { return this.visible.includes(key); },
+                isDraftSelected(key) { return this.draft.includes(key); },
+                isDraftFull() { return this.draft.length >= this.maxWidgets; },
+            }"
+            x-on:open-widget-customizer.window="openCustomizer()"
+        >
+            {{-- Widget Cards --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                @foreach($availableWidgets as $key => $widget)
+                    @php $cc = $colorClasses[$widget['color']] ?? $colorClasses['gray']; @endphp
+                    <button
+                        type="button"
+                        x-show="isVisible('{{ $key }}')"
+                        x-cloak
+                        wire:click="setActiveWidget('{{ $key }}')"
+                        class="relative text-left rounded-xl border p-4 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                            {{ $cc['bg'] }} {{ $cc['border'] }}
+                            {{ $activeWidget === $key ? 'ring-2 ring-offset-2 dark:ring-offset-gray-900 ' . $cc['activeBorder'] : '' }}"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-gray-600 dark:text-gray-400 truncate">{{ $widget['label'] }}</p>
+                                <p class="mt-1 text-2xl font-bold {{ $cc['value'] }}">{{ $counts[$key] ?? 0 }}</p>
+                            </div>
+                            <div class="flex-shrink-0 rounded-lg p-2 {{ $cc['iconBg'] }}">
+                                <x-dynamic-component :component="$widget['icon']" class="w-5 h-5 {{ $cc['icon'] }}" />
+                            </div>
+                        </div>
+                        @if($activeWidget === $key)
+                            <div class="mt-2 inline-flex items-center gap-1 text-xs font-medium {{ $cc['value'] }}">
+                                <x-heroicon-m-funnel class="w-3 h-3" />
+                                <span>Filtered</span>
+                            </div>
+                        @endif
+                    </button>
+                @endforeach
+            </div>
+
+            @if($activeWidget)
+                <div class="mb-3 flex items-center justify-between rounded-lg bg-primary-50 dark:bg-primary-950/40 border border-primary-200 dark:border-primary-800 px-3 py-2">
+                    <div class="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-300">
+                        <x-heroicon-m-funnel class="w-4 h-4" />
+                        <span>Showing: <strong>{{ $availableWidgets[$activeWidget]['label'] ?? $activeWidget }}</strong></span>
+                    </div>
+                    <button
+                        type="button"
+                        wire:click="setActiveWidget('{{ $activeWidget }}')"
+                        class="text-xs font-medium text-primary-700 dark:text-primary-300 hover:underline"
+                    >
+                        Clear filter
+                    </button>
+                </div>
+            @endif
+
+            {{-- Customize Widget Modal --}}
+            <div
+                x-show="open"
+                x-cloak
+                x-transition.opacity
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                x-on:click.self="open = false"
+                x-on:keydown.escape.window="open = false"
+            >
+                <div
+                    class="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                >
+                    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white">Customize Widget</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                Pilih maksimal <span x-text="maxWidgets"></span> widget untuk ditampilkan
+                                (<span x-text="draft.length"></span>/<span x-text="maxWidgets"></span>)
+                            </p>
+                        </div>
+                        <button type="button" x-on:click="open = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                            <x-heroicon-m-x-mark class="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div class="p-4 overflow-y-auto space-y-2">
+                        @foreach($availableWidgets as $key => $widget)
+                            @php $cc = $colorClasses[$widget['color']] ?? $colorClasses['gray']; @endphp
+                            <label
+                                class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                                :class="isDraftSelected('{{ $key }}')
+                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-950/30'
+                                    : (isDraftFull() ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800')"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    :checked="isDraftSelected('{{ $key }}')"
+                                    :disabled="!isDraftSelected('{{ $key }}') && isDraftFull()"
+                                    x-on:change="toggleDraft('{{ $key }}')"
+                                >
+                                <div class="flex-shrink-0 rounded-md p-1.5 {{ $cc['iconBg'] }}">
+                                    <x-dynamic-component :component="$widget['icon']" class="w-4 h-4 {{ $cc['icon'] }}" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $widget['label'] }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $counts[$key] ?? 0 }} item</p>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
+                        <button
+                            type="button"
+                            x-on:click="resetDefault()"
+                            class="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+                        >
+                            Reset ke default
+                        </button>
+                        <div class="flex items-center gap-2">
+                            <x-filament::button color="gray" x-on:click="open = false" tag="button">
+                                Batal
+                            </x-filament::button>
+                            <x-filament::button x-on:click="saveCustomizer()" tag="button">
+                                Simpan
+                            </x-filament::button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{ $this->table }}
     @else
         <div 
