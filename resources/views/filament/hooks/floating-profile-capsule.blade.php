@@ -151,7 +151,6 @@
 </div>
 
 @once
-@push('styles')
 <style>
     [x-cloak] { display:none !important; }
 
@@ -273,5 +272,4 @@
     .zw-pop-enter-from { opacity: 0; transform: translateY(10px) scale(0.97); }
     .zw-pop-enter-to   { opacity: 1; transform: translateY(0) scale(1); }
 </style>
-@endpush
 @endonce

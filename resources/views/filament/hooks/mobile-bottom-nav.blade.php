@@ -131,7 +131,6 @@
 </div>
 
 @once
-@push('styles')
 <style>
     /* Hide on desktop, show on mobile */
     .zw-mobnav-root { display: none; font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; }
@@ -247,5 +246,4 @@
     .zw-sheet-enter-from { opacity: 0; transform: translateY(16px) scale(0.97); }
     .zw-sheet-enter-to   { opacity: 1; transform: translateY(0) scale(1); }
 </style>
-@endpush
 @endonce

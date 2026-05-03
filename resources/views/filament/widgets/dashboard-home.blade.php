@@ -304,7 +304,6 @@
 </div>
 
 @once
-@push('scripts')
 <script>
     function zwDashboard(monthly) {
         return {
@@ -386,8 +385,6 @@
         };
     }
 </script>
-@endpush
-@push('styles')
 <style>
     /* ─────── Layout swap (desktop vs mobile) ─────── */
     .zw-home { font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; color:#111827; }
@@ -597,6 +594,5 @@
     .zw-mob-empty { background:#fff; border:1px dashed #e5e7eb; border-radius:14px; }
     .dark .zw-mob-empty { background:#1f2937; border-color:#374151; }
 </style>
-@endpush
 @endonce
 </x-filament-widgets::widget>
