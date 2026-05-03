@@ -9,6 +9,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestRentals extends BaseWidget
 {
+    protected static bool $isDiscovered = false;
     protected static ?int $sort = 2;
 
     protected int|string|array $columnSpan = 'full';

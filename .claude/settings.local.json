@@ -15,7 +15,15 @@
       "Bash(grep -r '$table->json\\\\|data\\\\|feature' 'd:\\\\6. Kints\\\\Projects\\\\Zewalo\\\\database\\\\migrations\\\\central' '--include=*.php')",
       "Bash(./vendor/bin/pint --test app/Providers/CentralSettingsServiceProvider.php app/Providers/StorageServiceProvider.php app/Services/Storage/TenantStorageService.php)",
       "Bash(./vendor/bin/pint app/Providers/CentralSettingsServiceProvider.php app/Providers/StorageServiceProvider.php app/Services/Storage/TenantStorageService.php)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p /tmp/zewalo-design)",
+      "Read(//tmp/**)",
+      "Bash(cp \"C:\\\\Users\\\\danga\\\\.claude\\\\projects\\\\d--6--Kints-Projects-Zewalo\\\\fbf7fcd6-b5dd-4777-aef0-7b87b9a1c675\\\\tool-results\\\\webfetch-1777776812170-54wbn6.bin\" design.tar.gz)",
+      "Bash(tar -xzf design.tar.gz)",
+      "Bash(cp \"/tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/Tenant Admin Panel.html\" /tmp/zewalo-design/main.html)",
+      "Bash(cp -r /tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/components /tmp/zewalo-design/comp)",
+      "Bash(cp /tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/colors_and_type.css /tmp/zewalo-design/colors.css)"
     ]
   }
 }

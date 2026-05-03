@@ -150,11 +150,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
-                \App\Filament\Widgets\StatsOverview::class,
-                \App\Filament\Widgets\LatestRentals::class,
-                \App\Filament\Widgets\RentalChart::class,
+                \App\Filament\Widgets\DashboardHomeWidget::class,
             ])
             ->middleware([
                 RedirectCentralDomainToPanel::class,  // Redirect central domains FIRST

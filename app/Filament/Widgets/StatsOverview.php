@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 
 class StatsOverview extends BaseWidget
 {
+    protected static bool $isDiscovered = false;
     protected static ?int $sort = 1;
     protected ?string $pollingInterval = '60s';
 

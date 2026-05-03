@@ -1,360 +1,327 @@
+@php
+    $statusColors = [
+        'quotation'      => ['solid' => '#f97316', 'bg' => '#fff7ed', 'fg' => '#c2410c', 'label' => 'Quotation'],
+        'confirmed'      => ['solid' => '#3b82f6', 'bg' => '#eff6ff', 'fg' => '#1d4ed8', 'label' => 'Confirmed'],
+        'active'         => ['solid' => '#22c55e', 'bg' => '#f0fdf4', 'fg' => '#15803d', 'label' => 'Active'],
+        'completed'      => ['solid' => '#a855f7', 'bg' => '#faf5ff', 'fg' => '#7e22ce', 'label' => 'Done'],
+        'cancelled'      => ['solid' => '#6b7280', 'bg' => '#f9fafb', 'fg' => '#374151', 'label' => 'Cancel'],
+        'late_pickup'    => ['solid' => '#ef4444', 'bg' => '#fef2f2', 'fg' => '#b91c1c', 'label' => 'Late'],
+        'late_return'    => ['solid' => '#ef4444', 'bg' => '#fef2f2', 'fg' => '#b91c1c', 'label' => 'Late'],
+        'partial_return' => ['solid' => '#eab308', 'bg' => '#fefce8', 'fg' => '#854d0e', 'label' => 'Partial'],
+    ];
+    $sc = $statusColors;
+@endphp
+
 <x-filament-panels::page>
-    <div class="flex items-center space-x-1 mb-2 sm:mb-4 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
-        <button 
-            wire:click="setTab('order')" 
-            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $activeTab === 'order' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
-        >
-            By Order
-        </button>
-        <button 
-            wire:click="setTab('unit')" 
-            class="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors {{ $activeTab === 'unit' ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300' }}"
-        >
-            By Unit
-        </button>
-    </div>
+    <div class="zw-sched" x-data="zwSchedule()" x-init="init()">
 
-    @if($activeTab === 'order')
-        <div wire:key="tab-order">
-            {{-- Legend and Add Button --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 sm:mb-4">
-                {{-- Legend - Always visible with labels --}}
-                <div class="flex flex-wrap gap-x-2 gap-y-1 sm:gap-4 text-[10px] sm:text-sm">
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #f97316;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Quotation</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #3b82f6;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Confirmed</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #22c55e;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Active</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #a855f7;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Done</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #6b7280;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Cancel</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #ef4444;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Late</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 sm:w-4 sm:h-4 rounded" style="background: #eab308;"></div>
-                        <span class="text-gray-600 dark:text-gray-400">Partial</span>
-                    </div>
-                </div>
-
-                <a href="{{ url('/admin/rentals/create') }}" class="inline-flex items-center justify-center px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition shrink-0 self-end sm:self-auto">
-                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span class="sm:hidden">Add</span>
-                    <span class="hidden sm:inline">New Rental</span>
-                </a>
+        {{-- Toolbar (FilterBar): tab + view dropdown + new --}}
+        <div class="zw-toolbar">
+            <div class="zw-pill-group">
+                <button wire:click="setTab('order')" type="button"
+                    class="zw-pill {{ $activeTab === 'order' ? 'zw-pill--on' : '' }}">By Order</button>
+                <button wire:click="setTab('unit')" type="button"
+                    class="zw-pill {{ $activeTab === 'unit' ? 'zw-pill--on' : '' }}">By Product</button>
             </div>
 
-            {{-- Mobile Calendar Controls --}}
-            <div id="mobile-calendar-controls" class="md:hidden bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-white/10 shadow-sm p-2 mb-2">
-                <div class="flex items-center justify-between gap-1">
-                    {{-- Navigation --}}
-                    <div class="flex items-center gap-0.5">
-                        <button onclick="calendarNav('prev')" class="p-1.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                            </svg>
-                        </button>
-                        <button onclick="calendarNav('next')" class="p-1.5 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </div>
-                    
-                    {{-- Title --}}
-                    <span id="mobile-calendar-title" class="text-xs font-semibold text-gray-900 dark:text-white flex-1 text-center truncate">
-                        Loading...
-                    </span>
-                    
-                    {{-- View Switcher --}}
-                    <div class="flex items-center gap-0.5">
-                        <button onclick="calendarNav('today')" class="px-2 py-1 text-xs font-medium rounded bg-primary-500 text-white hover:bg-primary-600 transition">
-                            Today
-                        </button>
-                        <select id="mobile-view-select" onchange="calendarChangeView(this.value)" class="text-xs font-medium rounded bg-gray-100 dark:bg-gray-800 border-0 py-1 pl-1 pr-5 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-primary-500">
-                            <option value="dayGridMonth">Month</option>
-                            <option value="listWeek">List</option>
-                        </select>
+            @if ($activeTab === 'order')
+                <div class="zw-view-select" x-data="{ open:false }" @click.outside="open=false">
+                    <button @click="open=!open" type="button" class="zw-view-btn">
+                        <span>{{ ucfirst($calendarView) }}</span>
+                        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </button>
+                    <div x-show="open" x-cloak class="zw-view-menu" x-transition.opacity>
+                        @foreach (['month' => 'Month', 'week' => 'Week', 'day' => 'Day'] as $k => $l)
+                            <button wire:click="setView('{{ $k }}')" @click="open=false" type="button"
+                                class="zw-view-item {{ $calendarView === $k ? 'zw-view-item--on' : '' }}">
+                                {{ $l }}
+                            </button>
+                        @endforeach
                     </div>
                 </div>
-            </div>
+            @endif
 
-        @livewire(\App\Filament\Widgets\RentalCalendarWidget::class)
+            <div class="zw-spacer"></div>
+
+            <a href="{{ url('/admin/rentals/create') }}" class="zw-new-btn zw-hide-mobile">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+                <span>New Booking</span>
+            </a>
         </div>
 
-        @push('scripts')
-        <script>
-            // Get FullCalendar instance from Alpine component
-            function getCalendar() {
-                var calendarEl = document.querySelector('[wire\\:id] .fc');
-                if (!calendarEl) {
-                    calendarEl = document.querySelector('.fc');
-                }
-                if (calendarEl && calendarEl.__fullcalendar) {
-                    return calendarEl.__fullcalendar;
-                }
-                // Try Alpine approach
-                var alpineEl = document.querySelector('[x-data*="fullcalendar"]');
-                if (alpineEl && alpineEl._x_dataStack) {
-                    for (var i = 0; i < alpineEl._x_dataStack.length; i++) {
-                        var data = alpineEl._x_dataStack[i];
-                        if (data.calendar) return data.calendar;
-                    }
-                }
-                return null;
-            }
-            
-            function calendarNav(action) {
-                var calendar = getCalendar();
-                if (!calendar) {
-                    console.log('Calendar not found');
-                    return;
-                }
-                if (action === 'prev') calendar.prev();
-                else if (action === 'next') calendar.next();
-                else if (action === 'today') calendar.today();
-                updateMobileTitle();
-            }
-            
-            function calendarChangeView(view) {
-                var calendar = getCalendar();
-                if (!calendar) return;
-                calendar.changeView(view);
-                updateMobileTitle();
-            }
-            
-            function updateMobileTitle() {
-                var calendar = getCalendar();
-                var titleEl = document.getElementById('mobile-calendar-title');
-                if (titleEl && calendar) {
-                    titleEl.textContent = calendar.view.title;
-                }
-            }
-            
-            // Auto-update title when calendar is ready
-            document.addEventListener('DOMContentLoaded', function() {
-                var checkCalendar = setInterval(function() {
-                    var calendar = getCalendar();
-                    if (calendar) {
-                        updateMobileTitle();
-                        clearInterval(checkCalendar);
-                    }
-                }, 200);
-                
-                // Clear after 10 seconds to avoid infinite loop
-                setTimeout(function() { clearInterval(checkCalendar); }, 10000);
-            });
-            
-            // Also listen for Livewire updates
-            document.addEventListener('livewire:navigated', function() {
-                setTimeout(updateMobileTitle, 500);
-            });
-        </script>
-        @endpush
-    @else
-        <div wire:key="tab-unit" class="space-y-4">
+        {{-- Status Legend --}}
+        <div class="zw-legend">
+            @foreach (['quotation','confirmed','active','completed','cancelled','late_pickup','partial_return'] as $k)
+                @php $c = $sc[$k]; @endphp
+                <div class="zw-legend__item">
+                    <span class="zw-legend__dot" style="background:{{ $c['solid'] }}"></span>
+                    <span>{{ $c['label'] }}</span>
+                </div>
+            @endforeach
+        </div>
+
+        @if ($activeTab === 'order')
+            {{-- Google-Calendar style toolbar --}}
+            <div class="zw-gc-toolbar">
+                <button wire:click="gotoToday" type="button" class="zw-gc-today">Today</button>
+                <button wire:click="navigatePrev" type="button" class="zw-gc-nav" aria-label="Prev">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <button wire:click="navigateNext" type="button" class="zw-gc-nav" aria-label="Next">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+                <div class="zw-gc-title">{{ $this->getTitle() }}</div>
+            </div>
+
+            <div class="zw-cal-shell">
+                @if ($calendarView === 'month')
+                    @include('filament.pages.partials.schedule-month', ['weeks' => $this->getMonthGrid(), 'sc' => $sc])
+                @elseif ($calendarView === 'week')
+                    @include('filament.pages.partials.schedule-week', ['grid' => $this->getWeekGrid(), 'sc' => $sc])
+                @else
+                    @include('filament.pages.partials.schedule-day', ['layout' => $this->getDayLayout(), 'sc' => $sc])
+                @endif
+            </div>
+        @else
+            {{-- By Product (with hour-aware mini-bars) --}}
             @php
                 $products = $this->getProductsWithUnitsAndRentals();
+                $header = $this->getDaysHeader();
             @endphp
-            {{-- Search Control --}}
-            <div class="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm relative">
-                <x-filament::input.wrapper prefix-icon="heroicon-m-magnifying-glass">
-                    <x-filament::input
-                        wire:model.live.debounce.500ms="search"
-                        type="search"
-                        placeholder="Search products or units..."
-                    />
-                </x-filament::input.wrapper>
+            @include('filament.pages.partials.schedule-by-product', ['products' => $products, 'header' => $header, 'sc' => $sc])
+        @endif
+    </div>
+
+    {{-- Overflow popup ("+N more") --}}
+    <div x-cloak x-show="overflowOpen" @keydown.escape.window="overflowOpen=false" class="zw-overflow"
+         @click.self="overflowOpen=false">
+        <div class="zw-overflow__panel" @click.stop>
+            <div class="zw-overflow__head">
+                <div class="zw-overflow__date" x-text="overflowTitle"></div>
+                <button @click="overflowOpen=false" type="button" class="zw-overflow__close" aria-label="Close">×</button>
             </div>
-
-            {{-- Header & Navigation --}}
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Global Product Schedule</h2>
-                    <p class="text-xs text-gray-500">Rental schedule for all products and units</p>
-                </div>
-                
-                <div class="flex items-center gap-2 bg-gray-100 dark:bg-white/5 p-1 rounded-lg">
-                    <x-filament::button wire:click="previousMonth" icon="heroicon-m-chevron-left" color="gray" size="sm" variant="ghost" />
-                    <span class="text-sm font-bold px-4 text-gray-700 dark:text-gray-200">
-                        {{ $startDate->format('M Y') }} - {{ $endDate->format('M Y') }}
-                    </span>
-                    <x-filament::button wire:click="nextMonth" icon="heroicon-m-chevron-right" color="gray" size="sm" variant="ghost" />
-                </div>
+            <div class="zw-overflow__body">
+                <template x-for="r in overflowItems" :key="r.id">
+                    <button type="button" class="zw-overflow__row"
+                            @click="openRental(r.id); overflowOpen=false">
+                        <span class="zw-overflow__bar" :style="`background:${r.color}`"></span>
+                        <span class="zw-overflow__time" x-text="r.time"></span>
+                        <span class="zw-overflow__name" x-text="r.customer"></span>
+                        <span class="zw-overflow__pill" :style="`background:${r.bg};color:${r.fg}`" x-text="r.label"></span>
+                    </button>
+                </template>
             </div>
-
-            {{-- Timeline Table --}}
-            <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-white/10 shadow-sm relative">
-                <div wire:loading wire:target="search, previousMonth, nextMonth, setTab, gotoPage, nextPage, previousPage, perPage" class="absolute inset-0 z-50 bg-white/50 dark:bg-gray-900/50 backdrop-blur-[2px] rounded-xl">
-                    <div class="sticky top-0 h-screen max-h-full flex items-center justify-center">
-                        <x-filament::loading-indicator class="h-12 w-12 text-primary-600 dark:text-primary-400" />
-                    </div>
-                </div>
-                <div class="overflow-x-auto overflow-y-hidden rounded-xl">
-                    <table class="w-full text-left border-collapse table-fixed min-w-max border-spacing-0">
-                        <thead>
-                            <tr>
-                                <th class="sticky left-0 z-30 p-3 bg-gray-50 dark:bg-gray-800 border-b border-r border-gray-200 dark:border-white/10 w-32 md:w-64 text-xs font-bold uppercase text-gray-600 dark:text-gray-400">
-                                    Product / Unit
-                                </th>
-                                @foreach($days as $day)
-                                    <th class="p-2 border-b border-r border-gray-200 dark:border-white/10 text-center min-w-[35px] {{ $day->isToday() ? 'bg-primary-50 dark:bg-primary-900/20' : 'bg-gray-50/50 dark:bg-white/5' }}">
-                                        <div class="text-[9px] font-medium text-gray-400">{{ $day->format('D') }}</div>
-                                        <div class="text-xs font-bold {{ $day->isToday() ? 'text-primary-600' : 'text-gray-700 dark:text-gray-200' }}">
-                                            {{ $day->format('d') }}
-                                        </div>
-                                    </th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($products as $group)
-                                {{-- Product Header Row --}}
-                                <tr wire:key="product-header-{{ $group['product']->id }}" class="bg-gray-50 dark:bg-gray-800/50">
-                                    <td colspan="{{ count($days) + 1 }}" class="sticky left-0 z-20 p-2 pl-3 border-b border-gray-200 dark:border-white/10 font-bold text-sm text-primary-600 dark:text-primary-400">
-                                        {{ $group['product']->name }}
-                                    </td>
-                                </tr>
-
-                                @foreach($group['units'] as $data)
-                                    <tr wire:key="unit-row-{{ $data['unit']->id }}" class="h-12 border-b border-gray-100 dark:border-white/5 last:border-0">
-                                        <td class="sticky left-0 z-20 p-3 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-white/10 text-sm text-gray-800 dark:text-gray-200 pl-6">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs font-mono bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded text-gray-600 dark:text-gray-400">
-                                                    {{ $data['unit']->serial_number }}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        
-                                        @php
-                                            $occupiedDays = [];
-                                            foreach($data['rentals'] as $rental) {
-                                                $current = $rental['start']->copy()->startOfDay();
-                                                $end = $rental['end']->copy()->startOfDay();
-                                                while($current <= $end) {
-                                                    $occupiedDays[$current->format('Y-m-d')] = $rental;
-                                                    $current->addDay();
-                                                }
-                                            }
-                                            $skipDays = 0;
-                                        @endphp
-
-                                        @foreach($days as $index => $day)
-                                            @if($skipDays > 0)
-                                                @php $skipDays--; @endphp
-                                                @continue
-                                            @endif
-
-                                            @php
-                                                $dateStr = $day->format('Y-m-d');
-                                                $rental = $occupiedDays[$dateStr] ?? null;
-                                                
-                                                $colspan = 1;
-                                                if ($rental) {
-                                                    // Calculate how many subsequent days have the same rental
-                                                    $remainingDays = count($days) - $index;
-                                                    for ($i = 1; $i < $remainingDays; $i++) {
-                                                        $nextDateStr = $days[$index + $i]->format('Y-m-d');
-                                                        $nextRental = $occupiedDays[$nextDateStr] ?? null;
-                                                        if ($nextRental && $nextRental['id'] === $rental['id']) {
-                                                            $colspan++;
-                                                        } else {
-                                                            break;
-                                                        }
-                                                    }
-                                                    $skipDays = $colspan - 1;
-                                                }
-                                                
-                                                $colorMap = [
-                                                    'quotation' => ['bg' => 'bg-orange-500', 'text' => 'text-white'],
-                                                    'confirmed' => ['bg' => 'bg-blue-500', 'text' => 'text-white'],
-                                                    'active' => ['bg' => 'bg-green-500', 'text' => 'text-white'],
-                                                    'completed' => ['bg' => 'bg-purple-500', 'text' => 'text-white'],
-                                                    'cancelled' => ['bg' => 'bg-gray-500', 'text' => 'text-white'],
-                                                    'late_pickup' => ['bg' => 'bg-red-600', 'text' => 'text-white'],
-                                                    'late_return' => ['bg' => 'bg-red-600', 'text' => 'text-white'],
-                                                    'partial_return' => ['bg' => 'bg-yellow-500', 'text' => 'text-white'],
-                                                ];
-                                                $status = strtolower($rental['status'] ?? '');
-                                                $colors = $colorMap[$status] ?? ['bg' => 'bg-gray-100 dark:bg-white/5', 'text' => 'text-transparent'];
-                                            @endphp
-                                            <td colspan="{{ $colspan }}" class="p-0 border-r border-gray-200 dark:border-white/10 relative {{ $day->isToday() && !$rental ? 'bg-primary-50/20' : '' }}">
-                                                @if($rental)
-                                                    <div 
-                                                        wire:click="mountAction('viewRentalDetails', { rentalId: {{ $rental['id'] }} })"
-                                                        class="absolute inset-y-1 left-0 right-0 {{ $colors['bg'] }} z-10 flex items-center px-1 shadow-sm cursor-pointer hover:opacity-80 transition-opacity mx-0.5 rounded-sm"
-                                                        title="{{ $rental['code'] }} - {{ $rental['customer'] }} ({{ ucfirst($status) }})"
-                                                    >
-                                                        <span class="text-[9px] font-bold {{ $colors['text'] }} truncate whitespace-nowrap leading-none px-1">
-                                                            {{ $rental['customer'] }}
-                                                        </span>
-                                                    </div>
-                                                @endif
-                                            </td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            @empty
-                                <tr wire:key="empty-state">
-                                    <td class="sticky left-0 z-20 p-6 bg-white dark:bg-gray-900 border-r border-b border-gray-200 dark:border-white/10">
-                                        <div class="flex flex-col items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
-                                            <x-heroicon-o-magnifying-glass class="w-6 h-6" />
-                                            <span class="text-xs font-medium text-center">No product / Unit found</span>
-                                        </div>
-                                    </td>
-                                    <td colspan="{{ count($days) }}" class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-white/10"></td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="p-4 border-t border-gray-200 dark:border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div class="w-full md:w-32 shrink-0 order-2 md:order-1">
-                        <x-filament::input.wrapper prefix="Per page">
-                            <x-filament::input.select wire:model.live="perPage">
-                                <option value="15">15</option>
-                                <option value="35">35</option>
-                                <option value="55">55</option>
-                                <option value="75">75</option>
-                                <option value="95">95</option>
-                            </x-filament::input.select>
-                        </x-filament::input.wrapper>
-                    </div>
-                    <div class="w-full md:w-auto order-1 md:order-2">
-                        {{ $products->links() }}
-                    </div>
-                </div>
-            </div>
-
-            {{-- Legend --}}
-            <div class="flex flex-wrap items-center gap-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-200 dark:border-white/10">
-                <span class="mr-2">Status Legend:</span>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-orange-500"></div> Quotation</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-blue-500"></div> Confirmed</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-green-500"></div> Active</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-purple-500"></div> Completed</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-gray-500"></div> Cancelled</div>
-                <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-red-600"></div> Late Pickup/Return</div>
-            <div class="flex items-center gap-1"><div class="w-3 h-3 rounded bg-yellow-500"></div> Partial Return</div>
         </div>
-        </div>
-    @endif
-    
-    <x-filament-actions::modals />
+    </div>
+
+    <x-filament-actions::modals/>
+
+    @push('scripts')
+    <script>
+        function zwSchedule() {
+            return {
+                overflowOpen: false,
+                overflowTitle: '',
+                overflowItems: [],
+                init() {},
+                openOverflow(title, items) {
+                    this.overflowTitle = title;
+                    this.overflowItems = items;
+                    this.overflowOpen = true;
+                },
+                openRental(id) {
+                    @this.mountAction('viewRentalDetails', { rentalId: id });
+                },
+            };
+        }
+    </script>
+    @endpush
+
+    @once
+        @push('styles')
+        <style>
+            [x-cloak]{ display:none !important; }
+            .zw-sched { font-family:'Figtree', ui-sans-serif, system-ui, sans-serif; color:#111827; display:flex; flex-direction:column; gap:12px; }
+
+            /* Toolbar */
+            .zw-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+            .zw-spacer { flex:1; }
+            .zw-pill-group { display:inline-flex; background:#f3f4f6; border-radius:10px; padding:3px; flex:1 1 auto; }
+            @media (min-width:640px) { .zw-pill-group { flex:0 0 auto; } }
+            .zw-pill { flex:1; padding:8px 16px; border-radius:7px; border:none; background:transparent; color:#6b7280; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+            .zw-pill--on { background:#fff; color:#111827; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+            .dark .zw-pill-group { background:#111827; }
+            .dark .zw-pill { color:#9ca3af; }
+            .dark .zw-pill--on { background:#1f2937; color:#f9fafb; }
+
+            .zw-view-select { position:relative; }
+            .zw-view-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:8px; background:#fff; border:1px solid #e5e7eb; font-size:12px; font-weight:700; color:#374151; cursor:pointer; font-family:inherit; }
+            .dark .zw-view-btn { background:#1f2937; border-color:#374151; color:#f9fafb; }
+            .zw-view-menu { position:absolute; top:calc(100% + 4px); left:0; z-index:30; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.12); overflow:hidden; min-width:120px; }
+            .dark .zw-view-menu { background:#1f2937; border-color:#374151; }
+            .zw-view-item { width:100%; text-align:left; padding:10px 14px; border:none; background:#fff; color:#111827; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; border-bottom:1px solid #f3f4f6; }
+            .zw-view-item:last-child { border-bottom:none; }
+            .zw-view-item--on { background:#f0f9ff; color:#0369a1; font-weight:700; }
+            .dark .zw-view-item { background:#1f2937; color:#f9fafb; border-color:#374151; }
+            .dark .zw-view-item--on { background:#0c4a6e; color:#7dd3fc; }
+
+            .zw-new-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; background:#0284c7; color:#fff; font-size:12px; font-weight:700; text-decoration:none; cursor:pointer; }
+            .zw-new-btn:hover { background:#0369a1; }
+
+            /* Legend */
+            .zw-legend { display:flex; flex-wrap:wrap; gap:6px 14px; padding:9px 12px; background:#fff; border:1px solid #f3f4f6; border-radius:10px; }
+            .dark .zw-legend { background:#1f2937; border-color:#374151; }
+            .zw-legend__item { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:#374151; }
+            .dark .zw-legend__item { color:#d1d5db; }
+            .zw-legend__dot { width:10px; height:10px; border-radius:99px; }
+
+            /* Google Calendar toolbar */
+            .zw-gc-toolbar { display:flex; align-items:center; gap:8px; padding:8px 12px; background:#fff; border:1px solid #f3f4f6; border-radius:10px; }
+            .dark .zw-gc-toolbar { background:#1f2937; border-color:#374151; }
+            .zw-gc-today { padding:6px 14px; border-radius:99px; background:transparent; border:1px solid #d1d5db; color:#374151; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; }
+            .zw-gc-today:hover { background:#f3f4f6; }
+            .dark .zw-gc-today { border-color:#4b5563; color:#f9fafb; }
+            .zw-gc-nav { width:32px; height:32px; border-radius:99px; background:transparent; border:none; color:#374151; cursor:pointer; display:grid; place-items:center; }
+            .zw-gc-nav:hover { background:#f3f4f6; }
+            .dark .zw-gc-nav { color:#f9fafb; }
+            .dark .zw-gc-nav:hover { background:#374151; }
+            .zw-gc-title { font-size:18px; font-weight:700; color:#111827; letter-spacing:-0.3px; margin-left:6px; }
+            .dark .zw-gc-title { color:#f9fafb; }
+            @media (max-width:640px) { .zw-gc-title { font-size:14px; } }
+
+            /* Calendar shell */
+            .zw-cal-shell { background:#fff; border:1px solid #f3f4f6; border-radius:12px; overflow:hidden; }
+            .dark .zw-cal-shell { background:#1f2937; border-color:#374151; }
+
+            /* MONTH grid */
+            .zw-month { display:flex; flex-direction:column; }
+            .zw-month__head { display:grid; grid-template-columns:repeat(7, 1fr); border-bottom:1px solid #f3f4f6; }
+            .zw-month__head > div { padding:8px 6px; font-size:11px; font-weight:700; color:#6b7280; text-align:center; text-transform:uppercase; letter-spacing:.3px; }
+            .dark .zw-month__head, .dark .zw-month__head > div { border-color:#374151; color:#9ca3af; }
+            .zw-month__week { display:grid; grid-template-columns:repeat(7, 1fr); border-bottom:1px solid #f3f4f6; min-height:88px; }
+            .dark .zw-month__week { border-color:#374151; }
+            .zw-month__week:last-child { border-bottom:none; }
+            .zw-month__cell { border-right:1px solid #f3f4f6; padding:4px; display:flex; flex-direction:column; gap:2px; min-width:0; min-height:88px; }
+            .dark .zw-month__cell { border-color:#374151; }
+            .zw-month__cell:last-child { border-right:none; }
+            .zw-month__cell--out { background:#f9fafb; }
+            .dark .zw-month__cell--out { background:#111827; }
+            .zw-month__day { font-size:11px; font-weight:700; color:#374151; padding:2px 4px; align-self:flex-start; }
+            .dark .zw-month__day { color:#f9fafb; }
+            .zw-month__day--today { background:#0284c7; color:#fff; border-radius:99px; min-width:22px; height:22px; display:grid; place-items:center; padding:0; }
+            .zw-month__day--out { color:#9ca3af; }
+            .zw-month__bar { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:5px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(0,0,0,0.12); }
+            .zw-month__more { font-size:10px; font-weight:700; color:#0284c7; padding:2px 6px; border:none; background:transparent; cursor:pointer; text-align:left; font-family:inherit; }
+            .zw-month__more:hover { text-decoration:underline; }
+
+            @media (max-width:640px) {
+                .zw-month__week { min-height:64px; }
+                .zw-month__cell { min-height:64px; padding:2px; }
+                .zw-month__bar { font-size:9px; padding:1px 4px; }
+                .zw-month__head > div { padding:6px 2px; font-size:10px; }
+            }
+
+            /* WEEK grid */
+            .zw-week { display:flex; flex-direction:column; min-width:0; }
+            .zw-week__head { display:grid; grid-template-columns:repeat(7, 1fr); border-bottom:1px solid #f3f4f6; }
+            .dark .zw-week__head { border-color:#374151; }
+            .zw-week__head > div { padding:10px 4px; text-align:center; border-right:1px solid #f3f4f6; }
+            .dark .zw-week__head > div { border-color:#374151; }
+            .zw-week__head > div:last-child { border-right:none; }
+            .zw-week__dayname { font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:.4px; }
+            .zw-week__daynum { font-size:18px; font-weight:800; color:#111827; margin-top:2px; }
+            .dark .zw-week__daynum { color:#f9fafb; }
+            .zw-week__daynum--today { color:#fff; background:#0284c7; border-radius:99px; width:28px; height:28px; line-height:28px; margin:2px auto 0; display:block; }
+
+            .zw-week__body { padding:8px; display:grid; gap:6px; }
+            .zw-week__bar { display:grid; grid-template-columns:repeat(7, 1fr); align-items:center; gap:2px; }
+            .zw-week__bar > .zw-week__rental {
+                grid-column-start: var(--start);
+                grid-column-end: span var(--span);
+                background:var(--bg);
+                color:#fff; padding:8px 10px; border-radius:6px; font-size:12px; font-weight:700;
+                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;
+                box-shadow:0 1px 3px rgba(0,0,0,0.12);
+            }
+            .zw-week__rental__sub { font-size:10px; font-weight:600; opacity:.85; margin-top:2px; }
+
+            @media (max-width:640px) {
+                .zw-week__head > div { padding:6px 2px; }
+                .zw-week__daynum { font-size:13px; }
+                .zw-week__bar > .zw-week__rental { padding:6px 6px; font-size:10px; }
+            }
+
+            /* DAY timeline */
+            .zw-day { display:flex; flex-direction:column; min-width:0; }
+            .zw-day__grid { display:flex; min-height:600px; position:relative; }
+            .zw-day__hours { width:50px; flex-shrink:0; border-right:1px solid #f3f4f6; }
+            .dark .zw-day__hours { border-color:#374151; }
+            .zw-day__hour { height:48px; padding:2px 6px; font-size:10px; font-weight:600; color:#6b7280; text-align:right; border-bottom:1px solid #f9fafb; }
+            .dark .zw-day__hour { border-color:#374151; }
+            .zw-day__events { flex:1; position:relative; min-height:600px; background-image:linear-gradient(to bottom, #f3f4f6 1px, transparent 1px); background-size:100% 48px; }
+            .dark .zw-day__events { background-image:linear-gradient(to bottom, #374151 1px, transparent 1px); }
+            .zw-day__event { position:absolute; padding:6px 10px; border-radius:6px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15); overflow:hidden; }
+            .zw-day__event__time { font-size:10px; font-weight:600; opacity:.85; margin-top:2px; }
+
+            /* By Product (hour-aware mini-bars) */
+            .zw-prod { display:flex; flex-direction:column; gap:10px; }
+            .zw-prod__search { background:#fff; padding:10px 14px; border:1px solid #f3f4f6; border-radius:10px; }
+            .dark .zw-prod__search { background:#1f2937; border-color:#374151; }
+            .zw-prod__shell { background:#fff; border:1px solid #f3f4f6; border-radius:12px; overflow:hidden; }
+            .dark .zw-prod__shell { background:#1f2937; border-color:#374151; }
+            .zw-prod__scroll { overflow:auto; max-height:70vh; }
+            .zw-prod__table { border-collapse:collapse; table-layout:fixed; min-width:max-content; width:100%; }
+            .zw-prod__table th, .zw-prod__table td { border-bottom:1px solid #f3f4f6; border-right:1px solid #f3f4f6; padding:0; }
+            .dark .zw-prod__table th, .dark .zw-prod__table td { border-color:#374151; }
+            .zw-prod__th-spacer { background:#fff; min-width:200px; width:200px; position:sticky; left:0; top:0; z-index:30; padding:8px 12px !important; font-size:11px; font-weight:800; text-transform:uppercase; color:#6b7280; }
+            .dark .zw-prod__th-spacer { background:#1f2937; }
+            .zw-prod__month { padding:6px 8px !important; background:#f9fafb; font-size:11px; font-weight:700; color:#374151; text-align:center; position:sticky; top:0; z-index:20; }
+            .dark .zw-prod__month { background:#111827; color:#f9fafb; }
+            .zw-prod__day { width:42px; min-width:42px; padding:6px 0 !important; background:#fff; text-align:center; position:sticky; top:36px; z-index:20; }
+            .dark .zw-prod__day { background:#1f2937; }
+            .zw-prod__day--today { background:#f0f9ff; }
+            .dark .zw-prod__day--today { background:#0c4a6e; }
+            .zw-prod__day__short { font-size:9px; color:#9ca3af; font-weight:600; }
+            .zw-prod__day__num { font-size:13px; font-weight:700; color:#111827; }
+            .dark .zw-prod__day__num { color:#f9fafb; }
+            .zw-prod__day--today .zw-prod__day__num { color:#0284c7; }
+
+            .zw-prod__product { padding:6px 12px !important; background:#f0f9ff; font-size:13px; font-weight:700; color:#0369a1; position:sticky; left:0; z-index:15; }
+            .dark .zw-prod__product { background:#0c4a6e; color:#7dd3fc; }
+            .zw-prod__sku { padding:6px 12px 6px 24px !important; background:#fff; position:sticky; left:0; z-index:10; }
+            .dark .zw-prod__sku { background:#1f2937; }
+            .zw-prod__sku-tag { font-family:ui-monospace, monospace; font-size:11px; background:#f3f4f6; color:#4b5563; padding:2px 8px; border-radius:6px; }
+            .dark .zw-prod__sku-tag { background:#374151; color:#d1d5db; }
+
+            .zw-prod__cell { position:relative; height:36px; min-width:42px; }
+            .zw-prod__seg { position:absolute; top:6px; bottom:6px; padding:0 4px; display:flex; align-items:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.15); overflow:hidden; }
+            .zw-prod__seg__name { font-size:9px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+            /* Overflow popup */
+            .zw-overflow { position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.45); display:grid; place-items:center; padding:16px; }
+            .zw-overflow__panel { background:#fff; border-radius:14px; max-width:420px; width:100%; max-height:80vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(0,0,0,0.25); }
+            .dark .zw-overflow__panel { background:#1f2937; }
+            .zw-overflow__head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #f3f4f6; }
+            .dark .zw-overflow__head { border-color:#374151; }
+            .zw-overflow__date { font-size:14px; font-weight:800; color:#111827; }
+            .dark .zw-overflow__date { color:#f9fafb; }
+            .zw-overflow__close { width:30px; height:30px; border-radius:99px; border:none; background:#f3f4f6; color:#374151; font-size:18px; line-height:1; cursor:pointer; }
+            .dark .zw-overflow__close { background:#374151; color:#f9fafb; }
+            .zw-overflow__body { overflow-y:auto; padding:6px 0; }
+            .zw-overflow__row { display:flex; align-items:center; gap:10px; width:100%; padding:10px 16px; background:transparent; border:none; cursor:pointer; font-family:inherit; text-align:left; }
+            .zw-overflow__row:hover { background:#f9fafb; }
+            .dark .zw-overflow__row:hover { background:#111827; }
+            .zw-overflow__bar { width:4px; height:32px; border-radius:99px; flex-shrink:0; }
+            .zw-overflow__time { font-size:11px; font-weight:700; color:#6b7280; min-width:50px; }
+            .zw-overflow__name { flex:1; font-size:13px; font-weight:700; color:#111827; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .dark .zw-overflow__name { color:#f9fafb; }
+            .zw-overflow__pill { padding:3px 10px; border-radius:99px; font-size:10px; font-weight:700; }
+
+            /* Responsive helpers */
+            @media (max-width:767px) {
+                .zw-hide-mobile { display:none !important; }
+            }
+        </style>
+        @endpush
+    @endonce
 </x-filament-panels::page>

@@ -8,7 +8,8 @@ use Illuminate\Support\Carbon;
 
 class RentalChart extends ChartWidget
 {
-    // PERBAIKAN: Hapus kata "static" dari property $heading
+    protected static bool $isDiscovered = false;
+
     protected ?string $heading = 'Rentals This Month';
 
     protected static ?int $sort = 3;

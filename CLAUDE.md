@@ -501,6 +501,42 @@ app(\App\Services\Storage\TenantStorageService::class)->temporaryUrl($path, now(
 
 **Kenapa signed, bukan public bucket?** Private + signed URL default: (1) lebih aman, file rental/invoice/KTP customer tidak bisa di-crawl, (2) tidak tergantung config `r2_url` yang sering salah (trailing slash, bucket name duplicate), (3) tiap tenant ter-isolate di level object access — kalaupun URL bocor, expired dalam 60 menit.
 
+### R2 CORS Policy (WAJIB — Penyebab "Upload Stuck Loading di Filament")
+
+**Gejala**: User upload foto di Filament FileUpload → spinner "ketuk untuk membatalkan, ukuran berkas" muncul terus tidak pernah selesai, walaupun file sebenarnya sudah ter-upload ke R2. Di DevTools Network tab tidak ada request ke `/livewire/upload-file` yang stuck — yang ada adalah request ke `*.r2.cloudflarestorage.com/<file-id>?X-Amz-...` dengan status **CORS error**.
+
+**Root cause**: Filament 4 / FilePond JS (`vendor/filament/forms/resources/js/components/file-upload.js:187`) memanggil `fetch(signedR2Url, {cache: 'no-store'})` untuk render preview file di FileUpload component. R2 (default) tidak return CORS headers, browser block fetch, FilePond stuck di state loading.
+
+**Fix**: Set CORS policy di **Cloudflare Dashboard → R2 → bucket `zewalowebapp` → Settings → CORS Policy**:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://zewalo.com",
+      "https://*.zewalo.com",
+      "http://localhost",
+      "http://localhost:8000"
+    ],
+    "AllowedMethods": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+**Origins yang harus include**:
+- `https://<central-domain>` — landing page (e.g. `https://zewalo.com`)
+- `https://*.<central-domain>` — wildcard cover central admin (`sa.zewalo.com`) DAN semua tenant subdomain (`ajra.zewalo.com`, `toko-a.zewalo.com`, dll)
+- `http://localhost` + `http://localhost:8000` — dev environment
+
+**Kalau ada tenant pakai custom domain** (di luar pattern `*.zewalo.com`): tambah origin-nya manual ke array `AllowedOrigins` setiap kali tenant baru pakai custom domain. Pertimbangkan otomasi via API kalau ini sering terjadi.
+
+**Setelah update CORS**: hard reload browser (Ctrl+Shift+R) supaya browser invalidate CORS preflight cache lama. Propagasi Cloudflare ~1 menit.
+
+**Kenapa Livewire upload tidak kena CORS?** Livewire pakai server-proxied upload (temp disk = `local`, lihat seksi *Livewire Temp Upload* di bawah). Browser POST ke `/livewire/upload-file` (same-origin) → server PHP yang upload ke R2 (server-to-server, no CORS). Yang kena CORS hanyalah **preview/display** file existing di FileUpload component yang fetch via signed URL dari browser.
+
 ### Livewire Temp Upload (Penyebab Umum "Uploading Stuck")
 `config/livewire.php` → `temporary_file_upload.disk` = `LIVEWIRE_TMP_DISK` env, **harus `local`** (bukan `r2` / `public` / `s3`). Alasan:
 - Livewire temp disk harus writable dalam single-container (Docker Alpine).
@@ -617,6 +653,128 @@ try {
 
 ### Navigation Badge
 Sidebar navigation menampilkan badge jumlah issue yang unresolved. Warna **danger** kalau ada severity `critical`, **warning** untuk lainnya. Helps superadmin spot issue baru tanpa polling halaman.
+
+## Tenant Admin Dashboard (Home)
+
+Halaman home di tenant admin panel (`/admin`) **bukan** lagi default Filament Dashboard dengan stack widget terpisah. Diganti satu widget custom yang merangkum greeting + stats + menu + jadwal hari ini + booking terbaru, dengan layout yang berbeda per breakpoint.
+
+### Arsitektur
+- **Widget**: `App\Filament\Widgets\DashboardHomeWidget` — single full-width widget (`columnSpan = 'full'`, `sort = -10` supaya selalu di paling atas).
+- **View**: `resources/views/filament/widgets/dashboard-home.blade.php` — semua CSS inline di `@push('styles')` dengan namespace `.zw-` supaya tidak bentrok dengan Filament.
+- **Registrasi**: di `AdminPanelProvider::widgets([...])` — hanya `DashboardHomeWidget::class`. Widget lama (`StatsOverview`, `LatestRentals`, `RentalChart`) tetap ada di codebase tapi `protected static bool $isDiscovered = false` supaya tidak auto-register lewat `discoverWidgets()`.
+
+### Konten per Breakpoint
+| Section | Mobile (<768) | Tablet (768–1023) | Desktop (≥1024) |
+|---------|--------------|--------------------|-----------------|
+| Greeting + tanggal | ✓ | ✓ | ✓ |
+| Subtitle "X pickup · Y return hari ini" | ✗ | ✓ | ✓ |
+| Overview stats (6 kartu) | ✗ | ✓ (3 kolom) | ✓ (6 kolom) |
+| Menu grid (8 menu) | ✓ (2 kolom, row layout dengan icon kiri + label & desc) | ✓ (4 kolom column) | ✓ (4 kolom column) |
+| Today's Schedule list | ✗ | ✓ | ✓ |
+| Recent Bookings table | ✗ | ✗ | ✓ |
+
+Mobile sengaja minimal — hanya greeting + menu — sesuai keputusan UX (overview & today schedule terlalu padat di layar kecil).
+
+### Data Sources (cached 120s)
+- `getStats()` → `Cache::remember('zw_dashboard_home_stats', 120, ...)` — Active rentals, Quotations, Pickups today (`start_date = today` + status `confirmed`/`late_pickup`), Returns today (`end_date = today` + status `active`/`late_return`/`partial_return`), Overdue (`late_*`), Revenue (sum `total` bulan ini)
+- `getTodaySchedule()` → rental yang `start_date` atau `end_date` jatuh hari ini, sort by `start_date`, limit 8
+- `getRecentBookings()` → 6 rental terbaru by `created_at`
+- Cache key tidak per-tenant scoped karena `Setting::set()` / Filament cache flush sudah handle invalidation di tenant boundary; kalau perlu lebih aman, bungkus key dengan `tenant()?->id`
+
+### Status Color Map
+Konsisten antara Dashboard & Schedule (lihat seksi Schedule di bawah). 7 status (`quotation`/`confirmed`/`active`/`completed`/`cancelled`/`late_pickup`/`late_return`/`partial_return`) → warna solid + bg + fg + label.
+
+### Menambah Menu Baru
+Edit array `getMenu()` di `DashboardHomeWidget.php` — tiap item: `id`, `label`, `icon` (heroicon class), `url`, `desc` (tampil hanya di mobile).
+
+## Tenant Admin Schedule (Native Calendar)
+
+Halaman Schedule (`/admin/schedule`) **tidak lagi pakai** Filament FullCalendar plugin (`saade/filament-fullcalendar`) — di-rewrite jadi native Livewire + Alpine.js untuk fidelity UI yang lebih tinggi dan bundle yang lebih ringan. Widget lama `RentalCalendarWidget` masih ada (untuk page `RentalCalendar` yang `shouldRegisterNavigation = false`) tapi tidak dipakai di Schedule baru.
+
+### Arsitektur
+- **Page**: `App\Filament\Pages\Schedule` — Livewire page dengan state URL-persistent via `#[Url]` attributes (`tab`, `view`, `d` untuk cursor date, `search`).
+- **Main view**: `resources/views/filament/pages/schedule.blade.php` — toolbar + legend + Google Calendar–style nav + container untuk partial sesuai `calendarView`.
+- **Partials** di `resources/views/filament/pages/partials/`:
+  - `schedule-month.blade.php` — 7×6 grid bulan, "+N more" → Alpine popup
+  - `schedule-week.blade.php` — Gantt bars 7 kolom dengan `grid-column: span N` per rental
+  - `schedule-day.blade.php` — timeline 24-jam dengan lane assignment otomatis untuk overlap
+  - `schedule-by-product.blade.php` — sticky product+SKU+month header, **hour-aware mini-bars** (lihat di bawah)
+
+### Filter & View Toggle
+- **Tab "By Order" / "By Product"** — pill toggle di toolbar atas (`setTab($tab)`)
+- **View dropdown** "Month / Week / Day" — hanya muncul saat tab `order` (`setView($view)`)
+- **Tombol "New Booking"** — link ke `/admin/rentals/create`, hidden di mobile via `.zw-hide-mobile` CSS
+
+### Google Calendar–style Toolbar
+- Tombol **Today** (pill rounded) → `gotoToday()` reset cursor ke hari ini
+- Tombol chevron **prev/next** → `navigatePrev()` / `navigateNext()`, step unit otomatis sesuai view (`month`/`week`/`day`)
+- Title format: bulan untuk Month, range tanggal untuk Week, full date untuk Day
+
+### Data Loading
+- `getRentals()` — query `Rental::where('start_date', '<', $end)->where('end_date', '>', $start)` (overlap query), eager-load `customer:id,name`, limit 500. Dipanggil oleh semua view (Month/Week/Day) berdasarkan `getRangeStart()` & `getRangeEnd()`.
+- **Tidak di-cache** — page Livewire akan re-run pada tiap navigasi; cache layer akan salah saat tenant berbeda. Kalau perlu, tambah Redis cache dengan key per tenant + cursor + view.
+
+### Month View — "+N more" Popup
+- `getMonthGrid($maxStack = 3)` — return array `[week_index][cell_index]` dengan `visible` (3 pertama) & `overflow` count + `all` (semua items)
+- Saat `overflow > 0`: tombol `+N more` → trigger Alpine `openOverflow(title, items)` → modal bottom-sheet dengan **list rental hari itu lengkap dengan status pill** (warna sesuai status di sistem)
+- Click rental di popup → `openRental(id)` → mount Filament action `viewRentalDetails`
+
+### Day View — Lane Assignment
+- `getDayLayout()` — sort events by `startMin`, assign lane greedy (cari lane yang sudah `free` di waktu itu, kalau tidak ada → lane baru)
+- Render: `position: absolute` dengan `top = startMin/60 * 48px`, `height = duration/60 * 48px`, `left = lane * (100/totalLanes)%`, `width = (100/totalLanes)%`
+
+### By Product — Hour-Aware Mini-Bars (Penting)
+**Problem yang di-fix**: Versi lama, kalau di tanggal yang sama ada 2 rental berbeda untuk unit yang sama (jam pagi & jam sore), bar yang kedua menimpa yang pertama karena tiap cell hanya bisa render 1 background.
+
+**Solusi (option b — proportional positioning)**:
+- Setiap day-cell jadi container `position: relative; height: 36px`
+- Tiap rental yang overlap dengan tanggal itu di-clip jadi segment `[segStart, segEnd]` dalam jendela `[dayStart, dayEnd]`
+- Konversi ke persen: `left = (segStart.hour*60 + segStart.minute) / (24*60) * 100%`, `width = ((endMin - startMin) / (24*60)) * 100%`
+- Tiap segment jadi `<button position: absolute; left: X%; width: Y%; background: status_color>` — **bisa berdampingan tanpa menimpa**
+- `continuesLeft` / `continuesRight` flag → border-radius dihilangkan di sisi yang continue ke hari sebelum/sesudah, jadi visually nyambung
+- Min visible width 8% supaya rental durasi <2 jam tetap kelihatan
+
+**Catatan**: hover/click tetap akurat ke segment yang diklik (bukan bar terakhir saja).
+
+### Sticky Header By Product
+- Kolom **Product / Unit** sticky `left: 0`
+- **Month label row** (e.g. "April 2026") sticky `top: 0` dengan `colspan` jumlah hari di bulan itu
+- **Day header row** (Sen 13, Sel 14, ...) sticky `top: 36px`
+- Tiap product baris pertama: header row dengan nama product (`zw-prod__product`), baris berikutnya untuk tiap unit dengan SKU tag
+
+### Status Color Map (Single Source di Blade)
+Didefinisikan di awal `schedule.blade.php` sebagai `$statusColors = [...]` PHP array, lalu di-pass ke partial via `'sc' => $sc`. Sama persis dengan yang dipakai di Dashboard widget.
+
+| Status DB | Solid | BG | FG | Label |
+|-----------|-------|----|----|-------|
+| `quotation` | #f97316 | #fff7ed | #c2410c | Quotation |
+| `confirmed` | #3b82f6 | #eff6ff | #1d4ed8 | Confirmed |
+| `active` | #22c55e | #f0fdf4 | #15803d | Active |
+| `completed` | #a855f7 | #faf5ff | #7e22ce | Done |
+| `cancelled` | #6b7280 | #f9fafb | #374151 | Cancel |
+| `late_pickup` / `late_return` | #ef4444 | #fef2f2 | #b91c1c | Late |
+| `partial_return` | #eab308 | #fefce8 | #854d0e | Partial |
+
+### Click Rental → Detail Modal
+Semua view trigger `wire:click="mountAction('viewRentalDetails', { rentalId: X })"`. Action didefinisikan di `Schedule::viewRentalDetailsAction()` — Filament action modal dengan field disabled (rental_code, status, customer, total, periode, items, notes) + footer button "Buka Rental" → `/admin/rentals/{id}/view`.
+
+### Responsive Breakpoints
+Pure CSS media queries (no JS detection), namespace `.zw-`:
+- **Mobile** `<768px` — tombol "New Booking" hidden, calendar cells lebih ringkas (`min-height: 64px` vs 88), font lebih kecil, `gc-title: 14px`
+- **Tablet** `768–1023px` — stats grid 3 kolom, menu grid 4 kolom column layout
+- **Desktop** `≥1024px` — stats grid 6 kolom, sidebar full
+
+### Menambah View Baru (misal Year)
+1. Tambah method `getYearGrid()` di `Schedule.php` yang return data terstruktur
+2. Buat partial `partials/schedule-year.blade.php`
+3. Tambah ke array dropdown di `schedule.blade.php`: `['month'=>'Month', 'week'=>'Week', 'day'=>'Day', 'year'=>'Year']`
+4. Tambah `@elseif ($calendarView === 'year') @include('filament.pages.partials.schedule-year', [...])` di main view
+5. Update `stepUnit()` & `getRangeStart()`/`getRangeEnd()` untuk handle `'year'`
+
+### Cache & Performance
+- View partial blade di-compile sekali oleh Laravel; refresh saat `php artisan view:clear`
+- Query rental dibatasi 500 rows per request — cukup untuk view Month (overlap window max ~5 minggu); kalau lebih besar, paginate atau tambah indeks pada `(start_date, end_date)`
+- By Product pakai paginate eksisting (`perPage` setting di UI) — lebih aman untuk tenant dengan ratusan unit
 
 ## Key Conventions
 
