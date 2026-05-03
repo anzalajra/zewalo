@@ -102,12 +102,6 @@ class AdminPanelProvider extends PanelProvider
 
         $panel
             ->renderHook(
-                $useTopNav
-                    ? 'panels::global-search.after'
-                    : 'panels::sidebar.footer',
-                fn () => view('filament.hooks.qr-scanner')
-            )
-            ->renderHook(
                 'panels::content.start',
                 function () {
                     $tenant = tenant();
@@ -140,6 +134,18 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::body.end',
                 fn () => view('filament.hooks.responsive-navigation')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('filament.hooks.floating-profile-capsule')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('filament.hooks.mobile-bottom-nav')
+            )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('filament.hooks.qr-scanner-listener')
             )
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
