@@ -1,12 +1,24 @@
 <div class="zw-prod">
-    <div class="zw-prod__search">
-        <x-filament::input.wrapper prefix-icon="heroicon-m-magnifying-glass">
-            <x-filament::input
-                wire:model.live.debounce.500ms="search"
-                type="search"
-                placeholder="Cari produk atau unit…"
-            />
-        </x-filament::input.wrapper>
+    {{-- Top bar: Today + Prev/Next + Range Title + Search --}}
+    <div class="zw-prod__topbar">
+        <button wire:click="productGotoToday" type="button" class="zw-gc-today">Today</button>
+        <button wire:click="productPrev" type="button" class="zw-gc-nav" aria-label="Prev">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button wire:click="productNext" type="button" class="zw-gc-nav" aria-label="Next">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <div class="zw-prod__title">{{ $rangeTitle }}</div>
+        <div class="zw-spacer"></div>
+        <div class="zw-prod__search-wrap">
+            <x-filament::input.wrapper prefix-icon="heroicon-m-magnifying-glass">
+                <x-filament::input
+                    wire:model.live.debounce.500ms="search"
+                    type="search"
+                    placeholder="Cari produk / unit…"
+                />
+            </x-filament::input.wrapper>
+        </div>
     </div>
 
     <div class="zw-prod__shell">
@@ -67,7 +79,7 @@
             </table>
         </div>
 
-        <div style="padding:14px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="padding:12px 14px;border-top:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
             <div style="width:140px;">
                 <x-filament::input.wrapper prefix="Per page">
                     <x-filament::input.select wire:model.live="perPage">

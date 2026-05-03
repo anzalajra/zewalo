@@ -38,7 +38,7 @@
                     @endforeach
                     @if ($cell['overflow'] > 0)
                         <button type="button" class="zw-month__more"
-                                x-on:click="openOverflow({{ $cellTitleJson }}, {{ $allItems }})">
+                                onclick='window.dispatchEvent(new CustomEvent("zw-open-overflow", { detail: { title: {{ $cellTitleJson }}, items: {{ $allItems }} } }))'>
                             +{{ $cell['overflow'] }} more
                         </button>
                     @endif

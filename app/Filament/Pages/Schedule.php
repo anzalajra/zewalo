@@ -40,15 +40,24 @@ class Schedule extends Page implements HasActions
     #[Url(as: 'd')]
     public ?string $cursor = null;
 
+    #[Url(as: 'pd')]
+    public ?string $productCursor = null;
+
     #[Url(except: '')]
     public ?string $search = '';
 
     public int $perPage = 15;
 
+    /** Window size (days) for By Product view */
+    public const PRODUCT_WINDOW_DAYS = 15;
+
     public function mount(): void
     {
         if (! $this->cursor) {
             $this->cursor = now()->startOfDay()->toDateString();
+        }
+        if (! $this->productCursor) {
+            $this->productCursor = now()->startOfDay()->toDateString();
         }
     }
 
@@ -81,6 +90,59 @@ class Schedule extends Page implements HasActions
         $this->cursor = $this->cursorCarbon()
             ->add($this->stepUnit(), 1)
             ->toDateString();
+    }
+
+    public function productGotoToday(): void
+    {
+        $this->productCursor = now()->startOfDay()->toDateString();
+        $this->resetPage();
+    }
+
+    public function productPrev(): void
+    {
+        $this->productCursor = $this->productCursorCarbon()
+            ->subDays(self::PRODUCT_WINDOW_DAYS)
+            ->toDateString();
+        $this->resetPage();
+    }
+
+    public function productNext(): void
+    {
+        $this->productCursor = $this->productCursorCarbon()
+            ->addDays(self::PRODUCT_WINDOW_DAYS)
+            ->toDateString();
+        $this->resetPage();
+    }
+
+    public function productCursorCarbon(): Carbon
+    {
+        try {
+            return Carbon::parse($this->productCursor);
+        } catch (\Throwable) {
+            return now();
+        }
+    }
+
+    public function getProductRangeStart(): Carbon
+    {
+        return $this->productCursorCarbon()->copy()->startOfDay();
+    }
+
+    public function getProductRangeEnd(): Carbon
+    {
+        return $this->productCursorCarbon()->copy()
+            ->addDays(self::PRODUCT_WINDOW_DAYS - 1)
+            ->endOfDay();
+    }
+
+    public function getProductRangeTitle(): string
+    {
+        $s = $this->getProductRangeStart();
+        $e = $this->getProductRangeEnd();
+        if ($s->format('Y-m') === $e->format('Y-m')) {
+            return $s->translatedFormat('d') . ' – ' . $e->translatedFormat('d F Y');
+        }
+        return $s->translatedFormat('d M') . ' – ' . $e->translatedFormat('d M Y');
     }
 
     public function updatedSearch(): void
@@ -331,11 +393,11 @@ class Schedule extends Page implements HasActions
             ]);
     }
 
-    /** By-Product table: per-day cells split into hour-aware mini-bars */
+    /** By-Product table: per-day cells split into hour-aware mini-bars (15-day window) */
     public function getProductsWithUnitsAndRentals(): Paginator
     {
-        $rangeStart = now()->startOfMonth();
-        $rangeEnd   = now()->addMonths(2)->endOfMonth();
+        $rangeStart = $this->getProductRangeStart();
+        $rangeEnd   = $this->getProductRangeEnd();
 
         $query = Product::with(['units.rentalItems.rental.customer'])
             ->whereHas('units');
@@ -424,8 +486,8 @@ class Schedule extends Page implements HasActions
 
     public function getDaysHeader(): array
     {
-        $rangeStart = now()->startOfMonth();
-        $rangeEnd   = now()->addMonths(2)->endOfMonth();
+        $rangeStart = $this->getProductRangeStart();
+        $rangeEnd   = $this->getProductRangeEnd();
         $months = [];
         $days = [];
         for ($d = $rangeStart->copy(); $d <= $rangeEnd; $d->addDay()) {

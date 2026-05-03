@@ -13,9 +13,9 @@
 @endphp
 
 <x-filament-panels::page>
-    <div class="zw-sched" x-data="zwSchedule()" x-init="init()">
+    <div class="zw-sched">
 
-        {{-- Toolbar (FilterBar): tab + view dropdown + new --}}
+        {{-- Toolbar --}}
         <div class="zw-toolbar">
             <div class="zw-pill-group">
                 <button wire:click="setTab('order')" type="button"
@@ -25,14 +25,14 @@
             </div>
 
             @if ($activeTab === 'order')
-                <div class="zw-view-select" x-data="{ open:false }" @click.outside="open=false">
-                    <button @click="open=!open" type="button" class="zw-view-btn">
+                <div class="zw-view-select" x-data="{ open: false }" @click.outside="open = false">
+                    <button @click="open = ! open" type="button" class="zw-view-btn">
                         <span>{{ ucfirst($calendarView) }}</span>
                         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                     </button>
-                    <div x-show="open" x-cloak class="zw-view-menu" x-transition.opacity>
+                    <div x-show="open" x-cloak class="zw-view-menu" x-transition.opacity style="display:none">
                         @foreach (['month' => 'Month', 'week' => 'Week', 'day' => 'Day'] as $k => $l)
-                            <button wire:click="setView('{{ $k }}')" @click="open=false" type="button"
+                            <button wire:click="setView('{{ $k }}')" @click="open = false" type="button"
                                 class="zw-view-item {{ $calendarView === $k ? 'zw-view-item--on' : '' }}">
                                 {{ $l }}
                             </button>
@@ -61,7 +61,6 @@
         </div>
 
         @if ($activeTab === 'order')
-            {{-- Google-Calendar style toolbar --}}
             <div class="zw-gc-toolbar">
                 <button wire:click="gotoToday" type="button" class="zw-gc-today">Today</button>
                 <button wire:click="navigatePrev" type="button" class="zw-gc-nav" aria-label="Prev">
@@ -83,27 +82,39 @@
                 @endif
             </div>
         @else
-            {{-- By Product (with hour-aware mini-bars) --}}
             @php
                 $products = $this->getProductsWithUnitsAndRentals();
                 $header = $this->getDaysHeader();
             @endphp
-            @include('filament.pages.partials.schedule-by-product', ['products' => $products, 'header' => $header, 'sc' => $sc])
+            @include('filament.pages.partials.schedule-by-product', [
+                'products' => $products,
+                'header'   => $header,
+                'sc'       => $sc,
+                'rangeTitle' => $this->getProductRangeTitle(),
+            ])
         @endif
     </div>
 
-    {{-- Overflow popup ("+N more") --}}
-    <div x-cloak x-show="overflowOpen" @keydown.escape.window="overflowOpen=false" class="zw-overflow"
-         @click.self="overflowOpen=false">
+    {{-- Overflow popup — isolated Alpine scope, listens for window event --}}
+    <div
+        x-data="zwOverflowPopup()"
+        x-on:zw-open-overflow.window="open($event.detail.title, $event.detail.items)"
+        x-show="visible"
+        x-cloak
+        @keydown.escape.window="visible = false"
+        @click.self="visible = false"
+        class="zw-overflow"
+        style="display:none"
+    >
         <div class="zw-overflow__panel" @click.stop>
             <div class="zw-overflow__head">
-                <div class="zw-overflow__date" x-text="overflowTitle"></div>
-                <button @click="overflowOpen=false" type="button" class="zw-overflow__close" aria-label="Close">×</button>
+                <div class="zw-overflow__date" x-text="title"></div>
+                <button @click="visible = false" type="button" class="zw-overflow__close" aria-label="Close">×</button>
             </div>
             <div class="zw-overflow__body">
-                <template x-for="r in overflowItems" :key="r.id">
+                <template x-for="r in items" :key="r.id">
                     <button type="button" class="zw-overflow__row"
-                            @click="openRental(r.id); overflowOpen=false">
+                            @click="openRental(r.id)">
                         <span class="zw-overflow__bar" :style="`background:${r.color}`"></span>
                         <span class="zw-overflow__time" x-text="r.time"></span>
                         <span class="zw-overflow__name" x-text="r.customer"></span>
@@ -118,22 +129,35 @@
 
     @push('scripts')
     <script>
-        function zwSchedule() {
+        function zwOverflowPopup() {
             return {
-                overflowOpen: false,
-                overflowTitle: '',
-                overflowItems: [],
-                init() {},
-                openOverflow(title, items) {
-                    this.overflowTitle = title;
-                    this.overflowItems = items;
-                    this.overflowOpen = true;
+                visible: false,
+                title: '',
+                items: [],
+                open(title, items) {
+                    this.title = title;
+                    this.items = items || [];
+                    this.visible = true;
                 },
                 openRental(id) {
-                    @this.mountAction('viewRentalDetails', { rentalId: id });
+                    this.visible = false;
+                    if (window.Livewire) {
+                        window.Livewire.dispatch('open-rental-modal', { id: id });
+                    }
                 },
             };
         }
+        // Bridge: dispatch Livewire event to mount Filament action
+        document.addEventListener('livewire:init', () => {
+            window.Livewire.on('open-rental-modal', (event) => {
+                const id = event.id ?? (event[0] && event[0].id);
+                if (! id) return;
+                const el = document.querySelector('[wire\\:id]');
+                if (el && window.Livewire.find(el.getAttribute('wire:id'))) {
+                    window.Livewire.find(el.getAttribute('wire:id')).call('mountAction', 'viewRentalDetails', { rentalId: id });
+                }
+            });
+        });
     </script>
     @endpush
 
@@ -210,7 +234,7 @@
             .dark .zw-month__day { color:#f9fafb; }
             .zw-month__day--today { background:#0284c7; color:#fff; border-radius:99px; min-width:22px; height:22px; display:grid; place-items:center; padding:0; }
             .zw-month__day--out { color:#9ca3af; }
-            .zw-month__bar { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:5px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(0,0,0,0.12); }
+            .zw-month__bar { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:5px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(0,0,0,0.12); border:none; text-align:left; font-family:inherit; }
             .zw-month__more { font-size:10px; font-weight:700; color:#0284c7; padding:2px 6px; border:none; background:transparent; cursor:pointer; text-align:left; font-family:inherit; }
             .zw-month__more:hover { text-decoration:underline; }
 
@@ -241,7 +265,7 @@
                 background:var(--bg);
                 color:#fff; padding:8px 10px; border-radius:6px; font-size:12px; font-weight:700;
                 white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;
-                box-shadow:0 1px 3px rgba(0,0,0,0.12);
+                box-shadow:0 1px 3px rgba(0,0,0,0.12); border:none; text-align:left; font-family:inherit;
             }
             .zw-week__rental__sub { font-size:10px; font-weight:600; opacity:.85; margin-top:2px; }
 
@@ -260,13 +284,17 @@
             .dark .zw-day__hour { border-color:#374151; }
             .zw-day__events { flex:1; position:relative; min-height:600px; background-image:linear-gradient(to bottom, #f3f4f6 1px, transparent 1px); background-size:100% 48px; }
             .dark .zw-day__events { background-image:linear-gradient(to bottom, #374151 1px, transparent 1px); }
-            .zw-day__event { position:absolute; padding:6px 10px; border-radius:6px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15); overflow:hidden; }
+            .zw-day__event { position:absolute; padding:6px 10px; border-radius:6px; color:#fff; font-size:12px; font-weight:700; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.15); overflow:hidden; border:none; text-align:left; font-family:inherit; }
             .zw-day__event__time { font-size:10px; font-weight:600; opacity:.85; margin-top:2px; }
 
-            /* By Product (hour-aware mini-bars) */
+            /* By Product */
             .zw-prod { display:flex; flex-direction:column; gap:10px; }
-            .zw-prod__search { background:#fff; padding:10px 14px; border:1px solid #f3f4f6; border-radius:10px; }
-            .dark .zw-prod__search { background:#1f2937; border-color:#374151; }
+            .zw-prod__topbar { display:flex; align-items:center; gap:8px; padding:8px 12px; background:#fff; border:1px solid #f3f4f6; border-radius:10px; flex-wrap:wrap; }
+            .dark .zw-prod__topbar { background:#1f2937; border-color:#374151; }
+            .zw-prod__title { font-size:15px; font-weight:700; color:#111827; letter-spacing:-0.2px; margin-left:6px; }
+            .dark .zw-prod__title { color:#f9fafb; }
+            @media (max-width:640px) { .zw-prod__title { font-size:13px; } }
+            .zw-prod__search-wrap { flex:1 1 200px; min-width:160px; max-width:280px; }
             .zw-prod__shell { background:#fff; border:1px solid #f3f4f6; border-radius:12px; overflow:hidden; }
             .dark .zw-prod__shell { background:#1f2937; border-color:#374151; }
             .zw-prod__scroll { overflow:auto; max-height:70vh; }
@@ -275,27 +303,27 @@
             .dark .zw-prod__table th, .dark .zw-prod__table td { border-color:#374151; }
             .zw-prod__th-spacer { background:#fff; min-width:200px; width:200px; position:sticky; left:0; top:0; z-index:30; padding:8px 12px !important; font-size:11px; font-weight:800; text-transform:uppercase; color:#6b7280; }
             .dark .zw-prod__th-spacer { background:#1f2937; }
-            .zw-prod__month { padding:6px 8px !important; background:#f9fafb; font-size:11px; font-weight:700; color:#374151; text-align:center; position:sticky; top:0; z-index:20; }
+            .zw-prod__month { padding:8px !important; background:#f9fafb; font-size:12px; font-weight:700; color:#374151; text-align:center; position:sticky; top:0; z-index:20; }
             .dark .zw-prod__month { background:#111827; color:#f9fafb; }
-            .zw-prod__day { width:42px; min-width:42px; padding:6px 0 !important; background:#fff; text-align:center; position:sticky; top:36px; z-index:20; }
+            .zw-prod__day { width:64px; min-width:64px; padding:8px 0 !important; background:#fff; text-align:center; position:sticky; top:38px; z-index:20; }
             .dark .zw-prod__day { background:#1f2937; }
-            .zw-prod__day--today { background:#f0f9ff; }
-            .dark .zw-prod__day--today { background:#0c4a6e; }
-            .zw-prod__day__short { font-size:9px; color:#9ca3af; font-weight:600; }
-            .zw-prod__day__num { font-size:13px; font-weight:700; color:#111827; }
+            .zw-prod__day--today { background:#f0f9ff !important; }
+            .dark .zw-prod__day--today { background:#0c4a6e !important; }
+            .zw-prod__day__short { font-size:10px; color:#9ca3af; font-weight:600; }
+            .zw-prod__day__num { font-size:14px; font-weight:700; color:#111827; }
             .dark .zw-prod__day__num { color:#f9fafb; }
             .zw-prod__day--today .zw-prod__day__num { color:#0284c7; }
 
-            .zw-prod__product { padding:6px 12px !important; background:#f0f9ff; font-size:13px; font-weight:700; color:#0369a1; position:sticky; left:0; z-index:15; }
+            .zw-prod__product { padding:8px 12px !important; background:#f0f9ff; font-size:13px; font-weight:700; color:#0369a1; position:sticky; left:0; z-index:15; }
             .dark .zw-prod__product { background:#0c4a6e; color:#7dd3fc; }
-            .zw-prod__sku { padding:6px 12px 6px 24px !important; background:#fff; position:sticky; left:0; z-index:10; }
+            .zw-prod__sku { padding:8px 12px 8px 24px !important; background:#fff; position:sticky; left:0; z-index:10; min-width:200px; width:200px; }
             .dark .zw-prod__sku { background:#1f2937; }
             .zw-prod__sku-tag { font-family:ui-monospace, monospace; font-size:11px; background:#f3f4f6; color:#4b5563; padding:2px 8px; border-radius:6px; }
             .dark .zw-prod__sku-tag { background:#374151; color:#d1d5db; }
 
-            .zw-prod__cell { position:relative; height:36px; min-width:42px; }
-            .zw-prod__seg { position:absolute; top:6px; bottom:6px; padding:0 4px; display:flex; align-items:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.15); overflow:hidden; }
-            .zw-prod__seg__name { font-size:9px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            .zw-prod__cell { position:relative; height:40px; min-width:64px; }
+            .zw-prod__seg { position:absolute; top:6px; bottom:6px; padding:0 4px; display:flex; align-items:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.15); overflow:hidden; border:none; font-family:inherit; }
+            .zw-prod__seg__name { font-size:10px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
             /* Overflow popup */
             .zw-overflow { position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.45); display:grid; place-items:center; padding:16px; }
