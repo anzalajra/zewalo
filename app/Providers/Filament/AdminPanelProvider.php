@@ -102,6 +102,10 @@ class AdminPanelProvider extends PanelProvider
 
         $panel
             ->renderHook(
+                'panels::styles.after',
+                fn () => view('filament.hooks.zw-styles')
+            )
+            ->renderHook(
                 'panels::content.start',
                 function () {
                     $tenant = tenant();

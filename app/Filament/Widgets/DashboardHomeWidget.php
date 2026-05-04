@@ -93,13 +93,18 @@ class DashboardHomeWidget extends Widget
     public function getRecentBookings(): array
     {
         return Cache::remember('zw_dashboard_recent_bookings', 120, function () {
-            return Rental::with(['customer:id,name', 'items:id,rental_id,product_id', 'items.product:id,name'])
+            return Rental::with([
+                    'customer:id,name',
+                    'items:id,rental_id,product_unit_id',
+                    'items.productUnit:id,product_id',
+                    'items.productUnit.product:id,name',
+                ])
                 ->latest('created_at')
                 ->limit(6)
                 ->get()
                 ->map(function (Rental $r) {
                     $first = $r->items->first();
-                    $itemName = $first?->product?->name ?? '—';
+                    $itemName = $first?->productUnit?->product?->name ?? '—';
                     if ($r->items->count() > 1) {
                         $itemName .= ' +' . ($r->items->count() - 1);
                     }

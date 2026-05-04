@@ -17,6 +17,8 @@ class RentalCalendarWidget extends FullCalendarWidget implements HasActions
 {
     use InteractsWithActions;
 
+    protected static bool $isDiscovered = false;
+
     public function getRecord(): ?Model
     {
         return null;
