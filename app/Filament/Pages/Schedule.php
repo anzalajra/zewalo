@@ -48,16 +48,13 @@ class Schedule extends Page implements HasActions
 
     public int $perPage = 15;
 
-    /** Window size (days) for By Product view */
-    public const PRODUCT_WINDOW_DAYS = 15;
-
     public function mount(): void
     {
         if (! $this->cursor) {
             $this->cursor = now()->startOfDay()->toDateString();
         }
         if (! $this->productCursor) {
-            $this->productCursor = now()->startOfDay()->toDateString();
+            $this->productCursor = now()->startOfMonth()->toDateString();
         }
     }
 
@@ -94,14 +91,15 @@ class Schedule extends Page implements HasActions
 
     public function productGotoToday(): void
     {
-        $this->productCursor = now()->startOfDay()->toDateString();
+        $this->productCursor = now()->startOfMonth()->toDateString();
         $this->resetPage();
     }
 
     public function productPrev(): void
     {
         $this->productCursor = $this->productCursorCarbon()
-            ->subDays(self::PRODUCT_WINDOW_DAYS)
+            ->subMonthNoOverflow()
+            ->startOfMonth()
             ->toDateString();
         $this->resetPage();
     }
@@ -109,7 +107,8 @@ class Schedule extends Page implements HasActions
     public function productNext(): void
     {
         $this->productCursor = $this->productCursorCarbon()
-            ->addDays(self::PRODUCT_WINDOW_DAYS)
+            ->addMonthNoOverflow()
+            ->startOfMonth()
             ->toDateString();
         $this->resetPage();
     }
@@ -117,32 +116,25 @@ class Schedule extends Page implements HasActions
     public function productCursorCarbon(): Carbon
     {
         try {
-            return Carbon::parse($this->productCursor);
+            return Carbon::parse($this->productCursor)->startOfMonth();
         } catch (\Throwable) {
-            return now();
+            return now()->startOfMonth();
         }
     }
 
     public function getProductRangeStart(): Carbon
     {
-        return $this->productCursorCarbon()->copy()->startOfDay();
+        return $this->productCursorCarbon()->copy()->startOfMonth()->startOfDay();
     }
 
     public function getProductRangeEnd(): Carbon
     {
-        return $this->productCursorCarbon()->copy()
-            ->addDays(self::PRODUCT_WINDOW_DAYS - 1)
-            ->endOfDay();
+        return $this->productCursorCarbon()->copy()->endOfMonth()->endOfDay();
     }
 
     public function getProductRangeTitle(): string
     {
-        $s = $this->getProductRangeStart();
-        $e = $this->getProductRangeEnd();
-        if ($s->format('Y-m') === $e->format('Y-m')) {
-            return $s->translatedFormat('d') . ' – ' . $e->translatedFormat('d F Y');
-        }
-        return $s->translatedFormat('d M') . ' – ' . $e->translatedFormat('d M Y');
+        return $this->productCursorCarbon()->translatedFormat('F Y');
     }
 
     public function updatedSearch(): void

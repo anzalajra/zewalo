@@ -1,11 +1,13 @@
 <div class="zw-prod">
     {{-- Top bar: Today + Prev/Next + Range Title + Search --}}
     <div class="zw-prod__topbar">
-        <button wire:click="productGotoToday" type="button" class="zw-gc-today">Today</button>
-        <button wire:click="productPrev" type="button" class="zw-gc-nav" aria-label="Prev">
+        <button wire:click="productGotoToday"
+                @click="setTimeout(() => window.dispatchEvent(new CustomEvent('zw-prod-scroll-today')), 250)"
+                type="button" class="zw-gc-today">Today</button>
+        <button wire:click="productPrev" type="button" class="zw-gc-nav" aria-label="Prev bulan">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <button wire:click="productNext" type="button" class="zw-gc-nav" aria-label="Next">
+        <button wire:click="productNext" type="button" class="zw-gc-nav" aria-label="Next bulan">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
         </button>
         <div class="zw-prod__title">{{ $rangeTitle }}</div>
@@ -21,8 +23,20 @@
         </div>
     </div>
 
-    <div class="zw-prod__shell">
-        <div class="zw-prod__scroll">
+    <div class="zw-prod__shell"
+         x-data="{
+            scrollToToday() {
+                const $scroll = this.$refs.scroll;
+                const $today  = $scroll.querySelector('[data-today=\'1\']');
+                if (! $today) return;
+                const stickyW = 200; // width of sticky product/sku column
+                const target  = $today.offsetLeft - stickyW - 32;
+                $scroll.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+            },
+         }"
+         x-init="$nextTick(() => scrollToToday())"
+         x-on:zw-prod-scroll-today.window="$nextTick(() => scrollToToday())">
+        <div class="zw-prod__scroll" x-ref="scroll">
             <table class="zw-prod__table">
                 <thead>
                     <tr>
@@ -33,7 +47,8 @@
                     </tr>
                     <tr>
                         @foreach ($header['days'] as $d)
-                            <th class="zw-prod__day {{ $d['isToday'] ? 'zw-prod__day--today' : '' }}">
+                            <th class="zw-prod__day {{ $d['isToday'] ? 'zw-prod__day--today' : '' }}"
+                                @if ($d['isToday']) data-today="1" @endif>
                                 <div class="zw-prod__day__short">{{ $d['short'] }}</div>
                                 <div class="zw-prod__day__num">{{ $d['day'] }}</div>
                             </th>
