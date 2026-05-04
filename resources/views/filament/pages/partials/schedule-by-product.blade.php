@@ -55,13 +55,27 @@
                                 @foreach ($row['cells'] as $cell)
                                     <td class="zw-prod__cell {{ $cell['isToday'] ? 'zw-prod__day--today' : '' }}">
                                         @foreach ($cell['segments'] as $seg)
-                                            @php $c = $sc[$seg['rental']['status']] ?? $sc['cancelled']; @endphp
+                                            @php
+                                                $c = $sc[$seg['rental']['status']] ?? $sc['cancelled'];
+                                                // Extend segment 1px past the continuing cell edge so adjacent
+                                                // segments cover the cell border-right and visually merge.
+                                                $segWidth = max(8, $seg['width']);
+                                                if ($seg['continuesLeft'] && $seg['continuesRight']) {
+                                                    $posStyle = "left:-1px; right:-1px; width:auto;";
+                                                } elseif ($seg['continuesLeft']) {
+                                                    $posStyle = "left:-1px; width:calc({$segWidth}% + 1px);";
+                                                } elseif ($seg['continuesRight']) {
+                                                    $posStyle = "left:{$seg['left']}%; right:-1px; width:auto;";
+                                                } else {
+                                                    $posStyle = "left:{$seg['left']}%; width:{$segWidth}%;";
+                                                }
+                                            @endphp
                                             <button type="button"
                                                 wire:click="mountAction('viewRentalDetails', { rentalId: {{ $seg['rental']['id'] }} })"
                                                 class="zw-prod__seg"
-                                                style="left:{{ $seg['left'] }}%; width:{{ max(8, $seg['width']) }}%; background:{{ $c['solid'] }}; border-top-left-radius:{{ $seg['continuesLeft'] ? '0' : '4px' }}; border-bottom-left-radius:{{ $seg['continuesLeft'] ? '0' : '4px' }}; border-top-right-radius:{{ $seg['continuesRight'] ? '0' : '4px' }}; border-bottom-right-radius:{{ $seg['continuesRight'] ? '0' : '4px' }};"
+                                                style="{{ $posStyle }} background:{{ $c['solid'] }}; border-top-left-radius:{{ $seg['continuesLeft'] ? '0' : '4px' }}; border-bottom-left-radius:{{ $seg['continuesLeft'] ? '0' : '4px' }}; border-top-right-radius:{{ $seg['continuesRight'] ? '0' : '4px' }}; border-bottom-right-radius:{{ $seg['continuesRight'] ? '0' : '4px' }};"
                                                 title="{{ $seg['rental']['customer'] }} — {{ $seg['rental']['start']->format('d M H:i') }} → {{ $seg['rental']['end']->format('d M H:i') }}">
-                                                <span class="zw-prod__seg__name">{{ $seg['rental']['customer'] }}</span>
+                                                <span class="zw-prod__seg__name">{{ $seg['continuesLeft'] ? '' : $seg['rental']['customer'] }}</span>
                                             </button>
                                         @endforeach
                                     </td>

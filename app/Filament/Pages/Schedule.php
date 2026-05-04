@@ -229,7 +229,13 @@ class Schedule extends Page implements HasActions
             ])->toArray();
     }
 
-    /** Build month grid (6 weeks × 7 days) with rentals laid out per day with overflow */
+    /**
+     * Build month grid (6 weeks × 7 days). Each week returns:
+     *  - 'days' (array of 7 day metas)
+     *  - 'bars' (segments spanning multiple columns within the week, merged Google-Calendar style)
+     *  - 'overflowByCol' (per-column count of bars hidden under the maxStack lane limit)
+     *  - 'allByCol' (per-column full list of rentals overlapping that day, for "+N more" popup)
+     */
     public function getMonthGrid(int $maxStack = 3): array
     {
         $start = $this->getRangeStart();
@@ -237,26 +243,109 @@ class Schedule extends Page implements HasActions
         $cursorMonth = (int) $this->cursorCarbon()->format('m');
 
         $rentals = $this->getRentals();
-        $weeks = [];
 
+        // Pre-build flat day list & per-day rental list (for overflow popup)
+        $flatDays = [];
+        $itemsByDay = [];
         for ($d = $start->copy(); $d <= $end; $d->addDay()) {
             $iso = $d->toDateString();
+            $flatDays[] = [
+                'date'    => $iso,
+                'day'     => (int) $d->format('j'),
+                'isToday' => $d->isToday(),
+                'inMonth' => (int) $d->format('m') === $cursorMonth,
+            ];
             $items = [];
             foreach ($rentals as $r) {
                 if ($d->between($r['start']->copy()->startOfDay(), $r['end']->copy()->endOfDay())) {
                     $items[] = $r;
                 }
             }
+            $itemsByDay[$iso] = $items;
+        }
 
-            $week = intdiv((int) $start->diffInDays($d), 7);
-            $weeks[$week][] = [
-                'date'      => $iso,
-                'day'       => (int) $d->format('j'),
-                'isToday'   => $d->isToday(),
-                'inMonth'   => (int) $d->format('m') === $cursorMonth,
-                'visible'   => array_slice($items, 0, $maxStack),
-                'overflow'  => max(0, count($items) - $maxStack),
-                'all'       => $items,
+        $totalDays = count($flatDays);
+        $weekCount = intdiv($totalDays, 7);
+        $weeks = [];
+
+        for ($w = 0; $w < $weekCount; $w++) {
+            $weekDays = array_slice($flatDays, $w * 7, 7);
+            $weekStart = $start->copy()->addDays($w * 7)->startOfDay();
+            $weekEnd   = $weekStart->copy()->addDays(6)->endOfDay();
+
+            // Collect rentals overlapping this week, with their column span within the week
+            $weekRentals = [];
+            foreach ($rentals as $r) {
+                $rStart = $r['start']->copy()->startOfDay();
+                $rEnd   = $r['end']->copy()->endOfDay();
+                if ($rEnd < $weekStart || $rStart > $weekEnd) continue;
+
+                $segStart = $rStart->greaterThan($weekStart) ? $rStart : $weekStart;
+                $segEnd   = $rEnd->lessThan($weekEnd) ? $rEnd : $weekEnd;
+
+                $startCol = max(0, min(6, (int) $weekStart->diffInDays($segStart->copy()->startOfDay())));
+                $endCol   = max(0, min(6, (int) $weekStart->diffInDays($segEnd->copy()->startOfDay())));
+
+                $weekRentals[] = [
+                    'rental'   => $r,
+                    'startCol' => $startCol,
+                    'endCol'   => $endCol,
+                    'span'     => $endCol - $startCol + 1,
+                    'sortKey'  => $rStart->timestamp,
+                ];
+            }
+
+            // Sort by start column then by rental start time so longer/earlier bars get top lanes
+            usort($weekRentals, function ($a, $b) {
+                if ($a['startCol'] !== $b['startCol']) return $a['startCol'] <=> $b['startCol'];
+                if ($a['span'] !== $b['span']) return $b['span'] <=> $a['span'];
+                return $a['sortKey'] <=> $b['sortKey'];
+            });
+
+            // Assign each rental to a lane (row within the week) — first lane where its column range is free
+            $lanes = []; // [laneIndex => array of [startCol, endCol]]
+            foreach ($weekRentals as &$wr) {
+                $assigned = null;
+                foreach ($lanes as $li => $occupied) {
+                    $conflict = false;
+                    foreach ($occupied as [$s, $e]) {
+                        if (! ($wr['endCol'] < $s || $wr['startCol'] > $e)) { $conflict = true; break; }
+                    }
+                    if (! $conflict) { $assigned = $li; break; }
+                }
+                if ($assigned === null) {
+                    $assigned = count($lanes);
+                    $lanes[$assigned] = [];
+                }
+                $lanes[$assigned][] = [$wr['startCol'], $wr['endCol']];
+                $wr['lane'] = $assigned;
+            }
+            unset($wr);
+
+            // Split into visible bars (lane < maxStack) and per-column overflow count
+            $bars = [];
+            $overflowByCol = array_fill(0, 7, 0);
+            foreach ($weekRentals as $wr) {
+                if ($wr['lane'] < $maxStack) {
+                    $bars[] = $wr;
+                } else {
+                    for ($c = $wr['startCol']; $c <= $wr['endCol']; $c++) {
+                        $overflowByCol[$c]++;
+                    }
+                }
+            }
+
+            // Per-column "all rentals today" for overflow popup
+            $allByCol = [];
+            foreach ($weekDays as $col => $dayMeta) {
+                $allByCol[$col] = $itemsByDay[$dayMeta['date']] ?? [];
+            }
+
+            $weeks[] = [
+                'days'          => $weekDays,
+                'bars'          => $bars,
+                'overflowByCol' => $overflowByCol,
+                'allByCol'      => $allByCol,
             ];
         }
 

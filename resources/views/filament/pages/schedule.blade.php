@@ -222,26 +222,36 @@
             .zw-month__head { display:grid; grid-template-columns:repeat(7, 1fr); border-bottom:1px solid #f3f4f6; }
             .zw-month__head > div { padding:8px 6px; font-size:11px; font-weight:700; color:#6b7280; text-align:center; text-transform:uppercase; letter-spacing:.3px; }
             .dark .zw-month__head, .dark .zw-month__head > div { border-color:#374151; color:#9ca3af; }
-            .zw-month__week { display:grid; grid-template-columns:repeat(7, 1fr); border-bottom:1px solid #f3f4f6; min-height:88px; }
+            .zw-month__week { display:flex; flex-direction:column; border-bottom:1px solid #f3f4f6; min-height:88px; }
             .dark .zw-month__week { border-color:#374151; }
             .zw-month__week:last-child { border-bottom:none; }
-            .zw-month__cell { border-right:1px solid #f3f4f6; padding:4px; display:flex; flex-direction:column; gap:2px; min-width:0; min-height:88px; }
+            /* Day-number row */
+            .zw-month__daynums { display:grid; grid-template-columns:repeat(7, 1fr); }
+            .zw-month__cell { border-right:1px solid #f3f4f6; padding:4px; min-width:0; min-height:28px; }
             .dark .zw-month__cell { border-color:#374151; }
             .zw-month__cell:last-child { border-right:none; }
             .zw-month__cell--out { background:#f9fafb; }
             .dark .zw-month__cell--out { background:#111827; }
-            .zw-month__day { font-size:11px; font-weight:700; color:#374151; padding:2px 4px; align-self:flex-start; }
+            .zw-month__day { font-size:11px; font-weight:700; color:#374151; padding:2px 4px; display:inline-block; }
             .dark .zw-month__day { color:#f9fafb; }
-            .zw-month__day--today { background:#0284c7; color:#fff; border-radius:99px; min-width:22px; height:22px; display:grid; place-items:center; padding:0; }
+            .zw-month__day--today { background:#0284c7; color:#fff; border-radius:99px; min-width:22px; height:22px; line-height:18px; text-align:center; padding:0; }
             .zw-month__day--out { color:#9ca3af; }
-            .zw-month__bar { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:5px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(0,0,0,0.12); border:none; text-align:left; font-family:inherit; }
-            .zw-month__more { font-size:10px; font-weight:700; color:#0284c7; padding:2px 6px; border:none; background:transparent; cursor:pointer; text-align:left; font-family:inherit; }
+            /* Bars row — single grid spanning full week, with column-spanning bars */
+            .zw-month__lanes { display:grid; grid-template-columns:repeat(7, 1fr); column-gap:2px; row-gap:2px; padding:0 2px; align-items:start; }
+            .zw-month__bar { font-size:10px; font-weight:700; color:#fff; padding:2px 6px; border-radius:5px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(0,0,0,0.12); border:none; text-align:left; font-family:inherit; height:20px; line-height:16px; min-width:0; }
+            .zw-month__bar__time { opacity:.85; margin-right:4px; }
+            .zw-month__bar__name { }
+            /* Overflow row */
+            .zw-month__overflow-row { display:grid; grid-template-columns:repeat(7, 1fr); padding:2px 2px 4px; gap:2px; }
+            .zw-month__overflow-cell { min-height:0; padding:0 4px; }
+            .zw-month__more { font-size:10px; font-weight:700; color:#0284c7; padding:1px 4px; border:none; background:transparent; cursor:pointer; text-align:left; font-family:inherit; }
             .zw-month__more:hover { text-decoration:underline; }
 
             @media (max-width:640px) {
                 .zw-month__week { min-height:64px; }
-                .zw-month__cell { min-height:64px; padding:2px; }
-                .zw-month__bar { font-size:9px; padding:1px 4px; }
+                .zw-month__cell { min-height:24px; padding:2px; }
+                .zw-month__bar { font-size:9px; padding:1px 4px; height:18px; line-height:14px; }
+                .zw-month__bar__time { display:none; }
                 .zw-month__head > div { padding:6px 2px; font-size:10px; }
             }
 
