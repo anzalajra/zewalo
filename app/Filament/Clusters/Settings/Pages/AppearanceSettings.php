@@ -39,6 +39,13 @@ class AppearanceSettings extends Page implements HasForms
     public function mount(): void
     {
         $settings = Setting::all()->pluck('value', 'key')->toArray();
+
+        // Ensure the locale toggle reflects the currently active locale, even if
+        // it was never saved to the settings table before.
+        if (! isset($settings['locale']) || ! in_array($settings['locale'], ['id', 'en'])) {
+            $settings['locale'] = app()->getLocale();
+        }
+
         $this->form->fill($settings);
     }
 
@@ -114,7 +121,7 @@ class AppearanceSettings extends Page implements HasForms
             ]);
     }
 
-    public function save(): void
+    public function save()
     {
         $data = $this->form->getState();
 
@@ -122,11 +129,13 @@ class AppearanceSettings extends Page implements HasForms
             Setting::set($key, $value);
         }
 
-        // Apply locale immediately if changed
-        if (isset($data['locale']) && in_array($data['locale'], ['id', 'en'])) {
-            app()->setLocale($data['locale']);
-            session(['locale' => $data['locale']]);
-            cookie()->queue('zewalo_locale', $data['locale'], 60 * 24 * 365);
+        // Apply locale immediately so the success message and next render use the new language.
+        $newLocale = $data['locale'] ?? null;
+        if ($newLocale && in_array($newLocale, ['id', 'en'])) {
+            app()->setLocale($newLocale);
+            session()->put('locale', $newLocale);
+            session()->save();
+            cookie()->queue(cookie()->forever('zewalo_locale', $newLocale));
         }
 
         Notification::make()
@@ -134,7 +143,8 @@ class AppearanceSettings extends Page implements HasForms
             ->success()
             ->send();
 
-        // Redirect to force full page reload so panel re-boots with new settings
-        $this->redirect(static::getUrl());
+        // Force a full HTTP redirect (navigate: false) so the panel boots fresh
+        // and re-applies the locale + theme settings on the next request.
+        $this->redirect(static::getUrl(), navigate: false);
     }
 }

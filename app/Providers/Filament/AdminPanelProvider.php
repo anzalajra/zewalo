@@ -38,38 +38,49 @@ class AdminPanelProvider extends PanelProvider
 
     public function panel(Panel $panel): Panel
     {
-        $primaryColor = Color::Amber;
-        $navigationLayout = 'sidebar';
-        $brandName = config('app.name');
-        $brandLogo = null;
-        $favicon = null;
+        // NOTE: This method runs ONCE during the Laravel boot phase, before any
+        // request hits the panel — i.e. before tenant context is initialized.
+        // Reading `Setting::get(...)` directly here always queries the central
+        // database (or default connection), which is why we wrap every per-tenant
+        // value below in a Closure. Filament evaluates Closures passed to
+        // `brandName`, `brandLogo`, `favicon`, `topNavigation`, and `topbar` at
+        // render time, by which point the tenant DB is active. The primary color
+        // is applied via the `ApplyTenantAppearance` auth middleware further down.
 
-        try {
-            if (Schema::hasTable('settings')) {
-                $siteName = Setting::get('site_name');
-                if ($siteName) {
-                    $brandName = $siteName;
+        $brandNameResolver = function () {
+            try {
+                if (Schema::hasTable('settings')) {
+                    $siteName = Setting::get('site_name');
+                    if ($siteName) {
+                        return $siteName;
+                    }
                 }
-                $logo = Setting::get('site_logo') ?: Setting::get('logo');
-                if ($logo) {
-                    $brandLogo = \App\Services\Storage\R2Url::signed($logo);
-                    $favicon = $brandLogo;
-                }
-
-                $navigationLayout = Setting::get('navigation_layout', 'sidebar');
-
-                // Use the centralized ThemeService to ensure consistency between Admin and Frontend
-                $primaryColor = \App\Services\ThemeService::getPrimaryColor();
+            } catch (\Throwable $e) {
+                // ignore — fall through to default
             }
-        } catch (\Exception $e) {
-            // Fallback to default
-        }
+            return config('app.name');
+        };
 
-        // Configure the palette plugin to use the calculated primary color
-        // This ensures compatibility with the plugin's global theme application
-        // and supports all colors, not just those defined in the plugin's config file.
+        $brandLogoResolver = function () {
+            try {
+                if (Schema::hasTable('settings')) {
+                    $logo = Setting::get('site_logo') ?: Setting::get('logo');
+                    if ($logo) {
+                        return \App\Services\Storage\R2Url::signed($logo);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+            return null;
+        };
+
+        // Configure the palette plugin's static fallback. The palette plugin's
+        // ApplyPalette middleware writes these to FilamentColor on each request
+        // BEFORE our ApplyTenantAppearance middleware, so we register sane
+        // defaults here knowing our middleware will override `primary` later.
         Config::set('filament-palette.palette.dynamic_theme', [
-            'primary' => $primaryColor,
+            'primary' => Color::Amber,
             'warning' => Color::Amber,
             'danger' => Color::Red,
             'success' => Color::Green,
@@ -83,11 +94,13 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->maxContentWidth(Width::Full)
-            ->brandName($brandName)
-            ->brandLogo($brandLogo)
-            ->favicon($favicon)
+            ->brandName($brandNameResolver)
+            ->brandLogo($brandLogoResolver)
+            ->favicon($brandLogoResolver)
             ->colors([
-                'primary' => $primaryColor,
+                // Default colors used as a fallback. The actual `primary` is
+                // overridden per-tenant by ApplyTenantAppearance middleware.
+                'primary' => Color::Amber,
                 'danger' => Color::Red,
                 'gray' => Color::Gray,
                 'info' => Color::Blue,
@@ -96,9 +109,20 @@ class AdminPanelProvider extends PanelProvider
                 'purple' => Color::Purple,
             ]);
 
-        // Detect mobile early for render hooks
-        $isMobile = $this->isMobileDevice();
-        $useTopNav = ($navigationLayout === 'top' || $isMobile);
+        // Resolve navigation layout lazily so it reflects the tenant's current
+        // setting. Used both for `topNavigation()`/`topbar()` config and for
+        // render-hook decisions below.
+        $resolveUseTopNav = function (): bool {
+            $layout = 'sidebar';
+            try {
+                if (Schema::hasTable('settings')) {
+                    $layout = Setting::get('navigation_layout', 'sidebar');
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+            return $layout === 'top' || $this->isMobileDevice();
+        };
 
         $panel
             ->renderHook(
@@ -190,32 +214,29 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Subscription & Billing')
                     ->icon('heroicon-o-credit-card')
                     ->url(fn (): string => \App\Filament\Pages\SubscriptionBilling::getUrl()),
-            ])
-            ->bootUsing(function () {
-                // Apply tenant locale setting if available
-                try {
-                    if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-                        $tenantLocale = Setting::get('locale');
-                        if ($tenantLocale && in_array($tenantLocale, ['id', 'en'])) {
-                            app()->setLocale($tenantLocale);
-                            session(['locale' => $tenantLocale]);
-                            cookie()->queue('zewalo_locale', $tenantLocale, 60 * 24 * 365);
-                        }
-                    }
-                } catch (\Exception $e) {
-                    // Fallback silently
-                }
-            });
+            ]);
+        // NOTE: Tenant locale is applied by `ApplyTenantAppearance` middleware,
+        // not here. Filament's `bootUsing()` runs during `Panel::boot()` which
+        // is fired by the `panel:` middleware alias — that runs BEFORE the
+        // panel's other middleware including `InitializeTenancyByDomain`, so
+        // any `Setting::get()` call here would hit the central DB, not the
+        // tenant's. See `ApplyTenantAppearance::handle()`.
 
-        // On mobile, always use top navigation for better UX
-        // On desktop, use the user's preferred setting
-        if ($useTopNav) {
-            $panel->topNavigation();
-        } else {
-            // Sidebar mode: hide the topbar entirely
-            // Search, notifications, and user menu automatically move to sidebar
-            $panel->topbar(false);
-        }
+        // Both `topNavigation()` and `topbar()` accept a Closure that is
+        // evaluated at render time (inside Filament's layout blade), which is
+        // after `InitializeTenancyByDomain` has run. We always register both so
+        // a tenant changing `navigation_layout` from sidebar → top (or back)
+        // takes effect on the next request without needing the panel to be
+        // re-built.
+        //
+        // Layout matrix:
+        //   - top nav mode (or mobile):  topNavigation=true,  topbar=true
+        //     (the topbar is what *renders* the top navigation links)
+        //   - sidebar mode (default):    topNavigation=false, topbar=false
+        //     (sidebar already holds search/notifications; no need for a topbar)
+        $panel
+            ->topNavigation(fn () => $resolveUseTopNav())
+            ->topbar(fn () => $resolveUseTopNav());
 
         return $panel
             ->bootUsing(function () {
@@ -286,6 +307,17 @@ class AdminPanelProvider extends PanelProvider
                 \LaraZeus\SpatieTranslatable\SpatieTranslatablePlugin::make()
                     ->defaultLocales(['en', 'id']),
             ])
+            // Append AFTER plugins so it runs after `PaletteSwitcherPlugin`'s
+            // `ApplyPalette` middleware. ApplyPalette registers stale colors
+            // from `config('filament-palette.palette.dynamic_theme')` which is
+            // computed at boot (no tenant context); our middleware re-registers
+            // the correct primary color from the tenant's Setting and wins
+            // because FilamentColor's last `register()` call takes precedence.
+            // `isPersistent: true` ensures it also runs on Livewire panel
+            // requests so colors stay correct across SPA navigations.
+            ->authMiddleware([
+                \App\Http\Middleware\ApplyTenantAppearance::class,
+            ], isPersistent: true)
             ->databaseNotifications()
             // Navigation Groups Order - mengatur urutan group di sidebar
             ->navigationGroups([
