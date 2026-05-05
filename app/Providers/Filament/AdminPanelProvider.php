@@ -175,6 +175,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn () => view('filament.hooks.qr-scanner-listener')
             )
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('filament.hooks.floating-help-button')
+            )
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
@@ -214,6 +218,11 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Subscription & Billing')
                     ->icon('heroicon-o-credit-card')
                     ->url(fn (): string => \App\Filament\Pages\SubscriptionBilling::getUrl()),
+                MenuItem::make()
+                    ->label('Documentation')
+                    ->icon('heroicon-o-book-open')
+                    ->url(fn (): string => 'https://' . config('app.domain', 'localhost') . '/documentation')
+                    ->openUrlInNewTab(),
             ]);
         // NOTE: Tenant locale is applied by `ApplyTenantAppearance` middleware,
         // not here. Filament's `bootUsing()` runs during `Panel::boot()` which

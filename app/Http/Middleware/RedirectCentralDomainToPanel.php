@@ -40,6 +40,8 @@ class RedirectCentralDomainToPanel
                 str_starts_with($path, 'contact') ||
                 str_starts_with($path, 'careers') ||
                 str_starts_with($path, 'about-us') ||
+                str_starts_with($path, 'documentation') ||
+                str_starts_with($path, 'changelog') ||
                 str_starts_with($path, 'blog') ||
                 str_starts_with($path, 'livewire') ||
                 str_starts_with($path, '_debugbar') ||

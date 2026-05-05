@@ -6,6 +6,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CustomerDashboardController;
+use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicDocumentController;
 // use App\Http\Controllers\Admin\PageBuilderController;
@@ -68,6 +69,25 @@ if (! $isInstalled) {
 
     // Public Routes
     Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    // Central-domain only: documentation & changelog
+    $centralDomainOnly = function (callable $action) {
+        $centralDomains = config('tenancy.central_domains', []);
+        $host = request()->getHost();
+        $hostWithoutWww = preg_replace('/^www\./', '', $host);
+        if (! in_array($host, $centralDomains, true) && ! in_array($hostWithoutWww, $centralDomains, true)) {
+            abort(404);
+        }
+        return $action();
+    };
+
+    Route::get('/documentation', function () use ($centralDomainOnly) {
+        return $centralDomainOnly(fn () => app(DocumentationController::class)->show());
+    })->name('landing.documentation');
+
+    Route::get('/changelog', function () use ($centralDomainOnly) {
+        return $centralDomainOnly(fn () => app(DocumentationController::class)->changelog());
+    })->name('landing.changelog');
 
     // Landing Pages (Central domain only)
     $landingPages = [

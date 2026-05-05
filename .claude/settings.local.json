@@ -23,7 +23,10 @@
       "Bash(tar -xzf design.tar.gz)",
       "Bash(cp \"/tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/Tenant Admin Panel.html\" /tmp/zewalo-design/main.html)",
       "Bash(cp -r /tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/components /tmp/zewalo-design/comp)",
-      "Bash(cp /tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/colors_and_type.css /tmp/zewalo-design/colors.css)"
+      "Bash(cp /tmp/zewalo-design/tenant-admin-panel-mobile-friendly/project/colors_and_type.css /tmp/zewalo-design/colors.css)",
+      "Bash(php -l app/Http/Controllers/DocumentationController.php)",
+      "Bash(php -l app/Filament/Central/Pages/DocumentationSettings.php)",
+      "Bash(php -l routes/web.php)"
     ]
   }
 }

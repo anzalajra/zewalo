@@ -44,7 +44,8 @@
 <h4 class="font-bold text-sm mb-6 uppercase tracking-wider">{{ __('landing.footer.support') }}</h4>
 <ul class="space-y-4">
 <li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.help_center') }}</a></li>
-<li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.documentation') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="{{ url('/documentation') }}">{{ __('landing.footer.documentation') }}</a></li>
+<li><a class="text-sm text-slate-500 hover:text-primary" href="{{ url('/changelog') }}">Changelog</a></li>
 <li><a class="text-sm text-slate-500 hover:text-primary" href="#">{{ __('landing.footer.system_status') }}</a></li>
 </ul>
 </div>
