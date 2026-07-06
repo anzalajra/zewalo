@@ -21,7 +21,15 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        // Use the branded email for the tenant Admin panel's forgot-password flow.
+        // Filament's RequestPasswordReset page resolves this FQCN from the container
+        // (`app(ResetPassword::class, ['token' => $token])`) then sets `->url`, so
+        // swapping the concrete keeps Filament's token handling while sending our
+        // styled email through the central mail config.
+        $this->app->bind(
+            \Filament\Auth\Notifications\ResetPassword::class,
+            \App\Notifications\AdminResetPassword::class,
+        );
     }
 
     public function boot(): void

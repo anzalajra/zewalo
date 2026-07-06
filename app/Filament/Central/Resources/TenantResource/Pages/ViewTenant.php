@@ -14,6 +14,7 @@ class ViewTenant extends ViewRecord
     {
         return [
             Actions\EditAction::make(),
+            TenantResource::resetAdminPasswordAction(),
         ];
     }
 }

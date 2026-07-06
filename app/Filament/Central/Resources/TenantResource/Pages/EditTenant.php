@@ -14,6 +14,7 @@ class EditTenant extends EditRecord
     {
         return [
             Actions\ViewAction::make(),
+            TenantResource::resetAdminPasswordAction(),
             Actions\DeleteAction::make(),
             Actions\Action::make('extend_subscription')
                 ->label('Extend 30 Days')

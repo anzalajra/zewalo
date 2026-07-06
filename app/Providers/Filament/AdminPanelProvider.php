@@ -93,6 +93,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
             ->maxContentWidth(Width::Full)
             ->brandName($brandNameResolver)
             ->brandLogo($brandLogoResolver)

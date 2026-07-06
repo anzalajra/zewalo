@@ -19,18 +19,23 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 use UnitEnum;
@@ -382,6 +387,210 @@ class TenantResource extends Resource
         return [
             //
         ];
+    }
+
+    /**
+     * Header action (used on the View & Edit tenant pages) to reset a tenant
+     * admin's password from the central panel.
+     *
+     * Two modes:
+     *  - email:  send the branded Filament reset link to the admin's inbox
+     *            (same flow as the tenant panel's "forgot password"). The signed
+     *            URL is built against the tenant's own domain so the link opens
+     *            on the tenant admin panel.
+     *  - manual: set a new password immediately (for locked-out tenants). The
+     *            superadmin sees the value they typed and can hand it over.
+     *
+     * All DB work runs inside `$tenant->run()` so it hits the tenant database.
+     */
+    public static function resetAdminPasswordAction(): Action
+    {
+        return Action::make('resetAdminPassword')
+            ->label('Reset Password Admin')
+            ->icon('heroicon-o-key')
+            ->color('warning')
+            ->modalHeading('Reset Password Admin Toko')
+            ->modalDescription('Reset password untuk akun admin di toko (tenant) ini.')
+            ->modalSubmitActionLabel('Proses')
+            ->form(function (Tenant $record): array {
+                $admins = static::getTenantAdminOptions($record);
+
+                return [
+                    Select::make('email')
+                        ->label('Akun Admin')
+                        ->options($admins)
+                        ->required()
+                        ->searchable()
+                        ->native(false)
+                        ->helperText(empty($admins)
+                            ? 'Tidak ada akun admin ditemukan di toko ini.'
+                            : 'Pilih akun admin yang akan direset.'),
+                    Radio::make('mode')
+                        ->label('Metode')
+                        ->options([
+                            'email' => 'Kirim tautan reset password ke email admin',
+                            'manual' => 'Set password baru secara langsung',
+                        ])
+                        ->default('email')
+                        ->required()
+                        ->live(),
+                    TextInput::make('password')
+                        ->label('Password Baru')
+                        ->password()
+                        ->revealable()
+                        ->minLength(8)
+                        ->maxLength(72)
+                        ->default(fn () => Str::password(12))
+                        ->visible(fn (Get $get) => $get('mode') === 'manual')
+                        ->required(fn (Get $get) => $get('mode') === 'manual')
+                        ->helperText('Simpan password ini — akan diserahkan ke admin toko. Minimal 8 karakter.'),
+                ];
+            })
+            ->action(function (array $data, Tenant $record): void {
+                if (empty($data['email'])) {
+                    Notification::make()
+                        ->title('Tidak ada akun admin yang dipilih')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                if (($data['mode'] ?? 'email') === 'manual') {
+                    $ok = static::setTenantAdminPassword($record, $data['email'], $data['password']);
+
+                    if ($ok) {
+                        Notification::make()
+                            ->title('Password admin berhasil diperbarui')
+                            ->body("Akun: {$data['email']}")
+                            ->success()
+                            ->send();
+                    } else {
+                        Notification::make()
+                            ->title('Gagal memperbarui password')
+                            ->body('Akun admin tidak ditemukan di toko ini.')
+                            ->danger()
+                            ->send();
+                    }
+
+                    return;
+                }
+
+                $status = static::sendTenantAdminResetLink($record, $data['email']);
+
+                if ($status === Password::RESET_LINK_SENT) {
+                    Notification::make()
+                        ->title('Tautan reset password terkirim')
+                        ->body("Email berisi tautan reset dikirim ke {$data['email']}.")
+                        ->success()
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->title('Gagal mengirim tautan reset')
+                        ->body('Periksa konfigurasi email di Central Admin, atau gunakan metode "Set password baru secara langsung".')
+                        ->danger()
+                        ->send();
+                }
+            });
+    }
+
+    /**
+     * Return [email => "Name (email)"] of admin users inside the tenant DB.
+     *
+     * @return array<string, string>
+     */
+    protected static function getTenantAdminOptions(Tenant $tenant): array
+    {
+        try {
+            return $tenant->run(function (): array {
+                $format = fn ($users) => $users
+                    ->mapWithKeys(fn ($u) => [$u->email => "{$u->name} ({$u->email})"])
+                    ->all();
+
+                // Prefer users that can actually access the admin panel.
+                $admins = \App\Models\User::query()
+                    ->where('is_system_admin', false)
+                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['super_admin', 'admin', 'staff']))
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'email']);
+
+                if ($admins->isNotEmpty()) {
+                    return $format($admins);
+                }
+
+                // Fallback for tenants whose admin was never assigned a role
+                // (e.g. partially provisioned tenants): list all users so the
+                // superadmin can still recover access. Capped to stay usable.
+                $all = \App\Models\User::query()
+                    ->orderBy('id')
+                    ->limit(100)
+                    ->get(['id', 'name', 'email']);
+
+                return $format($all);
+            });
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Directly set a new password for the given tenant admin.
+     */
+    protected static function setTenantAdminPassword(Tenant $tenant, string $email, string $password): bool
+    {
+        return $tenant->run(function () use ($email, $password): bool {
+            $user = \App\Models\User::where('email', $email)->first();
+
+            if (! $user) {
+                return false;
+            }
+
+            // The `password` cast ('hashed') hashes the value on save.
+            $user->update(['password' => $password]);
+
+            return true;
+        });
+    }
+
+    /**
+     * Send the branded Filament reset-password email to the tenant admin, with
+     * the signed link pointing at the tenant's own admin panel domain.
+     */
+    protected static function sendTenantAdminResetLink(Tenant $tenant, string $email): string
+    {
+        $domain = $tenant->domains()->value('domain');
+
+        if (! $domain) {
+            return Password::INVALID_USER;
+        }
+
+        return $tenant->run(function () use ($email, $domain): string {
+            $previousRoot = config('app.url');
+
+            // Signed reset URL must resolve on the tenant domain, otherwise the
+            // link would open on the central panel and fail tenant resolution.
+            URL::forceRootUrl('https://' . $domain);
+
+            try {
+                return Password::broker('users')->sendResetLink(
+                    ['email' => $email],
+                    function ($user, string $token): void {
+                        $notification = app(\Filament\Auth\Notifications\ResetPassword::class, ['token' => $token]);
+                        $notification->url = URL::signedRoute(
+                            'filament.admin.auth.password-reset.reset',
+                            [
+                                'email' => $user->getEmailForPasswordReset(),
+                                'token' => $token,
+                            ],
+                        );
+
+                        $user->notify($notification);
+                    },
+                );
+            } finally {
+                URL::forceRootUrl($previousRoot);
+            }
+        });
     }
 
     public static function getPages(): array
