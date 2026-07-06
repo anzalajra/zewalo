@@ -37,8 +37,9 @@ class RunMonthlyDepreciation extends Command
 
         // Check if already run
         $existingRun = DepreciationRun::where('period', $period)->first();
-        if ($existingRun && !$force) {
+        if ($existingRun && ! $force) {
             $this->error("Depreciation for $period already exists. Use --force to overwrite (will delete old run).");
+
             return 1;
         }
 
@@ -51,13 +52,20 @@ class RunMonthlyDepreciation extends Command
             $journalEntry = \App\Models\JournalEntry::where('reference_type', DepreciationRun::class)
                 ->where('reference_id', $existingRun->id)
                 ->first();
-            
+
             if ($journalEntry) {
                 // Delete items first
                 $journalEntry->items()->delete();
                 $journalEntry->delete();
             }
-            
+
+            // Reverse the per-unit accumulated depreciation this run added, then drop
+            // its lines — otherwise re-running would double-count on the units.
+            foreach (\App\Models\DepreciationRunItem::where('depreciation_run_id', $existingRun->id)->get() as $item) {
+                ProductUnit::whereKey($item->product_unit_id)->decrement('accumulated_depreciation', $item->amount);
+            }
+            \App\Models\DepreciationRunItem::where('depreciation_run_id', $existingRun->id)->delete();
+
             $existingRun->delete();
             $this->warn("Deleted existing run for $period.");
         }
@@ -66,7 +74,7 @@ class RunMonthlyDepreciation extends Command
         // Get all active units (not retired)
         // We only depreciate units purchased before the end of the target month.
         $targetDate = Carbon::createFromFormat('Y-m', $period)->endOfMonth();
-        
+
         $units = ProductUnit::where('status', '!=', ProductUnit::STATUS_RETIRED)
             ->whereNotNull('purchase_date')
             ->whereNotNull('purchase_price')
@@ -75,45 +83,57 @@ class RunMonthlyDepreciation extends Command
 
         $totalDepreciation = 0;
         $itemsProcessed = 0;
+        $lines = []; // per-unit depreciation to persist
 
         foreach ($units as $unit) {
-            // Calculate monthly depreciation
-            $cost = $unit->purchase_price;
-            $residual = $unit->residual_value ?? 0;
-            $lifeMonths = $unit->useful_life ?? 60; // Default 5 years
-            
-            if ($lifeMonths <= 0) continue;
+            $cost = (float) $unit->purchase_price;
+            $residual = (float) ($unit->residual_value ?? 0);
+            $lifeMonths = (int) ($unit->useful_life ?? 60); // Default 5 years
 
-            $monthlyDepreciation = ($cost - $residual) / $lifeMonths;
-            
-            // Check if fully depreciated
-            // Calculate age in months at the END of the target period
-            $purchaseDate = $unit->purchase_date;
-            $ageMonths = $purchaseDate->diffInMonths($targetDate);
-            
-            // If unit is older than useful life, no more depreciation (unless we want to handle partial last month?)
-            // Simple logic: if age <= life, depreciate.
-            // More precise: Check accumulated depreciation so far.
-            // For now, simple straight line.
-            
-            if ($ageMonths < $lifeMonths && $monthlyDepreciation > 0) {
-                $totalDepreciation += $monthlyDepreciation;
-                $itemsProcessed++;
+            if ($lifeMonths <= 0) {
+                continue;
             }
+
+            // Cap by the remaining depreciable base so accumulated never exceeds
+            // (cost − residual). This makes book value stable/historical instead of
+            // recomputed retroactively from the age each read.
+            $depreciableBase = max(0, $cost - $residual);
+            $accumulated = (float) ($unit->accumulated_depreciation ?? 0);
+            $remaining = round($depreciableBase - $accumulated, 2);
+
+            if ($remaining <= 0) {
+                continue;
+            }
+
+            $monthlyDepreciation = $depreciableBase / $lifeMonths;
+            $thisMonth = round(min($monthlyDepreciation, $remaining), 2);
+
+            if ($thisMonth <= 0) {
+                continue;
+            }
+
+            $totalDepreciation += $thisMonth;
+            $itemsProcessed++;
+            $lines[] = [
+                'unit_id' => $unit->id,
+                'amount' => $thisMonth,
+                'accumulated_after' => round($accumulated + $thisMonth, 2),
+            ];
         }
 
         $totalDepreciation = round($totalDepreciation, 2);
 
         if ($totalDepreciation <= 0) {
-            $this->info("No depreciation to record for this period.");
+            $this->info('No depreciation to record for this period.');
+
             return 0;
         }
 
-        $this->info("Total Depreciation: Rp " . number_format($totalDepreciation, 2));
+        $this->info('Total Depreciation: Rp '.number_format($totalDepreciation, 2));
         $this->info("Items Processed: $itemsProcessed");
 
         // Record Run
-        DB::transaction(function () use ($period, $totalDepreciation, $itemsProcessed, $targetDate) {
+        DB::transaction(function () use ($period, $totalDepreciation, $itemsProcessed, $targetDate, $lines) {
             $run = DepreciationRun::create([
                 'date' => $targetDate,
                 'period' => $period,
@@ -121,6 +141,17 @@ class RunMonthlyDepreciation extends Command
                 'items_processed' => $itemsProcessed,
                 'notes' => "Auto-generated monthly depreciation for $itemsProcessed items.",
             ]);
+
+            // Persist per-unit lines and bump each unit's accumulated depreciation.
+            foreach ($lines as $line) {
+                \App\Models\DepreciationRunItem::create([
+                    'depreciation_run_id' => $run->id,
+                    'product_unit_id' => $line['unit_id'],
+                    'amount' => $line['amount'],
+                    'accumulated_after' => $line['accumulated_after'],
+                ]);
+                ProductUnit::whereKey($line['unit_id'])->increment('accumulated_depreciation', $line['amount']);
+            }
 
             // Create Journal Entry
             JournalService::recordSimpleTransaction(
@@ -131,7 +162,8 @@ class RunMonthlyDepreciation extends Command
             );
         });
 
-        $this->info("Depreciation run completed successfully.");
+        $this->info('Depreciation run completed successfully.');
+
         return 0;
     }
 }

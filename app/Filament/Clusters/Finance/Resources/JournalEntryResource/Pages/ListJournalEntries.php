@@ -133,7 +133,14 @@ class ListJournalEntries extends ListRecords
                             ->whereColumn('journal_entries.reference_id', 'finance_transactions.id')
                             ->where('journal_entries.reference_type', FinanceTransaction::class);
                     })->chunk(100, function ($transactions) use (&$count, $manualMappings) {
+                        $advanced = \App\Services\RentalAccountingService::isAdvanced();
                         foreach ($transactions as $transaction) {
+                            // Advanced mode posts rental-lifecycle payments/deposits via the
+                            // canonical engine on create; they have no per-transaction journal,
+                            // so skip them here to avoid a double posting on manual re-sync.
+                            if ($advanced && in_array($transaction->category, \App\Services\RentalAccountingService::EXPLICITLY_POSTED_CATEGORIES, true)) {
+                                continue;
+                            }
                             JournalService::syncFromTransaction($transaction, $manualMappings);
                             $count++;
                         }

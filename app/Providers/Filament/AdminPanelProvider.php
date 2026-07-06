@@ -121,7 +121,7 @@ class AdminPanelProvider extends PanelProvider
             } catch (\Throwable $e) {
                 // ignore
             }
-            return $layout === 'top' || $this->isMobileDevice();
+            return $layout === 'top' || $this->isPhone();
         };
 
         $panel
@@ -154,6 +154,10 @@ class AdminPanelProvider extends PanelProvider
 
                     return $output;
                 }
+            )
+            ->renderHook(
+                'panels::head.end',
+                fn () => view('filament.hooks.admin-pwa')
             )
             ->renderHook(
                 'panels::content.end',
@@ -342,32 +346,51 @@ class AdminPanelProvider extends PanelProvider
     }
 
     /**
-     * Detect if the current request is from a mobile device
+     * Detect whether the request comes from a PHONE (not a tablet).
+     *
+     * Phones get Filament's top-nav layout (topbar user menu); tablets deliberately
+     * do NOT — a portrait tablet keeps the sidebar layout but has its sidebar hidden
+     * and a bottom nav shown by the `gr-compact` engine (see responsive-navigation +
+     * zw-styles hooks). iPads and Android tablets are therefore excluded here:
+     *  - iPad UA is matched and rejected outright.
+     *  - Android *phones* include the "Mobile" token; Android *tablets* omit it.
      */
-    protected function isMobileDevice(): bool
+    protected function isPhone(): bool
     {
         $userAgent = request()->header('User-Agent', '');
+        if ($userAgent === '') {
+            return false;
+        }
 
-        // Common mobile device patterns
-        $mobilePatterns = [
-            '/Mobile/i',
-            '/Android/i',
+        // Explicit tablets are not phones — they use the gr-compact chrome instead.
+        if (preg_match('/iPad/i', $userAgent)) {
+            return false;
+        }
+        // Android tablets lack the "Mobile" token that Android phones carry.
+        if (preg_match('/Android/i', $userAgent) && ! preg_match('/Mobile/i', $userAgent)) {
+            return false;
+        }
+
+        $phonePatterns = [
             '/iPhone/i',
-            '/iPad/i',
             '/iPod/i',
-            '/webOS/i',
-            '/BlackBerry/i',
-            '/Opera Mini/i',
-            '/IEMobile/i',
+            '/Android.*Mobile/i',
             '/Windows Phone/i',
+            '/IEMobile/i',
+            '/BlackBerry/i',
+            '/BB10/i',
+            '/Opera Mini/i',
+            '/webOS/i',
+            '/Mobile Safari/i',
         ];
 
-        foreach ($mobilePatterns as $pattern) {
+        foreach ($phonePatterns as $pattern) {
             if (preg_match($pattern, $userAgent)) {
                 return true;
             }
         }
 
-        return false;
+        // Generic fallback: any remaining UA that self-identifies as "Mobile".
+        return (bool) preg_match('/Mobile/i', $userAgent);
     }
 }

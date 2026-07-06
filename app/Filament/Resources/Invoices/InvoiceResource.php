@@ -7,6 +7,7 @@ use App\Filament\Concerns\ChecksTenantFeature;
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Pages\EditInvoice;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\Resources\Invoices\Pages\ViewInvoice;
 use App\Filament\Resources\Invoices\RelationManagers\RentalsRelationManager;
 use App\Models\Account;
 use App\Models\FinanceAccount;
@@ -81,6 +82,26 @@ class InvoiceResource extends Resource
                             ->options(Invoice::getStatusOptions())
                             ->required()
                             ->default(Invoice::STATUS_SENT),
+                        Select::make('rental_ids')
+                            ->label('Attach Rentals')
+                            ->multiple()
+                            ->searchable()
+                            ->dehydrated(false)
+                            ->options(fn () => \App\Models\Rental::whereNull('invoice_id')
+                                ->whereNotIn('status', [\App\Models\Rental::STATUS_CANCELLED])
+                                ->with('customer')
+                                ->latest()
+                                ->limit(200)
+                                ->get()
+                                ->mapWithKeys(fn ($r) => [
+                                    $r->id => ($r->rental_code ?? ('#'.$r->id))
+                                        .' — '.($r->customer?->name ?? 'Unknown')
+                                        .' (Rp '.number_format((float) $r->total, 0, ',', '.').')',
+                                ])
+                                ->toArray())
+                            ->helperText('Rental terpilih akan dikaitkan ke invoice ini setelah dibuat, lalu total dihitung ulang.')
+                            ->visibleOn('create')
+                            ->columnSpanFull(),
                         TextInput::make('total')
                             ->disabled()
                             ->prefix('Rp')
@@ -117,6 +138,19 @@ class InvoiceResource extends Resource
                     ->sortable()
                     ->toggleable()
                     ->visibleFrom('sm'),
+                TextColumn::make('paid_amount')
+                    ->label('Paid')
+                    ->money('IDR')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->visibleFrom('md'),
+                TextColumn::make('balance')
+                    ->label('Balance')
+                    ->money('IDR')
+                    ->state(fn (Invoice $record): float => $record->balance)
+                    ->color(fn (Invoice $record): string => $record->balance > 0 ? 'danger' : 'gray')
+                    ->toggleable()
+                    ->visibleFrom('sm'),
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -130,7 +164,12 @@ class InvoiceResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('status')
+                    ->options(Invoice::getStatusOptions()),
+                \Filament\Tables\Filters\Filter::make('outstanding')
+                    ->label('Outstanding only')
+                    ->query(fn ($query) => $query->whereColumn('paid_amount', '<', 'total')
+                        ->whereNotIn('status', [Invoice::STATUS_PAID, 'cancelled'])),
             ])
             ->recordActions([
                 Action::make('record_payment')
@@ -305,6 +344,7 @@ class InvoiceResource extends Resource
         return [
             'index' => ListInvoices::route('/'),
             'create' => CreateInvoice::route('/create'),
+            'view' => ViewInvoice::route('/{record}'),
             'edit' => EditInvoice::route('/{record}/edit'),
         ];
     }

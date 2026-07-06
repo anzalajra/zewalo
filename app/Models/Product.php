@@ -2,17 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\Setting;
-use App\Models\Rental;
-use App\Models\RentalItem;
-use App\Models\ProductUnit;
-use Carbon\Carbon;
 
 class Product extends Model
 {
@@ -23,6 +18,11 @@ class Product extends Model
         'slug',
         'description',
         'daily_rate',
+        'hourly_rate',
+        'weekly_rate',
+        'monthly_rate',
+        'custom_fields',
+        'late_fee_daily_amount',
         'buffer_time',
         'image',
         'is_active',
@@ -33,12 +33,20 @@ class Product extends Model
 
     protected $casts = [
         'daily_rate' => 'decimal:2',
+        'hourly_rate' => 'decimal:2',
+        'weekly_rate' => 'decimal:2',
+        'monthly_rate' => 'decimal:2',
+        'late_fee_daily_amount' => 'decimal:2',
+        'custom_fields' => 'array',
         'buffer_time' => 'integer',
         'is_active' => 'boolean',
         'is_taxable' => 'boolean',
         'price_includes_tax' => 'boolean',
         'is_visible_on_frontend' => 'boolean',
     ];
+
+    /** Supported billing periods (multi-tier pricing). */
+    public const PERIODS = ['hour', 'day', 'week', 'month'];
 
     protected static function boot()
     {
@@ -49,6 +57,34 @@ class Product extends Model
                 $product->slug = Str::slug($product->name);
             }
         });
+    }
+
+    /**
+     * Resolve the rate for a given billing period. When the period-specific column
+     * is empty it falls back to a sensible multiple of the daily rate, so a product
+     * that only has a daily_rate still prices correctly in every period.
+     */
+    public function rateFor(string $period): float
+    {
+        $daily = (float) ($this->daily_rate ?? 0);
+
+        return match ($period) {
+            'hour' => (float) ($this->hourly_rate ?? ($daily / 8)),   // fallback: 8 working hours/day
+            'week' => (float) ($this->weekly_rate ?? ($daily * 7)),
+            'month' => (float) ($this->monthly_rate ?? ($daily * 30)),
+            default => $daily,
+        };
+    }
+
+    /** Rate map for all periods: ['hour'=>..,'day'=>..,'week'=>..,'month'=>..]. */
+    public function rateMap(): array
+    {
+        $map = [];
+        foreach (self::PERIODS as $p) {
+            $map[$p] = $this->rateFor($p);
+        }
+
+        return $map;
     }
 
     /**
@@ -67,7 +103,7 @@ class Product extends Model
     public function isFullyUnderMaintenance(): bool
     {
         $totalUnits = $this->units()->count();
-        
+
         if ($totalUnits === 0) {
             return false;
         }
@@ -75,7 +111,7 @@ class Product extends Model
         $maintenanceUnits = $this->units()
             ->where(function ($query) {
                 $query->where('status', ProductUnit::STATUS_MAINTENANCE)
-                      ->orWhereIn('condition', ['broken', 'lost']);
+                    ->orWhereIn('condition', ['broken', 'lost']);
             })
             ->count();
 
@@ -134,7 +170,6 @@ class Product extends Model
         return $this->variations()->exists();
     }
 
-
     public function components(): HasMany
     {
         return $this->hasMany(ProductComponent::class, 'parent_product_id');
@@ -166,7 +201,7 @@ class Product extends Model
      */
     public function isVisibleForCustomer($customer = null): bool
     {
-        if (!$this->is_active || !$this->is_visible_on_frontend) {
+        if (! $this->is_active || ! $this->is_visible_on_frontend) {
             return false;
         }
 
@@ -187,11 +222,11 @@ class Product extends Model
     {
         $bookedDates = [];
         $partialDates = [];
-        
+
         $unitsCount = $this->units()
             ->whereNotIn('status', [ProductUnit::STATUS_MAINTENANCE, ProductUnit::STATUS_RETIRED])
             ->count();
-        
+
         if ($unitsCount === 0) {
             $start = now();
             $end = now()->addYear();
@@ -199,12 +234,13 @@ class Product extends Model
                 $bookedDates[] = $start->format('Y-m-d');
                 $start->addDay();
             }
+
             return ['booked' => $bookedDates, 'partial' => []];
         }
 
         $unitIds = $this->units()->pluck('id');
         $bufferHours = (int) Setting::get('rental_buffer_time', 0);
-        
+
         $rentals = RentalItem::whereIn('product_unit_id', $unitIds)
             ->whereHas('rental', function ($query) {
                 $query->whereNotIn('status', [Rental::STATUS_COMPLETED, Rental::STATUS_CANCELLED])
@@ -213,7 +249,7 @@ class Product extends Model
                         Rental::STATUS_CONFIRMED,
                         Rental::STATUS_ACTIVE,
                         Rental::STATUS_LATE_PICKUP,
-                        Rental::STATUS_LATE_RETURN
+                        Rental::STATUS_LATE_RETURN,
                     ])
                     ->where('end_date', '>=', now()->startOfDay());
             })
@@ -224,18 +260,18 @@ class Product extends Model
 
         // 4. Map rentals to My Units
         $unitRentals = [];
-        
+
         // Pre-compute kit usage for my units (Optimized)
         $unitKits = \App\Models\UnitKit::whereIn('unit_id', $unitIds)
             ->whereNotNull('linked_unit_id')
             ->select('unit_id', 'linked_unit_id')
             ->get();
-            
+
         $unitKitMap = []; // UnitID -> [KitID, KitID]
         foreach ($unitKits as $uk) {
             $unitKitMap[$uk->unit_id][] = $uk->linked_unit_id;
         }
-        
+
         // Pre-compute reverse map: KitID -> [UnitID, UnitID] (My units using this kit)
         $kitUnitMap = [];
         foreach ($unitKitMap as $uId => $kIds) {
@@ -251,16 +287,16 @@ class Product extends Model
             ->get();
 
         $dailyStats = []; // 'Y-m-d' => ['full' => 0, 'partial' => 0]
-        
+
         foreach ($rentals as $item) {
             $rentalStart = $item->rental->start_date;
             $rentalEnd = $item->rental->end_date->copy()->addHours($bufferHours);
-            
+
             $periodStart = $rentalStart->copy()->startOfDay();
             $periodEnd = $rentalEnd->copy()->startOfDay();
-            
+
             $current = $periodStart->copy();
-            
+
             while ($current <= $periodEnd) {
                 $dateStr = $current->format('Y-m-d');
                 $dayStart = $current->copy()->startOfDay();
@@ -269,35 +305,36 @@ class Product extends Model
                 // Skip if rental ends exactly at start of day (0 duration on this day)
                 if ($rentalEnd->eq($dayStart)) {
                     $current->addDay();
+
                     continue;
                 }
-                
+
                 $isFullDay = ($rentalStart->lte($dayStart) && $rentalEnd->gte($dayEnd));
-                
-                if (!isset($dailyStats[$dateStr])) {
+
+                if (! isset($dailyStats[$dateStr])) {
                     $dailyStats[$dateStr] = ['full' => 0, 'partial' => 0];
                 }
-                
+
                 if ($isFullDay) {
                     $dailyStats[$dateStr]['full']++;
                 } else {
                     $dailyStats[$dateStr]['partial']++;
                 }
-                
+
                 $current->addDay();
             }
         }
 
         foreach ($dailyStats as $date => $stats) {
             $totalOccupancy = $stats['full'] + $stats['partial'];
-            
+
             if ($stats['full'] >= $unitsCount) {
                 $bookedDates[] = $date;
             } elseif ($totalOccupancy >= $unitsCount) {
                 $partialDates[] = $date;
             }
         }
-        
+
         return ['booked' => $bookedDates, 'partial' => $partialDates];
     }
 
@@ -319,10 +356,10 @@ class Product extends Model
                         Rental::STATUS_CONFIRMED,
                         Rental::STATUS_ACTIVE,
                         Rental::STATUS_LATE_PICKUP,
-                        Rental::STATUS_LATE_RETURN
+                        Rental::STATUS_LATE_RETURN,
                     ])->where(function ($overlap) use ($startDate, $endDate) {
                         $overlap->where('start_date', '<', $endDate)
-                                ->where('end_date', '>', $startDate);
+                            ->where('end_date', '>', $startDate);
                     });
                 });
             })

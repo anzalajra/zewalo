@@ -17,6 +17,8 @@ class Rental extends Model
         'daily_discount_amount',
         'date_promotion_id',
         'date_promotion_amount',
+        'category_discount_amount',
+        'category_name',
         'quotation_id',
         'invoice_id',
         'discount_code',
@@ -33,9 +35,22 @@ class Rental extends Model
         'deposit_type',
         'security_deposit_amount',
         'security_deposit_status',
+        'revenue_recognized_at',
         'down_payment_amount',
         'down_payment_status',
         'notes',
+        'activity_log',
+        'pricing_period',
+        'fulfillment_method',
+        'delivery_address',
+        'delivery_contact',
+        'delivery_notes',
+        'custom_fields',
+        'is_recurring',
+        'recurrence_interval',
+        'recurrence_next_date',
+        'recurrence_end_date',
+        'recurrence_parent_id',
         'tax_base',
         'ppn_rate',
         'tax_name',
@@ -55,11 +70,20 @@ class Rental extends Model
         'returned_date' => 'datetime',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
+        'daily_discount_amount' => 'decimal:2',
+        'date_promotion_amount' => 'decimal:2',
+        'category_discount_amount' => 'decimal:2',
         'total' => 'decimal:2',
         'late_fee' => 'decimal:2',
         'deposit' => 'decimal:2',
         'security_deposit_amount' => 'decimal:2',
+        'revenue_recognized_at' => 'datetime',
         'down_payment_amount' => 'decimal:2',
+        'activity_log' => 'array',
+        'custom_fields' => 'array',
+        'is_recurring' => 'boolean',
+        'recurrence_next_date' => 'date',
+        'recurrence_end_date' => 'date',
         'tax_base' => 'decimal:2',
         'ppn_rate' => 'decimal:2',
         'ppn_amount' => 'decimal:2',
@@ -85,6 +109,9 @@ class Rental extends Model
     public const STATUS_LATE_RETURN = 'late_return';
 
     public const STATUS_PARTIAL_RETURN = 'partial_return';
+
+    // Quotation whose start_date passed without ever being confirmed (dead-end, like cancelled).
+    public const STATUS_EXPIRED = 'expired';
 
     protected static function booted()
     {
@@ -191,6 +218,130 @@ class Rental extends Model
         return $this->belongsTo(DatePromotion::class);
     }
 
+    /**
+     * Append an entry to the JSON activity log (audit trail) without re-triggering
+     * observers / total recalculation. Use this — never append stamps to `notes` —
+     * for MOVE/SWAP, status transitions, late-fee/discount adjustments, cancellations.
+     */
+    public function logActivity(string $message, string $type = 'general', ?string $user = null): void
+    {
+        $log = $this->activity_log ?? [];
+
+        $log[] = [
+            'at' => now()->toIso8601String(),
+            'type' => $type,
+            'message' => $message,
+            'user' => $user ?? (auth()->user()?->email ?? 'system'),
+        ];
+
+        $this->activity_log = $log;
+
+        if ($this->exists) {
+            $this->updateQuietly(['activity_log' => $log]);
+        }
+    }
+
+    /**
+     * Single source of truth for rendering the ordered, non-zero discount layers
+     * (category → daily promo → date promo → manual/coupon). Reused by admin views,
+     * the rental editor summary, storefront checkout/cart, and quotation/invoice PDFs.
+     *
+     * @return array<int, array{key:string, label:string, amount:float}>
+     */
+    public function discountBreakdown(): array
+    {
+        $lines = [];
+
+        $category = (float) ($this->category_discount_amount ?? 0);
+        if ($category > 0) {
+            $label = 'Diskon Kategori';
+            if (! empty($this->category_name)) {
+                $label .= ' ('.$this->category_name.')';
+            }
+            $lines[] = ['key' => 'category', 'label' => $label, 'amount' => $category];
+        }
+
+        $daily = (float) ($this->daily_discount_amount ?? 0);
+        if ($daily > 0) {
+            $lines[] = [
+                'key' => 'daily',
+                'label' => $this->dailyDiscount?->name ?? 'Diskon Promo Harian',
+                'amount' => $daily,
+            ];
+        }
+
+        $date = (float) ($this->date_promotion_amount ?? 0);
+        if ($date > 0) {
+            $lines[] = [
+                'key' => 'date',
+                'label' => $this->datePromotion?->name ?? 'Diskon Promo Tanggal',
+                'amount' => $date,
+            ];
+        }
+
+        $manual = $this->discount_type === 'percent'
+            ? ((float) ($this->subtotal ?? 0)) * (((float) ($this->discount ?? 0)) / 100)
+            : (float) ($this->discount ?? 0);
+        if ($manual > 0) {
+            if (! empty($this->discount_code)) {
+                $label = 'Kupon '.$this->discount_code;
+            } else {
+                $label = $this->discountRelation?->name ?? 'Diskon Manual';
+            }
+            $lines[] = ['key' => 'manual', 'label' => $label, 'amount' => $manual];
+        }
+
+        return $lines;
+    }
+
+    /** The recurring source rental this quotation was generated from (if any). */
+    public function recurrenceParent(): BelongsTo
+    {
+        return $this->belongsTo(Rental::class, 'recurrence_parent_id');
+    }
+
+    /** Quotations generated from this rental's recurrence schedule. */
+    public function recurrenceChildren(): HasMany
+    {
+        return $this->hasMany(Rental::class, 'recurrence_parent_id');
+    }
+
+    /**
+     * Clone this recurring rental into a fresh QUOTATION for the next cycle.
+     * Dates shift to recurrence_next_date (preserving span); items copy as ghost
+     * slots (unit assigned at confirm time). Financials/recognition reset.
+     */
+    public function replicateForRecurrence(): self
+    {
+        $len = (int) abs($this->start_date->diffInDays($this->end_date));
+        $newStart = \Carbon\Carbon::parse($this->recurrence_next_date)
+            ->setTimeFrom($this->start_date);
+
+        $new = $this->replicate([
+            'rental_code', 'status', 'returned_date', 'activity_log',
+            'revenue_recognized_at', 'quotation_id', 'invoice_id',
+            'down_payment_status', 'security_deposit_status',
+        ]);
+        $new->status = self::STATUS_QUOTATION;
+        $new->start_date = $newStart;
+        $new->end_date = $newStart->copy()->addDays($len);
+        $new->recurrence_parent_id = $this->id;
+        $new->is_recurring = false;           // the child is not itself a recurring source
+        $new->recurrence_interval = null;
+        $new->recurrence_next_date = null;
+        $new->recurrence_end_date = null;
+        $new->save();                          // rental_code auto-generated in boot()
+
+        foreach ($this->items as $it) {
+            $copy = $it->replicate(['product_unit_id']); // ghost slot — assign at confirm time
+            $copy->product_unit_id = null;
+            $copy->rental_id = $new->id;
+            $copy->save();                     // subtotal via RentalItem hook, total via observer
+        }
+
+        return $new;
+    }
+
     public function quotation(): BelongsTo
     {
         return $this->belongsTo(Quotation::class);
@@ -216,6 +367,90 @@ class Rental extends Model
         return $this->hasMany(Delivery::class);
     }
 
+    // ─── Multi-tier pricing (billing period) ───
+
+    /** Number of whole billing periods between two dates for a given period unit. */
+    public static function periodsBetween($start, $end, string $period): int
+    {
+        $s = \Carbon\Carbon::parse($start);
+        $e = \Carbon\Carbon::parse($end);
+        $hours = max(1, (int) $s->diffInHours($e));
+
+        return match ($period) {
+            'hour' => max(1, (int) ceil($hours)),
+            'week' => max(1, (int) ceil($hours / 24 / 7)),
+            'month' => max(1, (int) ceil($hours / 24 / 30)),
+            default => max(1, (int) ceil($hours / 24)),
+        };
+    }
+
+    /** Human (Indonesian) label for the rental's billing period. */
+    public function periodLabel(): string
+    {
+        return self::periodLabelFor($this->pricing_period ?? 'day');
+    }
+
+    /** Human (Indonesian) label for a given billing period. */
+    public static function periodLabelFor(?string $period): string
+    {
+        return [
+            'hour' => 'jam',
+            'day' => 'hari',
+            'week' => 'minggu',
+            'month' => 'bulan',
+        ][$period ?? 'day'] ?? 'hari';
+    }
+
+    /**
+     * Auto-select the cheapest billing tier for a whole rental/cart given each line's
+     * per-period rate map. The customer just picks dates and the system charges
+     * whichever tier costs the least for that duration. The `hour` tier is only a
+     * candidate for sub-day rentals; day/week/month apply to a full day and up.
+     * Ties resolve to the finer (earlier) period.
+     *
+     * @param  array<int,array{rates:array<string,float>, quantity?:int}>  $lines
+     * @return array{period:string, periods:int, total:float, totals:array<string,float>, counts:array<string,int>, candidates:array<int,string>}
+     */
+    public static function optimalPricing(array $lines, $start, $end): array
+    {
+        $hours = 24;
+        try {
+            $hours = max(1, (int) \Carbon\Carbon::parse($start)->diffInHours(\Carbon\Carbon::parse($end)));
+        } catch (\Throwable $e) {
+            // Fall back to a day-length window on unparseable dates.
+        }
+
+        $candidates = $hours < 24 ? ['hour', 'day'] : ['day', 'week', 'month'];
+
+        $counts = [];
+        $totals = [];
+        foreach ($candidates as $p) {
+            $counts[$p] = self::periodsBetween($start, $end, $p);
+            $sum = 0.0;
+            foreach ($lines as $line) {
+                $rate = (float) ($line['rates'][$p] ?? 0);
+                $sum += $rate * max(1, (int) ($line['quantity'] ?? 1)) * $counts[$p];
+            }
+            $totals[$p] = round($sum, 2);
+        }
+
+        $period = $candidates[0];
+        foreach ($candidates as $p) {
+            if ($totals[$p] < $totals[$period]) {
+                $period = $p;
+            }
+        }
+
+        return [
+            'period' => $period,
+            'periods' => $counts[$period] ?? 1,
+            'total' => $totals[$period] ?? 0.0,
+            'totals' => $totals,
+            'counts' => $counts,
+            'candidates' => $candidates,
+        ];
+    }
+
     public static function getStatusOptions(): array
     {
         return [
@@ -227,7 +462,14 @@ class Rental extends Model
             self::STATUS_LATE_PICKUP => 'Late Pickup',
             self::STATUS_LATE_RETURN => 'Late Return',
             self::STATUS_PARTIAL_RETURN => 'Partial Return',
+            self::STATUS_EXPIRED => 'Expired',
         ];
+    }
+
+    /** Human label for a status value (falls back to the raw value). */
+    public static function getStatusLabel(string $status): string
+    {
+        return self::getStatusOptions()[$status] ?? $status;
     }
 
     public static function getStatusColor(string $status): string
@@ -240,6 +482,7 @@ class Rental extends Model
             self::STATUS_CANCELLED => 'gray',
             self::STATUS_PARTIAL_RETURN => 'orange',
             self::STATUS_LATE_PICKUP, self::STATUS_LATE_RETURN => 'danger',
+            self::STATUS_EXPIRED => 'gray',
             default => 'gray',
         };
     }
@@ -256,6 +499,8 @@ class Rental extends Model
             self::STATUS_ACTIVE,
             self::STATUS_LATE_RETURN,
             self::STATUS_PARTIAL_RETURN,
+            // Expired is a soft timeout — an expired quote can be re-dated / re-confirmed to revive it.
+            self::STATUS_EXPIRED,
         ]);
     }
 
@@ -264,13 +509,19 @@ class Rental extends Model
      */
     public function getRealTimeStatus(): string
     {
-        if (in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED])) {
+        if (in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED, self::STATUS_EXPIRED])) {
             return $this->status;
         }
 
         $now = now();
 
+        // A quotation whose pickup date passed without being confirmed expires (dead-end).
         if ($this->status === self::STATUS_QUOTATION && $this->start_date < $now) {
+            return self::STATUS_EXPIRED;
+        }
+
+        // A confirmed booking past its pickup date that hasn't been picked up is late.
+        if ($this->status === self::STATUS_CONFIRMED && $this->start_date < $now) {
             return self::STATUS_LATE_PICKUP;
         }
 
@@ -295,14 +546,19 @@ class Rental extends Model
      */
     public function checkAndUpdateLateStatus(): void
     {
-        if (in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED])) {
+        if (in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_CANCELLED, self::STATUS_EXPIRED])) {
             return;
         }
 
         $now = now();
         $newStatus = $this->status;
 
+        // Unconfirmed quotation past its pickup date → expired; confirmed → late pickup.
         if ($this->status === self::STATUS_QUOTATION && $this->start_date < $now) {
+            $newStatus = self::STATUS_EXPIRED;
+        }
+
+        if ($this->status === self::STATUS_CONFIRMED && $this->start_date < $now) {
             $newStatus = self::STATUS_LATE_PICKUP;
         }
 
@@ -594,16 +850,26 @@ class Rental extends Model
         $this->subtotal = $this->items()->sum('subtotal');
 
         // 2. Calculate Discount
-        $discountAmount = 0;
+        // Manual/coupon layer...
+        $manualDiscount = 0;
         if ($this->discountRelation) {
-            $discountAmount = $this->discountRelation->calculateDiscount($this->subtotal);
+            $manualDiscount = $this->discountRelation->calculateDiscount($this->subtotal);
         } else {
             if ($this->discount_type === 'percent') {
-                $discountAmount = $this->subtotal * ($this->discount / 100);
+                $manualDiscount = $this->subtotal * ($this->discount / 100);
             } else {
-                $discountAmount = $this->discount;
+                $manualDiscount = $this->discount;
             }
         }
+
+        // ...plus the promotion layers (category / daily / date), mirroring
+        // RentalObserver::recalculateTotals() so every recalc path agrees on the
+        // total. Without this, recalc would silently drop promo discounts and
+        // inflate the total of a promo rental.
+        $discountAmount = $manualDiscount
+            + ($this->daily_discount_amount ?? 0)
+            + ($this->date_promotion_amount ?? 0)
+            + ($this->category_discount_amount ?? 0);
 
         // 3. Calculate Tax Base (DPP)
         // DPP = (Subtotal - Discount) + Late Fee
@@ -735,49 +1001,416 @@ class Rental extends Model
     }
 
     /**
-     * Calculate late fee based on overdue days
+     * Calculate the late fee for this rental, honoring the configured late-fee
+     * mode (flat_per_day / per_unit_per_day / percentage_per_day / full_daily_rate
+     * / tiered), per-product overrides, and per-item partial-return windows.
      */
     public function calculateOverdueFee(): float
     {
-        if ($this->end_date->isFuture()) {
+        if (! $this->end_date || $this->end_date->isFuture()) {
             return 0;
         }
 
-        $overdueDays = $this->end_date->diffInDays(now(), false);
+        $mode = $this->resolveLateFeeMode();
+        $amount = (float) Setting::get('late_fee_amount', 0);
 
-        if ($overdueDays <= 0) {
-            return 0;
+        // Per-item IN-delivery check-in times are needed to scope each item's
+        // overdue window (partial returns: an item returned earlier stops
+        // accruing at its own return time, not the rental-wide "now").
+        $this->loadMissing('items.deliveryItems.delivery');
+
+        // Item fisik yang ter-assign (abaikan ghost slot tanpa unit).
+        $items = $this->items->whereNotNull('product_unit_id');
+
+        // Jam telat PER ITEM, dihitung dari waktu kembali efektif item itu sendiri
+        // (checked_at di delivery IN bila sudah dikembalikan, atau now() bila masih di luar).
+        $hoursLateFor = fn (RentalItem $item): float => max(
+            0.0,
+            (float) $this->end_date->diffInHours($this->effectiveReturnTime($item), false)
+        );
+
+        // Tiered mode dihitung per-jam, per-item (menghormati override produk).
+        if ($mode === 'tiered') {
+            $tiers = json_decode(Setting::get('late_fee_tiers', '[]'), true);
+            $tiers = is_array($tiers) ? $tiers : [];
+
+            $fee = 0.0;
+            foreach ($items as $item) {
+                $hours = $hoursLateFor($item);
+                if ($hours <= 0) {
+                    continue;
+                }
+                $fee += $this->tieredLateFeeForItem($item, $tiers, $hours);
+            }
+
+            return round($fee, 2);
         }
 
-        // Calculate total daily rate of all items
-        $totalDailyRate = $this->items->sum(function ($item) {
-            return $item->daily_rate * ($item->quantity ?? 1);
-        });
+        // Flat per hari adalah denda TINGKAT RENTAL (bukan per item): satu nominal
+        // per hari selama MASIH ada item yang belum kembali. Pakai jendela telat
+        // terlama di antara semua item.
+        if ($mode === 'flat_per_day') {
+            $maxHours = 0.0;
+            foreach ($items as $item) {
+                $maxHours = max($maxHours, $hoursLateFor($item));
+            }
 
-        return round($totalDailyRate * $overdueDays, 2);
+            return $maxHours > 0 ? round($amount * (int) ceil($maxHours / 24), 2) : 0.0;
+        }
+
+        // Mode per-item per-hari: tiap item dibulatkan ke atas berdasarkan jam telatnya sendiri.
+        $fee = 0.0;
+        foreach ($items as $item) {
+            $hours = $hoursLateFor($item);
+            if ($hours <= 0) {
+                continue;
+            }
+
+            $overdueDays = (int) ceil($hours / 24);
+            $qty = $item->quantity ?? 1;
+
+            $fee += match ($mode) {
+                // Override produk (jika ada) menggantikan nominal global per unit.
+                'per_unit_per_day' => (
+                    ($item->productUnit?->product?->late_fee_daily_amount !== null
+                        ? (float) $item->productUnit->product->late_fee_daily_amount
+                        : $amount)
+                    * $qty * $overdueDays
+                ),
+                'percentage_per_day' => $this->lateFeeDailyBase($item) * $qty * ($amount / 100) * $overdueDays,
+                default => $this->lateFeeDailyBase($item) * $qty * $overdueDays, // full_daily_rate
+            };
+        }
+
+        return round($fee, 2);
     }
 
-    public function validateReturn(): void
+    /**
+     * Resolve the configured late-fee mode, deriving from the legacy late_fee_type
+     * setting when the newer late_fee_mode is unset (backward compatibility).
+     */
+    protected function resolveLateFeeMode(): string
+    {
+        $mode = Setting::get('late_fee_mode');
+        if ($mode === null) {
+            $oldType = Setting::get('late_fee_type');
+            $mode = match ($oldType) {
+                'fixed' => 'flat_per_day',
+                'percentage' => 'percentage_per_day',
+                default => 'full_daily_rate',
+            };
+        }
+
+        return $mode;
+    }
+
+    /**
+     * The effective return moment for a single rental item, used to scope its late
+     * fee to its own overdue window. For an item already checked back in (possibly
+     * in an earlier partial-return batch) this is the EARLIEST time it was checked
+     * in on an IN delivery; for an item still out it is now() (still accruing).
+     *
+     * Relies on `items.deliveryItems.delivery` being loaded (callers do so).
+     */
+    protected function effectiveReturnTime(RentalItem $item): \Illuminate\Support\Carbon
+    {
+        $earliest = null;
+
+        foreach ($item->deliveryItems as $deliveryItem) {
+            // Only unit-level rows on IN (return) deliveries that are actually checked.
+            if ($deliveryItem->rental_item_kit_id !== null
+                || ! $deliveryItem->is_checked
+                || $deliveryItem->checked_at === null
+                || $deliveryItem->delivery?->type !== Delivery::TYPE_IN) {
+                continue;
+            }
+
+            if ($earliest === null || $deliveryItem->checked_at->lt($earliest)) {
+                $earliest = $deliveryItem->checked_at;
+            }
+        }
+
+        return $earliest ?? now();
+    }
+
+    /**
+     * Tarif dasar denda harian per unit untuk sebuah item:
+     * pakai override produk bila di-set, jika tidak pakai tarif sewa harian item.
+     */
+    protected function lateFeeDailyBase(RentalItem $item): float
+    {
+        $override = $item->productUnit?->product?->late_fee_daily_amount;
+
+        return $override !== null ? (float) $override : (float) $item->daily_rate;
+    }
+
+    /**
+     * Hitung denda tiered untuk satu item berdasarkan jam telat.
+     * Setelah tier terakhir, tiap 24 jam berikutnya = +1× tarif dasar harian.
+     */
+    protected function tieredLateFeeForItem(RentalItem $item, array $tiers, float $hoursLate): float
+    {
+        $qty = $item->quantity ?? 1;
+        $base = $this->lateFeeDailyBase($item); // tarif dasar harian per unit
+
+        // Tanpa tier → fallback: tarif harian penuh per hari.
+        if (empty($tiers)) {
+            return $base * (int) ceil($hoursLate / 24) * $qty;
+        }
+
+        // Urutkan tier menaik berdasarkan up_to_hours.
+        usort($tiers, fn ($a, $b) => (float) ($a['up_to_hours'] ?? 0) <=> (float) ($b['up_to_hours'] ?? 0));
+
+        $chargePerUnit = function (array $tier) use ($base): float {
+            $value = (float) ($tier['amount'] ?? 0);
+
+            return ($tier['charge_type'] ?? 'percentage') === 'fixed'
+                ? $value                       // Rp tetap per unit
+                : $base * ($value / 100);      // % dari tarif harian
+        };
+
+        $lastTier = end($tiers);
+        $lastHours = (float) ($lastTier['up_to_hours'] ?? 0);
+
+        // Masih dalam jangkauan tier → ambil tier pertama yang menampung jam telat.
+        if ($hoursLate <= $lastHours) {
+            foreach ($tiers as $tier) {
+                if ($hoursLate <= (float) ($tier['up_to_hours'] ?? 0)) {
+                    return $chargePerUnit($tier) * $qty;
+                }
+            }
+        }
+
+        // Lewat tier terakhir → charge tier terakhir + tiap 24 jam berikutnya 1× tarif harian.
+        $extraDays = (int) ceil(($hoursLate - $lastHours) / 24);
+        $perUnit = $chargePerUnit($lastTier) + ($extraDays * $base);
+
+        return $perUnit * $qty;
+    }
+
+    /**
+     * Human-readable breakdown of how calculateOverdueFee() arrives at the late fee, for
+     * transparency in the return settlement modal. Mirrors the exact same inputs/logic;
+     * the authoritative `fee` is taken straight from calculateOverdueFee() so the rincian
+     * total always matches what is actually charged.
+     *
+     * @return array{
+     *   is_late: bool, fee: float, mode: string, mode_label: string,
+     *   hours_late: float, overdue_days: int, end_date: ?string, now: string,
+     *   amount_setting: float, summary: ?string,
+     *   lines: array<int, array{label:string, detail:string, amount:float}>
+     * }
+     */
+    public function lateFeeBreakdown(): array
+    {
+        $now = now();
+
+        $result = [
+            'is_late' => false,
+            'fee' => 0.0,
+            'mode' => '',
+            'mode_label' => '',
+            'hours_late' => 0.0,
+            'overdue_days' => 0,
+            'end_date' => $this->end_date?->format('d M Y H:i'),
+            'now' => $now->format('d M Y H:i'),
+            'amount_setting' => 0.0,
+            'summary' => null,
+            'lines' => [],
+        ];
+
+        if (! $this->end_date || $this->end_date->isFuture()) {
+            return $result;
+        }
+
+        $mode = $this->resolveLateFeeMode();
+        $amount = (float) Setting::get('late_fee_amount', 0);
+
+        // Per-item return times (partial returns) — same source as calculateOverdueFee().
+        $this->loadMissing('items.deliveryItems.delivery');
+        $items = $this->items->whereNotNull('product_unit_id');
+
+        // Jam & hari telat per item, dari waktu kembali efektif item itu sendiri.
+        $hoursLateFor = fn (RentalItem $item): float => max(
+            0.0,
+            (float) $this->end_date->diffInHours($this->effectiveReturnTime($item), false)
+        );
+        $daysLateFor = fn (RentalItem $item): int => (int) ceil($hoursLateFor($item) / 24);
+
+        // Telat tingkat rental = jendela terlama di antara semua item.
+        $maxHours = 0.0;
+        foreach ($items as $item) {
+            $maxHours = max($maxHours, $hoursLateFor($item));
+        }
+
+        if ($maxHours <= 0) {
+            return $result;
+        }
+
+        // Apakah ada item yang sudah dikembalikan lebih awal (mis. partial return)?
+        $hasEarlyReturns = false;
+        foreach ($items as $item) {
+            if ($hoursLateFor($item) < $maxHours) {
+                $hasEarlyReturns = true;
+                break;
+            }
+        }
+
+        $overdueDays = (int) ceil($maxHours / 24);
+
+        $labels = [
+            'flat_per_day' => 'Flat per hari',
+            'per_unit_per_day' => 'Per unit per hari',
+            'percentage_per_day' => 'Persentase tarif harian / hari',
+            'full_daily_rate' => 'Tarif sewa harian penuh / hari',
+            'tiered' => 'Bertingkat (tiered)',
+        ];
+
+        $result['is_late'] = true;
+        $result['mode'] = $mode;
+        $result['mode_label'] = $labels[$mode] ?? $mode;
+        $result['hours_late'] = round($maxHours, 1);
+        $result['overdue_days'] = $overdueDays;
+        $result['amount_setting'] = $amount;
+        $result['fee'] = $this->calculateOverdueFee();
+
+        if ($hasEarlyReturns) {
+            $result['summary'] = 'Beberapa item sudah dikembalikan lebih awal — denda dihitung per item dari waktu kembali masing-masing.';
+        }
+
+        // Suffix penjelas untuk item yang kembali lebih awal / masih di luar.
+        $itemNote = function (RentalItem $item) use ($maxHours, $hoursLateFor): string {
+            $h = $hoursLateFor($item);
+            if ($h <= 0) {
+                return ' · dikembalikan tepat waktu';
+            }
+            if ($h < $maxHours) {
+                return ' · dikembalikan lebih awal';
+            }
+
+            return '';
+        };
+
+        $lines = [];
+
+        if ($mode === 'tiered') {
+            $tiers = json_decode(Setting::get('late_fee_tiers', '[]'), true);
+            $tiers = is_array($tiers) ? $tiers : [];
+
+            foreach ($items as $item) {
+                $qty = $item->quantity ?? 1;
+                $h = $hoursLateFor($item);
+                $lines[] = [
+                    'label' => $this->lateFeeItemLabel($item),
+                    'detail' => $qty.' unit · tarif harian Rp'.number_format($this->lateFeeDailyBase($item), 0, ',', '.')
+                        .' · '.round($h, 1).' jam telat'.$itemNote($item),
+                    'amount' => $h > 0 ? round($this->tieredLateFeeForItem($item, $tiers, $h), 2) : 0.0,
+                ];
+            }
+
+            $result['lines'] = $lines;
+
+            return $result;
+        }
+
+        switch ($mode) {
+            case 'flat_per_day':
+                $lines[] = [
+                    'label' => 'Tarif flat (tingkat rental)',
+                    'detail' => 'Rp'.number_format($amount, 0, ',', '.').' × '.$overdueDays.' hari'
+                        .' (selama masih ada item belum kembali)',
+                    'amount' => round($amount * $overdueDays, 2),
+                ];
+                break;
+
+            case 'per_unit_per_day':
+                foreach ($items as $item) {
+                    $qty = $item->quantity ?? 1;
+                    $days = $daysLateFor($item);
+                    $override = $item->productUnit?->product?->late_fee_daily_amount;
+                    $perUnit = $override !== null ? (float) $override : $amount;
+                    $lines[] = [
+                        'label' => $this->lateFeeItemLabel($item),
+                        'detail' => $qty.' unit × Rp'.number_format($perUnit, 0, ',', '.')
+                            .($override !== null ? ' (override produk)' : '').' × '.$days.' hari'.$itemNote($item),
+                        'amount' => round($perUnit * $qty * $days, 2),
+                    ];
+                }
+                break;
+
+            case 'percentage_per_day':
+                foreach ($items as $item) {
+                    $qty = $item->quantity ?? 1;
+                    $days = $daysLateFor($item);
+                    $dailyBase = $this->lateFeeDailyBase($item);
+                    $lines[] = [
+                        'label' => $this->lateFeeItemLabel($item),
+                        'detail' => $qty.' × Rp'.number_format($dailyBase, 0, ',', '.')
+                            .' × '.rtrim(rtrim(number_format($amount, 2, ',', ''), '0'), ',').'%'
+                            .' × '.$days.' hari'.$itemNote($item),
+                        'amount' => round($dailyBase * $qty * ($amount / 100) * $days, 2),
+                    ];
+                }
+                break;
+
+            default: // full_daily_rate
+                foreach ($items as $item) {
+                    $qty = $item->quantity ?? 1;
+                    $days = $daysLateFor($item);
+                    $dailyBase = $this->lateFeeDailyBase($item);
+                    $lines[] = [
+                        'label' => $this->lateFeeItemLabel($item),
+                        'detail' => $qty.' × Rp'.number_format($dailyBase, 0, ',', '.').' × '.$days.' hari'.$itemNote($item),
+                        'amount' => round($dailyBase * $qty * $days, 2),
+                    ];
+                }
+                break;
+        }
+
+        $result['lines'] = $lines;
+
+        return $result;
+    }
+
+    /** Product (+ variation) label for a rental item, used in the late fee breakdown. */
+    protected function lateFeeItemLabel(RentalItem $item): string
+    {
+        $product = $item->productUnit?->product?->name ?? $item->product?->name ?? 'Item';
+        $variation = $item->productUnit?->variation?->name ?? null;
+
+        return $product.($variation ? ' ('.$variation.')' : '');
+    }
+
+    /**
+     * Complete the rental on return.
+     *
+     * @param  float|null  $lateFee  When provided (e.g. a manual adjustment or waiver from
+     *                               the settlement modal), it is used as-is. When null the
+     *                               fee is auto-calculated from the overdue window.
+     */
+    public function validateReturn(?float $lateFee = null): void
     {
         // Check if all items (main units and kits) in the latest Delivery IN are checked
         $deliveryIn = $this->deliveries->where('type', Delivery::TYPE_IN)->sortByDesc('id')->first();
-        
-        if (!$deliveryIn || !$deliveryIn->allItemsChecked()) {
+
+        if (! $deliveryIn || ! $deliveryIn->allItemsChecked()) {
             throw new \Exception('All items must be checked in the Delivery Note before validating return.');
         }
 
         $this->returned_date = now();
 
-        // Calculate Late Fee
-        $lateFee = $this->calculateOverdueFee();
-        $this->late_fee = $lateFee;
-
-        // Update Total (Subtotal - Discount + Late Fee)
-        // Note: Deposit is separate
-        $this->total = $this->subtotal - $this->discount + $lateFee;
+        // Honor an explicitly provided late fee (manual override / waiver); otherwise
+        // auto-calculate. Previously this always recomputed and silently discarded any
+        // manual adjustment made during the return settlement.
+        $this->late_fee = $lateFee ?? $this->calculateOverdueFee();
 
         $this->status = self::STATUS_COMPLETED;
-        $this->save();
+
+        // Full recalculation (subtotal, discount, tax, deposit, total) so the stored total
+        // stays consistent with the rest of the app and the linked invoice. The old
+        // "subtotal - discount + lateFee" shortcut dropped tax and deposit from the total.
+        // recalculateTotal() persists the row.
+        $this->recalculateTotal();
 
         // Update product unit statuses based on return condition
         // We iterate all IN deliveries to find the condition for each item
@@ -809,6 +1442,152 @@ class Rental extends Model
     }
 
     /**
+     * Reopen a COMPLETED rental back to ACTIVE so its items / total can be corrected and
+     * the return redone.
+     *
+     * Operational revert only:
+     *  - status → ACTIVE, returned_date cleared;
+     *  - the latest IN delivery is reopened (DRAFT + items unchecked) so the return
+     *    checklist can be redone and units stop reading as "returned";
+     *  - unit statuses are recomputed (non-damaged units go back to RENTED).
+     *
+     * It deliberately does NOT reverse the financial entries posted by the previous
+     * completion (revenue recognition / deposit settlement) — those must be reviewed
+     * before completing again to avoid double counting.
+     */
+    public function reopenFromCompleted(): void
+    {
+        if ($this->status !== self::STATUS_COMPLETED) {
+            throw new \RuntimeException('Only completed rentals can be reopened.');
+        }
+
+        $this->status = self::STATUS_ACTIVE;
+        $this->returned_date = null;
+        // Allow revenue to be recognized again when this rental is re-completed
+        // (IFRS mode); prevents a permanent gap in the ledger after a reopen.
+        $this->revenue_recognized_at = null;
+        $this->save();
+
+        // Reopen the final return so refreshStatus() no longer sees the items as checked-in.
+        $deliveryIn = $this->deliveries()
+            ->where('type', Delivery::TYPE_IN)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($deliveryIn) {
+            $deliveryIn->update(['status' => Delivery::STATUS_DRAFT]);
+
+            foreach ($deliveryIn->items as $item) {
+                $item->update(['is_checked' => false, 'checked_at' => null]);
+                if ($item->rental_item_kit_id && $item->rentalItemKit) {
+                    $item->rentalItemKit->update(['is_returned' => false]);
+                }
+            }
+        }
+
+        // Non-damaged units return to RENTED; damaged/maintenance units stay out.
+        foreach ($this->items as $item) {
+            $item->productUnit?->refreshStatus();
+        }
+    }
+
+    /**
+     * Keep the rental's outstanding balance reflected in an invoice (Accounts
+     * Receivable). If an invoice already exists, re-aggregate it; otherwise issue one
+     * only when money is actually owed. In advanced finance mode the GL is posted
+     * canonically (revenue-once, PPN split, advances reclassified). Returns
+     * ['invoice' => ?Invoice, 'action' => 'recalc'|'created'|'none', 'reopened' => bool].
+     */
+    public function syncOutstandingInvoice(string $noteContext = 'update'): array
+    {
+        if ($this->invoice_id) {
+            $invoice = Invoice::find($this->invoice_id);
+            if (! $invoice) {
+                return ['invoice' => null, 'action' => 'none', 'reopened' => false];
+            }
+
+            $previousStatus = $invoice->status;
+            $invoice->recalculate();
+
+            return [
+                'invoice' => $invoice,
+                'action' => 'recalc',
+                'reopened' => $previousStatus === Invoice::STATUS_PAID && $invoice->status !== Invoice::STATUS_PAID,
+            ];
+        }
+
+        // No invoice yet — only issue one when money is actually owed.
+        $alreadyPaid = (float) $this->rentalIncomeTransactions()->sum('amount');
+        $outstanding = (float) $this->total - $alreadyPaid;
+
+        if ($outstanding <= 0.01) {
+            return ['invoice' => null, 'action' => 'none', 'reopened' => false];
+        }
+
+        $invoice = Invoice::create([
+            'user_id' => $this->user_id,
+            'quotation_id' => $this->quotation_id,
+            'date' => now(),
+            'due_date' => now()->addDays(7),
+            'status' => Invoice::STATUS_WAITING_FOR_PAYMENT,
+            'subtotal' => $this->subtotal,
+            'tax_base' => $this->tax_base ?? $this->subtotal,
+            'ppn_rate' => $this->ppn_rate ?? 0,
+            'ppn_amount' => $this->ppn_amount ?? 0,
+            'tax' => $this->ppn_amount ?? 0,
+            'late_fee' => $this->late_fee ?? 0,
+            'total' => $this->total,
+            'is_taxable' => $this->is_taxable ?? false,
+            'price_includes_tax' => $this->price_includes_tax ?? false,
+            'notes' => 'Generated ('.$noteContext.') for Rental '.$this->rental_code,
+        ]);
+
+        // Dr Piutang / Cr Revenue-or-Deferred + PPN (2-1400) + Denda (4-1200),
+        // standard-aware and idempotent (no-op in simple mode).
+        \App\Services\RentalAccountingService::postInvoiceIssued($invoice);
+
+        $advanceTotal = 0.0;
+        foreach ($this->rentalIncomeTransactions()->get() as $transaction) {
+            $transaction->reference()->associate($invoice);
+            if (! str_contains((string) $transaction->description, 'Invoice #')) {
+                $transaction->description = $transaction->description.' (Inv #'.$invoice->number.')';
+            }
+            $transaction->save();
+            $advanceTotal += (float) $transaction->amount;
+        }
+
+        // Any pre-invoice advance (Cr 2-1300) now settles the receivable it prepaid:
+        // Dr Uang Muka (2-1300) / Cr Piutang (1-1200).
+        \App\Services\RentalAccountingService::reclassifyAdvanceToReceivable($invoice, $advanceTotal);
+
+        // Link first so the rental is included, then recalc paid_amount/status.
+        $this->update(['invoice_id' => $invoice->id]);
+        $invoice->recalculate();
+
+        return ['invoice' => $invoice, 'action' => 'created', 'reopened' => false];
+    }
+
+    /**
+     * Income transactions linked to this rental (and its originating quotation, if any).
+     */
+    protected function rentalIncomeTransactions(): \Illuminate\Database\Eloquent\Builder
+    {
+        return FinanceTransaction::query()
+            ->where(function ($query) {
+                $query->where('reference_type', self::class)
+                    ->where('reference_id', $this->id);
+
+                if ($this->quotation_id) {
+                    $query->orWhere(function ($q) {
+                        $q->where('reference_type', Quotation::class)
+                            ->where('reference_id', $this->quotation_id);
+                    });
+                }
+            })
+            ->where('type', FinanceTransaction::TYPE_INCOME);
+    }
+
+    /**
      * Create delivery documents (Out and In) for this rental
      */
     public function createDeliveries(): void
@@ -837,6 +1616,11 @@ class Rental extends Model
 
         if ($deliveryOut->status === Delivery::STATUS_DRAFT || $deliveryOut->items()->count() === 0) {
             foreach ($this->items as $item) {
+                // Skip empty "ghost" slots (no unit assigned) — nothing physical to hand out.
+                if (! $item->product_unit_id || ! $item->productUnit) {
+                    continue;
+                }
+
                 // Main Unit
                 $deliveryOut->items()->firstOrCreate([
                     'rental_item_id' => $item->id,
@@ -865,9 +1649,9 @@ class Rental extends Model
             ->where('status', '!=', Delivery::STATUS_COMPLETED)
             ->first();
 
-        if (!$deliveryIn) {
+        if (! $deliveryIn) {
             // Only create if no Delivery IN exists at all (first time)
-            if (!$this->deliveries()->where('type', Delivery::TYPE_IN)->exists()) {
+            if (! $this->deliveries()->where('type', Delivery::TYPE_IN)->exists()) {
                 $deliveryIn = Delivery::create([
                     'rental_id' => $this->id,
                     'type' => Delivery::TYPE_IN,
@@ -881,7 +1665,25 @@ class Rental extends Model
         }
 
         if ($deliveryIn->status === Delivery::STATUS_DRAFT) {
+            // Kits flagged "not taken" on the OUT delivery were never handed to the
+            // customer, so there is nothing to receive back — skip them entirely so
+            // they don't appear in the return checklist or block its completion gate.
+            // The flag is usually set AFTER the IN row was first created at pickup time,
+            // so also delete any stale IN row for those kits (not just skip new ones).
+            $outNotTakenKitIds = $deliveryOut
+                ? $deliveryOut->items()->where('not_taken', true)->pluck('rental_item_kit_id')->filter()->all()
+                : [];
+
+            if (! empty($outNotTakenKitIds)) {
+                $deliveryIn->items()->whereIn('rental_item_kit_id', $outNotTakenKitIds)->delete();
+            }
+
             foreach ($this->items as $item) {
+                // Skip empty "ghost" slots (no unit assigned) — nothing physical to receive back.
+                if (! $item->product_unit_id || ! $item->productUnit) {
+                    continue;
+                }
+
                 // Main Unit
                 $deliveryIn->items()->firstOrCreate([
                     'rental_item_id' => $item->id,
@@ -892,6 +1694,10 @@ class Rental extends Model
 
                 // Kits
                 foreach ($item->rentalItemKits as $kit) {
+                    if (in_array($kit->id, $outNotTakenKitIds, true)) {
+                        continue;
+                    }
+
                     $deliveryIn->items()->firstOrCreate([
                         'rental_item_id' => $item->id,
                         'rental_item_kit_id' => $kit->id,
@@ -901,6 +1707,30 @@ class Rental extends Model
                 }
             }
         }
+    }
+
+    /**
+     * Realign draft delivery schedule dates to the rental's current start/end dates.
+     * Only touches draft rows (never completed/in-progress deliveries) so editing a
+     * rental's dates keeps its surat jalan in sync. Called after createDeliveries().
+     */
+    public function syncDeliveryDates(): void
+    {
+        $this->deliveries()
+            ->where('type', Delivery::TYPE_OUT)
+            ->where('status', Delivery::STATUS_DRAFT)
+            ->update([
+                'date' => $this->start_date,
+                'scheduled_at' => $this->start_date,
+            ]);
+
+        $this->deliveries()
+            ->where('type', Delivery::TYPE_IN)
+            ->where('status', Delivery::STATUS_DRAFT)
+            ->update([
+                'date' => $this->end_date,
+                'scheduled_at' => $this->end_date,
+            ]);
     }
 
     /**

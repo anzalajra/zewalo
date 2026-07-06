@@ -27,6 +27,8 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <x-storefront-rental-disabled-banner />
+
     <div class="flex flex-col lg:flex-row gap-8">
         <!-- Sidebar Filters -->
         <aside class="lg:w-64 flex-shrink-0" x-data="{ filtersOpen: false }">

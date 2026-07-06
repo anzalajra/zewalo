@@ -1,4 +1,11 @@
 <x-filament-panels::page>
+    <div class="flex justify-end -mb-2">
+        <x-filament::button color="primary" icon="heroicon-o-qr-code"
+            x-data x-on:click="window.dispatchEvent(new CustomEvent('open-unit-scanner'))">
+            Scan Unit (Kamera)
+        </x-filament::button>
+    </div>
+
     <x-filament::section>
         <x-slot name="heading">
             Rental Information
@@ -67,8 +74,12 @@
     </x-filament::section>
 
     <x-filament::section>
-        <div class="flex justify-end">
+        <div class="flex items-center justify-between gap-3">
+            @include('filament.resources.rentals.partials.delivery-handover')
             {{ ($this->validateReturnAction)(['rental' => $this->rental]) }}
         </div>
     </x-filament::section>
+
+    @include('filament.resources.rentals.pages.partials.scanner-popup')
+    @include('filament.resources.rentals.partials.immersive-compact')
 </x-filament-panels::page>

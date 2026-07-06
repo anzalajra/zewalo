@@ -88,4 +88,12 @@
             </table>
         </div>
     </x-filament::section>
+
+    @if($rental->exists)
+        <x-filament::section class="mt-6">
+            @include('filament.resources.rentals.partials.activity-log', ['rental' => $rental])
+        </x-filament::section>
+    @endif
+
+    @include('filament.resources.rentals.partials.immersive-compact')
 </x-filament-panels::page>

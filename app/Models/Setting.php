@@ -31,6 +31,7 @@ class Setting extends Model
     {
         return Cache::remember("setting.{$key}", 3600, function () use ($key, $default) {
             $setting = self::where('key', $key)->first();
+
             return $setting ? $setting->value : $default;
         });
     }
@@ -39,7 +40,7 @@ class Setting extends Model
     {
         $setting = self::firstOrNew(['key' => $key]);
         $setting->value = $value;
-        if (!$setting->exists) {
+        if (! $setting->exists) {
             $setting->label = ucwords(str_replace('_', ' ', $key));
         }
         $setting->save();
@@ -63,5 +64,49 @@ class Setting extends Model
             ->get()
             ->groupBy('group')
             ->toArray();
+    }
+
+    /**
+     * Whether the storefront rental flow (add-to-cart / checkout) is currently disabled
+     * by the admin (Settings → Disable Storefront Rental). Respects an optional
+     * start/end window; with no window it is disabled indefinitely while the toggle is on.
+     */
+    public static function isStorefrontRentalDisabled(): bool
+    {
+        $enabled = filter_var(self::get('storefront_rental_disabled', false), FILTER_VALIDATE_BOOLEAN);
+        if (! $enabled) {
+            return false;
+        }
+
+        $start = self::get('storefront_rental_disabled_start');
+        $end = self::get('storefront_rental_disabled_end');
+
+        // No window = indefinite while toggle is on.
+        if (empty($start) && empty($end)) {
+            return true;
+        }
+
+        $now = \Carbon\Carbon::now();
+        try {
+            if (! empty($start) && $now->lt(\Carbon\Carbon::parse($start))) {
+                return false;
+            }
+            if (! empty($end) && $now->gt(\Carbon\Carbon::parse($end))) {
+                return false;
+            }
+        } catch (\Exception $e) {
+            return true;
+        }
+
+        return true;
+    }
+
+    public static function storefrontRentalDisabledMessage(): string
+    {
+        $msg = self::get('storefront_rental_disabled_message');
+
+        return is_string($msg) && trim($msg) !== ''
+            ? $msg
+            : 'Mohon maaf, layanan rental sedang tidak tersedia untuk sementara waktu.';
     }
 }

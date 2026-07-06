@@ -1,0 +1,210 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\PushSubscription;
+use App\Models\Setting;
+use App\Models\User;
+use App\Services\Storage\R2Url;
+use App\Services\WebPushService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
+
+/**
+ * Installable admin PWA + web push endpoints. Runs inside tenant context
+ * (routes registered in routes/tenant.php), so the manifest, icon, name and
+ * push subscriptions are all per-tenant. VAPID keys are platform-wide.
+ */
+class AdminPwaController extends Controller
+{
+    protected function appName(): string
+    {
+        return (string) (Setting::get('pwa_admin_name') ?: (Setting::get('site_name') ?: 'Admin'));
+    }
+
+    public function manifest(): JsonResponse
+    {
+        $name = $this->appName();
+        $shortName = (string) (Setting::get('pwa_admin_short_name') ?: $name);
+        $themeColor = $this->normalizeHexColor(Setting::get('pwa_admin_theme_color'), '#0ea5e9');
+        $bgColor = $this->normalizeHexColor(Setting::get('pwa_admin_background_color'), '#ffffff');
+
+        $iconPath = Setting::get('pwa_admin_icon');
+        // Private R2 bucket → signed URL (falls back to the bundled favicon).
+        $iconUrl = $iconPath ? (R2Url::signed($iconPath) ?: asset('favicon.ico')) : asset('favicon.ico');
+        $iconMime = $this->guessMime($iconPath);
+
+        // One icon with `sizes: any` lets the browser scale a single high-res PNG
+        // for every slot (home screen, splash, badge). Declaring fake fixed sizes
+        // for the same file triggers "size mismatch" warnings in Chrome.
+        $icons = [
+            [
+                'src' => $iconUrl,
+                'sizes' => 'any',
+                'type' => $iconMime,
+                'purpose' => 'any',
+            ],
+            [
+                'src' => $iconUrl,
+                'sizes' => 'any',
+                'type' => $iconMime,
+                'purpose' => 'maskable',
+            ],
+        ];
+
+        return response()->json([
+            'name' => $name,
+            'short_name' => $shortName,
+            'description' => $name . ' Admin Panel',
+            'id' => '/admin',
+            'start_url' => '/admin',
+            'scope' => '/admin',
+            'display' => 'standalone',
+            'orientation' => 'portrait-primary',
+            'background_color' => $bgColor,
+            'theme_color' => $themeColor,
+            'icons' => $icons,
+        ], 200, [
+            'Cache-Control' => 'public, max-age=3600',
+            'Content-Type' => 'application/manifest+json',
+        ]);
+    }
+
+    protected function normalizeHexColor($value, string $default): string
+    {
+        if (! is_string($value)) {
+            return $default;
+        }
+        $v = trim($value);
+        if ($v === '') return $default;
+        // Accept "#rgb", "#rrggbb", "#rrggbbaa"
+        if (preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/', $v)) {
+            return $v;
+        }
+        // Bare hex without # — add it
+        if (preg_match('/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $v)) {
+            return '#' . $v;
+        }
+        return $default;
+    }
+
+    protected function guessMime(?string $path): string
+    {
+        if (! $path) return 'image/png';
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        return match ($ext) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            default => 'image/png',
+        };
+    }
+
+    public function serviceWorker(): Response
+    {
+        $content = view('admin-pwa.service-worker')->render();
+
+        return response($content, 200, [
+            'Content-Type' => 'application/javascript',
+            'Service-Worker-Allowed' => '/admin',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+
+    public function subscribe(Request $request, WebPushService $push): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'unauthenticated'], 401);
+        }
+
+        $data = $request->validate([
+            'endpoint' => 'required|string|max:2000',
+            'keys.p256dh' => 'required|string|max:255',
+            'keys.auth' => 'required|string|max:255',
+        ]);
+
+        $userAgent = substr((string) $request->header('User-Agent', ''), 0, 255);
+
+        // Remove stale subscriptions from the same device (browser reinstall /
+        // SW re-register often issues a fresh endpoint without us hearing about
+        // the old one — keeping both would deliver every push twice on iOS).
+        if ($userAgent !== '') {
+            PushSubscription::where('user_id', $user->id)
+                ->where('user_agent', $userAgent)
+                ->where('endpoint', '!=', $data['endpoint'])
+                ->delete();
+        }
+
+        PushSubscription::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'endpoint' => $data['endpoint'],
+            ],
+            [
+                'p256dh' => $data['keys']['p256dh'],
+                'auth' => $data['keys']['auth'],
+                'user_agent' => $userAgent,
+                'last_used_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'ok' => true,
+            'configured' => $push->isConfigured(),
+        ]);
+    }
+
+    public function unsubscribe(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'unauthenticated'], 401);
+        }
+
+        $endpoint = $request->input('endpoint');
+        if (! $endpoint) {
+            return response()->json(['error' => 'endpoint required'], 422);
+        }
+
+        PushSubscription::where('user_id', $user->id)
+            ->where('endpoint', $endpoint)
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function publicKey(WebPushService $push): JsonResponse
+    {
+        return response()->json([
+            'key' => $push->publicKey(),
+            'configured' => $push->isConfigured(),
+        ]);
+    }
+
+    public function test(WebPushService $push): JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return response()->json(['error' => 'unauthenticated'], 401);
+        }
+
+        $payload = [
+            'title' => $this->appName(),
+            'body' => 'Test notification dari admin panel. Push berhasil!',
+            'url' => '/admin',
+            'tag' => 'test-' . time(),
+        ];
+
+        $adminIds = User::role(['super_admin', 'admin', 'staff'])->pluck('id');
+        $recipients = 0;
+        foreach ($adminIds as $id) {
+            $push->sendToUser((int) $id, $payload);
+            $recipients++;
+        }
+
+        return response()->json(['ok' => true, 'recipients' => $recipients]);
+    }
+}

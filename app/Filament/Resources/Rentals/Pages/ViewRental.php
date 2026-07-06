@@ -353,16 +353,22 @@ class ViewRental extends Page
                                 'description' => 'Down Payment for Rental '.$this->rental->rental_code,
                                 'payment_method' => $data['payment_method'],
                             ]);
-                            // Initially link to Rental, will update to Invoice if created
+                            // Initially link to Rental, will update to Invoice if created.
+                            // In advanced mode the observer routes this FinanceTransaction to
+                            // the canonical engine (postAdvance, since no invoice exists yet).
                             $dpTransaction->reference()->associate($this->rental);
                             $dpTransaction->save();
 
-                            JournalService::recordSimpleTransaction(
-                                'RECEIVE_RENTAL_PAYMENT',
-                                $this->rental,
-                                $this->rental->down_payment_amount,
-                                'Down Payment for Rental '.$this->rental->rental_code
-                            );
+                            // Legacy simple-mode journal only — advanced mode already posted
+                            // the canonical advance via the FinanceTransaction above.
+                            if (! \App\Services\RentalAccountingService::isAdvanced()) {
+                                JournalService::recordSimpleTransaction(
+                                    'RECEIVE_RENTAL_PAYMENT',
+                                    $this->rental,
+                                    $this->rental->down_payment_amount,
+                                    'Down Payment for Rental '.$this->rental->rental_code
+                                );
+                            }
                         }
                     }
 
@@ -401,13 +407,26 @@ class ViewRental extends Page
                             'notes' => 'Generated from Rental '.$this->rental->rental_code,
                         ]);
 
-                        // Auto Journal: Rental Invoice Issued
-                        JournalService::recordSimpleTransaction(
-                            'RENTAL_INVOICE_ISSUED',
-                            $invoice,
-                            $invoice->total,
-                            'Invoice Generated for Rental '.$this->rental->rental_code
-                        );
+                        // Auto Journal: Rental Invoice Issued.
+                        if (\App\Services\RentalAccountingService::isAdvanced()) {
+                            // Canonical: Dr Receivable / Cr Revenue-or-Deferred + PPN + Denda
+                            // (revenue recognized once; idempotent per invoice).
+                            \App\Services\RentalAccountingService::postInvoiceIssued($invoice);
+
+                            // Reclassify any down-payment advance now that the invoice exists
+                            // (Dr Uang Muka / Cr Piutang for the DP already received).
+                            $dpPaid = (float) ($this->rental->down_payment_amount ?? 0);
+                            if ($dpPaid > 0 && $this->rental->down_payment_status === 'paid') {
+                                \App\Services\RentalAccountingService::reclassifyAdvanceToReceivable($invoice, $dpPaid);
+                            }
+                        } else {
+                            JournalService::recordSimpleTransaction(
+                                'RENTAL_INVOICE_ISSUED',
+                                $invoice,
+                                $invoice->total,
+                                'Invoice Generated for Rental '.$this->rental->rental_code
+                            );
+                        }
 
                         // Move all payments (DP, etc) from Rental/Quotation to Invoice
                         $existingTransactions = \App\Models\FinanceTransaction::where(function ($query) {

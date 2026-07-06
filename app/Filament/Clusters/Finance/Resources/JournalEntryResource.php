@@ -163,6 +163,35 @@ class JournalEntryResource extends Resource
                     }),
             ])
             ->actions([
+                \Filament\Actions\Action::make('reverse')
+                    ->label('Reverse')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reverse Journal Entry')
+                    ->modalDescription('Membuat entri pembalik (debit/kredit ditukar) tanpa menghapus histori. Entri asli ditandai sudah dibalik.')
+                    ->form([
+                        \Filament\Forms\Components\Textarea::make('reason')
+                            ->label('Alasan (opsional)')
+                            ->rows(2),
+                    ])
+                    ->visible(fn (\App\Models\JournalEntry $record) => ! $record->isReversal() && ! $record->isReversed())
+                    ->action(function (\App\Models\JournalEntry $record, array $data) {
+                        try {
+                            $rev = \App\Services\JournalService::reverseEntry($record, $data['reason'] ?? null);
+                            \Filament\Notifications\Notification::make()
+                                ->title('Entri dibalik')
+                                ->body('Entri pembalik: '.($rev?->reference_number ?? '-'))
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Gagal membalik entri')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

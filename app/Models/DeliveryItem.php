@@ -12,12 +12,18 @@ class DeliveryItem extends Model
         'rental_item_id',
         'rental_item_kit_id',
         'is_checked',
+        'checked_at',
+        'not_taken',
         'condition',
         'notes',
+        'photos',
     ];
 
     protected $casts = [
         'is_checked' => 'boolean',
+        'checked_at' => 'datetime',
+        'not_taken' => 'boolean',
+        'photos' => 'array',
     ];
 
     public function delivery(): BelongsTo

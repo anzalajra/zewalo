@@ -35,6 +35,12 @@ class AppServiceProvider extends ServiceProvider
         FinanceTransaction::observe(FinanceTransactionObserver::class);
         JournalEntryItem::observe(JournalEntryItemObserver::class);
         UnitKit::observe(UnitKitObserver::class);
+
+        // Mirror database-channel notifications to the admin PWA as web push.
+        \Illuminate\Support\Facades\Event::listen(
+            \Illuminate\Notifications\Events\NotificationSent::class,
+            \App\Listeners\SendWebPushOnNotification::class,
+        );
     
         Gate::policy(Cart::class, CartPolicy::class);
 

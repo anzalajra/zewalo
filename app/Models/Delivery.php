@@ -16,10 +16,19 @@ class Delivery extends Model
         'checked_by',
         'status',
         'notes',
+        'recipient_name',
+        'recipient_signature',
+        'signed_at',
+        'scheduled_at',
+        'address',
+        'sort_order',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'signed_at' => 'datetime',
+        'scheduled_at' => 'datetime',
+        'sort_order' => 'integer',
     ];
 
     public const TYPE_OUT = 'out';

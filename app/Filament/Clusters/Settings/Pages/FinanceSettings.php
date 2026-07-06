@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Services\JournalService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
@@ -103,8 +104,15 @@ class FinanceSettings extends Page implements HasForms
     public function syncSimpleTransactions(): void
     {
         $count = 0;
-        FinanceTransaction::chunk(100, function ($transactions) use (&$count) {
+        $advanced = \App\Services\RentalAccountingService::isAdvanced();
+        FinanceTransaction::chunk(100, function ($transactions) use (&$count, $advanced) {
             foreach ($transactions as $transaction) {
+                // In advanced mode, rental-lifecycle payments/deposits are posted once by
+                // the canonical engine on create (via syncFromTransaction routing) and never
+                // get a per-transaction journal — skip them here so a re-sync can't double-post.
+                if ($advanced && in_array($transaction->category, \App\Services\RentalAccountingService::EXPLICITLY_POSTED_CATEGORIES, true)) {
+                    continue;
+                }
                 JournalService::syncFromTransaction($transaction);
                 $count++;
             }
@@ -149,6 +157,18 @@ class FinanceSettings extends Page implements HasForms
                                                     session()->put('show_sync_confirmation', true);
                                                 }
                                             }),
+
+                                        DatePicker::make('finance_locked_until')
+                                            ->label('Tutup Buku Sampai (Period Lock)')
+                                            ->helperText('Jurnal bertanggal pada atau sebelum tanggal ini ditolak (JournalService::assertPeriodOpen). Kosongkan untuk membuka semua periode.')
+                                            ->native(false),
+
+                                        Select::make('accounting_standard')
+                                            ->label('Standar Akuntansi (Pengakuan Pendapatan)')
+                                            ->options(\App\Services\RentalAccountingService::standardOptions())
+                                            ->default(\App\Services\RentalAccountingService::STANDARD_SAK)
+                                            ->helperText('SAK: akui pendapatan sewa saat invoice. IFRS/PSAK 72: tangguhkan, akui saat sewa selesai. Hanya berpengaruh di mode Advanced.')
+                                            ->visible(fn ($get) => ($get('finance_mode') ?? 'simple') === 'advanced'),
                                     ]),
                             ]),
 

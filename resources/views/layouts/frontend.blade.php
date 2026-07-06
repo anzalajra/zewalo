@@ -33,6 +33,37 @@
     @endif
 </head>
 <body class="font-sans antialiased bg-gray-50">
+    {{-- Storefront announcement banners (scheduled, admin-managed) --}}
+    @php
+        try {
+            $__banners = \App\Models\Announcement::activeBanners();
+        } catch (\Throwable $e) {
+            $__banners = collect();
+        }
+    @endphp
+    @foreach ($__banners as $__banner)
+        <div x-data="{ show: true }" x-show="show"
+             class="w-full text-sm"
+             style="background-color: {{ $__banner->banner_bg_color ?: '#0ea5e9' }}; color: {{ $__banner->banner_text_color ?: '#ffffff' }};">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center gap-3">
+                @if ($__banner->category)
+                    <span class="shrink-0 rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
+                          style="background-color: rgba(255,255,255,.2);">{{ $__banner->category }}</span>
+                @endif
+                <div class="min-w-0 flex-1">
+                    <span class="font-semibold">{{ $__banner->title }}</span>
+                    @if ($__banner->content)
+                        <span class="opacity-90">— {{ $__banner->content }}</span>
+                    @endif
+                    @if ($__banner->link_url)
+                        <a href="{{ $__banner->link_url }}" class="ml-2 underline font-medium whitespace-nowrap">{{ $__banner->link_label ?: 'Detail' }}</a>
+                    @endif
+                </div>
+                <button type="button" @click="show = false" class="shrink-0 opacity-70 hover:opacity-100" aria-label="Close">&times;</button>
+            </div>
+        </div>
+    @endforeach
+
     <!-- Navigation -->
     <nav class="bg-white shadow-sm sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -59,6 +59,20 @@ class SendRentalReminders extends Command
              }
         }
 
+        // 2b. Daily summary to admins (combined H-1 pickup + return). Sent even when
+        // nothing is scheduled for tomorrow, so a missing notification means the
+        // scheduler is broken rather than just an empty day. Mirrored to web push
+        // by SendWebPushOnNotification (database channel).
+        $summaryAdmins = \App\Models\User::role(['super_admin', 'admin'])->get();
+        if ($summaryAdmins->isNotEmpty()) {
+            Notification::send($summaryAdmins, new \App\Notifications\DailyReminderSummaryNotification(
+                $pickupRentals->count(),
+                $returnRentals->count(),
+                now()->addDay()->toDateString(),
+            ));
+            $this->info("Sent Daily Reminder Summary ({$pickupRentals->count()} pickup, {$returnRentals->count()} return)");
+        }
+
         // 3. Overdue Alert
         // Check active rentals that are past due date
         $overdueRentals = Rental::whereIn('status', [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN])

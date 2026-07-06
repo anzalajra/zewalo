@@ -34,12 +34,18 @@ class CheckLateRentals extends Command
         $now = now();
         $isDryRun = $this->option('dry-run');
 
-        // Count rentals that will be affected
-        $latePickupsCount = Rental::where('status', Rental::STATUS_QUOTATION)
+        // Count rentals that will be affected.
+        // A never-confirmed quotation that overran its pickup date is a dead-end → expired.
+        $expiredCount = Rental::where('status', Rental::STATUS_QUOTATION)
             ->where('start_date', '<', $now)
             ->count();
 
-        $lateReturnsCount = Rental::where('status', Rental::STATUS_ACTIVE)
+        // Only a confirmed booking that overran its pickup date is a late pickup.
+        $latePickupsCount = Rental::where('status', Rental::STATUS_CONFIRMED)
+            ->where('start_date', '<', $now)
+            ->count();
+
+        $lateReturnsCount = Rental::whereIn('status', [Rental::STATUS_ACTIVE, Rental::STATUS_PARTIAL_RETURN])
             ->where('end_date', '<', $now)
             ->count();
 
@@ -52,21 +58,35 @@ class CheckLateRentals extends Command
         $this->table(
             ['Status Change', 'Count'],
             [
-                ['Quotation → Late Pickup', $latePickupsCount],
-                ['Active → Late Return', $lateReturnsCount],
+                ['Quotation → Expired', $expiredCount],
+                ['Confirmed → Late Pickup', $latePickupsCount],
+                ['Active/Partial Return → Late Return', $lateReturnsCount],
             ]
         );
 
         if ($isDryRun) {
             // Show details of affected rentals
+            if ($expiredCount > 0) {
+                $this->newLine();
+                $this->info('Expired Quotations:');
+                $expired = Rental::with('customer')
+                    ->where('status', Rental::STATUS_QUOTATION)
+                    ->where('start_date', '<', $now)
+                    ->get();
+
+                foreach ($expired as $rental) {
+                    $this->line("  - {$rental->rental_code} | Customer: {$rental->customer->name} | Start: {$rental->start_date->format('Y-m-d H:i')}");
+                }
+            }
+
             if ($latePickupsCount > 0) {
                 $this->newLine();
                 $this->info('Late Pickup Rentals:');
                 $latePickups = Rental::with('customer')
-                    ->where('status', Rental::STATUS_QUOTATION)
+                    ->where('status', Rental::STATUS_CONFIRMED)
                     ->where('start_date', '<', $now)
                     ->get();
-                
+
                 foreach ($latePickups as $rental) {
                     $this->line("  - {$rental->rental_code} | Customer: {$rental->customer->name} | Start: {$rental->start_date->format('Y-m-d H:i')}");
                 }
@@ -76,10 +96,10 @@ class CheckLateRentals extends Command
                 $this->newLine();
                 $this->info('Late Return Rentals:');
                 $lateReturns = Rental::with('customer')
-                    ->where('status', Rental::STATUS_ACTIVE)
+                    ->whereIn('status', [Rental::STATUS_ACTIVE, Rental::STATUS_PARTIAL_RETURN])
                     ->where('end_date', '<', $now)
                     ->get();
-                
+
                 foreach ($lateReturns as $rental) {
                     $this->line("  - {$rental->rental_code} | Customer: {$rental->customer->name} | End: {$rental->end_date->format('Y-m-d H:i')}");
                 }
@@ -87,7 +107,7 @@ class CheckLateRentals extends Command
 
             $this->newLine();
             $this->info('Run without --dry-run to apply changes.');
-            
+
             return Command::SUCCESS;
         }
 
@@ -95,9 +115,20 @@ class CheckLateRentals extends Command
         try {
             DB::beginTransaction();
 
-            // Update late pickups
-            $updatedPickups = DB::table('rentals')
+            // Expire never-confirmed quotations that overran their pickup date.
+            // Expired quotes never set units to RENTED (that only happens at pickup),
+            // so no unit-status refresh is needed and they free up automatically.
+            $updatedExpired = DB::table('rentals')
                 ->where('status', Rental::STATUS_QUOTATION)
+                ->where('start_date', '<', $now)
+                ->update([
+                    'status' => Rental::STATUS_EXPIRED,
+                    'updated_at' => $now,
+                ]);
+
+            // Update late pickups (confirmed only — quotations expire, they don't become late).
+            $updatedPickups = DB::table('rentals')
+                ->where('status', Rental::STATUS_CONFIRMED)
                 ->where('start_date', '<', $now)
                 ->update([
                     'status' => Rental::STATUS_LATE_PICKUP,
@@ -106,7 +137,7 @@ class CheckLateRentals extends Command
 
             // Update late returns
             $updatedReturns = DB::table('rentals')
-                ->where('status', Rental::STATUS_ACTIVE)
+                ->whereIn('status', [Rental::STATUS_ACTIVE, Rental::STATUS_PARTIAL_RETURN])
                 ->where('end_date', '<', $now)
                 ->update([
                     'status' => Rental::STATUS_LATE_RETURN,
@@ -116,8 +147,9 @@ class CheckLateRentals extends Command
             DB::commit();
 
             // Log the updates
-            if ($updatedPickups > 0 || $updatedReturns > 0) {
+            if ($updatedExpired > 0 || $updatedPickups > 0 || $updatedReturns > 0) {
                 Log::info("Late rentals check completed", [
+                    'expired_updated' => $updatedExpired,
                     'late_pickups_updated' => $updatedPickups,
                     'late_returns_updated' => $updatedReturns,
                     'checked_at' => $now->toDateTimeString(),
@@ -126,6 +158,7 @@ class CheckLateRentals extends Command
 
             $this->newLine();
             $this->info("✅ Update completed!");
+            $this->line("   - Quotations expired: {$updatedExpired}");
             $this->line("   - Late pickups updated: {$updatedPickups}");
             $this->line("   - Late returns updated: {$updatedReturns}");
 

@@ -3,25 +3,33 @@
 namespace App\Filament\Resources\Rentals\Pages;
 
 use App\Filament\Resources\Rentals\RentalResource;
-use App\Filament\Resources\Rentals\Schemas\RentalForm;
 use App\Models\Rental;
-use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\EditRecord;
-use Illuminate\Database\Eloquent\Model;
+use Filament\Resources\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 
-class EditRental extends EditRecord
+/**
+ * Edit rental — renders the custom Livewire RentalEditor (Fase 3 port) instead of
+ * the Filament form. The editor loads/saves items (including ghost slots) and
+ * handles cross-rental Transfer. Active/late-return rentals are read-only and
+ * bounce back to the list.
+ */
+class EditRental extends Page
 {
     protected static string $resource = RentalResource::class;
 
-    protected array $groupedItemsData = [];
+    public ?Rental $rental = null;
+
+    public function getView(): string
+    {
+        return 'filament.rentals.editor';
+    }
 
     public function mount(int|string $record): void
     {
-        parent::mount($record);
+        $this->rental = Rental::with('items.productUnit')->findOrFail($record);
 
-        // Check if rental can be edited
-        if (!$this->record->canBeEdited()) {
+        if (! $this->rental->canBeEdited()) {
             Notification::make()
                 ->title('Cannot edit this rental')
                 ->body('This rental is currently active and cannot be edited.')
@@ -32,45 +40,18 @@ class EditRental extends EditRecord
         }
     }
 
-    protected function mutateFormDataBeforeFill(array $data): array
+    public function getTitle(): string|Htmlable
     {
-        // Load rental items and group them for the form
-        $rental = Rental::with('items.productUnit')->findOrFail($data['id']);
-        $data['grouped_items'] = RentalForm::groupItemsForForm($rental->items);
-        return $data;
+        return '';
     }
 
-    protected function mutateFormDataBeforeSave(array $data): array
+    public function getHeading(): string|Htmlable
     {
-        // Extract grouped_items before saving (not a DB column)
-        $this->groupedItemsData = $data['grouped_items'] ?? [];
-        unset($data['grouped_items']);
-        return $data;
+        return '';
     }
 
-    protected function handleRecordUpdate(Model $record, array $data): Model
+    public function getBreadcrumbs(): array
     {
-        // Use saveQuietly to prevent Rental::saved → refreshUnitStatuses from firing here.
-        // syncRentalItems() runs immediately after in afterSave() and performs a single
-        // batch refresh of all unit statuses, so the per-save refresh is redundant and
-        // causes a memory-exhausting cascade when combined with RentalItem events.
-        $record->fill($data);
-        $record->saveQuietly();
-        return $record;
-    }
-
-    protected function afterSave(): void
-    {
-        // Sync rental items from grouped data (does its own batch unit-status refresh)
-        RentalForm::syncRentalItems($this->record, $this->groupedItemsData);
-        $this->record->refresh();
-    }
-
-    protected function getHeaderActions(): array
-    {
-        return [
-            DeleteAction::make()
-                ->visible(fn () => $this->record->canBeDeleted()),
-        ];
+        return [];
     }
 }

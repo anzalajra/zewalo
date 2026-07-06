@@ -213,15 +213,22 @@ class ListRentals extends ListRecords
     {
         $now = now();
 
-        // Update late pickups - gunakan DB::table untuk bypass model events
+        // Unconfirmed quotations past their pickup date expire (dead-end); only a
+        // confirmed booking becomes a late pickup. Kept in sync with
+        // Rental::checkAndUpdateLateStatus() + the rentals:check-late command.
         DB::table('rentals')
-            ->whereIn('status', ['quotation', 'confirmed'])
+            ->where('status', 'quotation')
+            ->where('start_date', '<', $now)
+            ->update(['status' => 'expired', 'updated_at' => $now]);
+
+        DB::table('rentals')
+            ->where('status', 'confirmed')
             ->where('start_date', '<', $now)
             ->update(['status' => 'late_pickup', 'updated_at' => $now]);
 
-        // Update late returns
+        // Update late returns (active + partial return past the end date).
         DB::table('rentals')
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'partial_return'])
             ->where('end_date', '<', $now)
             ->update(['status' => 'late_return', 'updated_at' => $now]);
     }
@@ -237,6 +244,7 @@ class ListRentals extends ListRecords
                 ->extraAttributes([
                     'x-on:click.prevent' => '$dispatch(\'open-widget-customizer\')',
                 ]),
+            \App\Filament\Actions\ReminderPickupReturnAction::make(),
             CreateAction::make()->label('New Rental'),
         ];
     }

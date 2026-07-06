@@ -8,6 +8,7 @@
         'late_pickup'    => ['solid' => '#ef4444', 'bg' => '#fee2e2', 'fg' => '#b91c1c', 'label' => 'Late'],
         'late_return'    => ['solid' => '#ef4444', 'bg' => '#fee2e2', 'fg' => '#b91c1c', 'label' => 'Late'],
         'partial_return' => ['solid' => '#eab308', 'bg' => '#fefce8', 'fg' => '#854d0e', 'label' => 'Partial'],
+        'expired'        => ['solid' => '#9ca3af', 'bg' => '#f3f4f6', 'fg' => '#374151', 'label' => 'Expired'],
     ];
 
     $monthlyJson = json_encode($monthly, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_HEX_TAG | JSON_UNESCAPED_UNICODE);

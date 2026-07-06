@@ -5,11 +5,15 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CustomerCategory;
+use App\Support\CustomFields;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Group;
@@ -21,6 +25,8 @@ class ProductForm
 {
     public static function configure(Schema $schema): Schema
     {
+        $customComponents = self::customFieldComponents();
+
         return $schema
             ->components([
                 // Toggles (Visible only on Create)
@@ -100,6 +106,35 @@ class ProductForm
                                     ->prefix('Rp')
                                     ->default(0),
 
+                                TextInput::make('hourly_rate')
+                                    ->label('Hourly Rate (Rp)')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->minValue(0)
+                                    ->placeholder('Kosongkan = otomatis dari harga harian'),
+
+                                TextInput::make('weekly_rate')
+                                    ->label('Weekly Rate (Rp)')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->minValue(0)
+                                    ->placeholder('Kosongkan = otomatis dari harga harian'),
+
+                                TextInput::make('monthly_rate')
+                                    ->label('Monthly Rate (Rp)')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->minValue(0)
+                                    ->placeholder('Kosongkan = otomatis dari harga harian'),
+
+                                TextInput::make('late_fee_daily_amount')
+                                    ->label('Denda Telat Harian (Override)')
+                                    ->helperText('Tarif dasar denda keterlambatan per unit per hari khusus produk ini. Kosongkan untuk mengikuti tarif sewa harian / setting global.')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->minValue(0)
+                                    ->placeholder('Ikuti tarif sewa / global'),
+
                                 TextInput::make('buffer_time')
                                     ->label('Buffer Time')
                                     ->helperText('Minimum hours required between rentals for units of this product. The system will use the maximum of this value and the global buffer setting.')
@@ -108,6 +143,7 @@ class ProductForm
                                     ->default(0)
                                     ->minValue(0),
                             ])
+                            ->columns(2)
                             ->columnSpan(1),
 
                         Repeater::make('variations')
@@ -121,6 +157,24 @@ class ProductForm
 
                                 TextInput::make('daily_rate')
                                     ->label('Override Daily Rate')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->placeholder('Leave empty to use product rate'),
+
+                                TextInput::make('hourly_rate')
+                                    ->label('Override Hourly Rate')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->placeholder('Leave empty to use product rate'),
+
+                                TextInput::make('weekly_rate')
+                                    ->label('Override Weekly Rate')
+                                    ->numeric()
+                                    ->prefix('Rp')
+                                    ->placeholder('Leave empty to use product rate'),
+
+                                TextInput::make('monthly_rate')
+                                    ->label('Override Monthly Rate')
                                     ->numeric()
                                     ->prefix('Rp')
                                     ->placeholder('Leave empty to use product rate'),
@@ -161,6 +215,65 @@ class ProductForm
                     ->options(CustomerCategory::where('is_active', true)->pluck('name', 'id'))
                     ->columns(2)
                     ->helperText('Selected categories will NOT be able to see this product.'),
+
+                Section::make('Informasi Tambahan')
+                    ->description('Custom fields produk (dikelola di Settings → Product Custom Fields).')
+                    ->schema($customComponents)
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->visible(count($customComponents) > 0),
             ]);
+    }
+
+    /**
+     * Build Filament components for the admin-defined product custom fields.
+     * Each maps to the JSON `custom_fields` column via `custom_fields.{name}`.
+     */
+    protected static function customFieldComponents(): array
+    {
+        $components = [];
+
+        foreach (CustomFields::definitions('product_custom_fields') as $field) {
+            $name = 'custom_fields.'.$field['name'];
+            $label = $field['label'] ?? $field['name'];
+            $type = $field['type'] ?? 'text';
+            $component = null;
+
+            switch ($type) {
+                case 'text':
+                case 'email':
+                case 'number':
+                    $component = TextInput::make($name)
+                        ->label($label)
+                        ->numeric($type === 'number')
+                        ->email($type === 'email');
+                    break;
+                case 'textarea':
+                    $component = Textarea::make($name)->label($label);
+                    break;
+                case 'select':
+                    $component = Select::make($name)
+                        ->label($label)
+                        ->options(CustomFields::parseOptions($field['options'] ?? ''));
+                    break;
+                case 'radio':
+                    $component = Radio::make($name)
+                        ->label($label)
+                        ->options(CustomFields::parseOptions($field['options'] ?? ''));
+                    break;
+                case 'checkbox':
+                    $component = Checkbox::make($name)->label($label);
+                    break;
+            }
+
+            if ($component) {
+                if ($field['required'] ?? false) {
+                    $component->required();
+                }
+                $components[] = $component;
+            }
+        }
+
+        return $components;
     }
 }

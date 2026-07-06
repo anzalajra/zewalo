@@ -90,11 +90,15 @@
                         {{ $kitItem->rentalItemKit->unitKit->name }}
                     </td>
                     <td style="font-size: 11px;">{{ $kitItem->rentalItemKit->unitKit->serial_number ?? '-' }}</td>
-                    <td style="font-size: 11px;">{{ $kitItem->condition ? ucfirst($kitItem->condition) : '-' }}</td>
+                    <td style="font-size: 11px;">{{ $kitItem->not_taken ? '-' : ($kitItem->condition ? ucfirst($kitItem->condition) : '-') }}</td>
                     <td>
-                        <span class="badge {{ $kitItem->is_checked ? 'badge-success' : 'badge-danger' }}">
-                            {{ $kitItem->is_checked ? '✓' : '✗' }}
-                        </span>
+                        @if($kitItem->not_taken)
+                            <span class="badge" style="background-color:#e5e7eb; color:#4b5563;">Tidak diambil</span>
+                        @else
+                            <span class="badge {{ $kitItem->is_checked ? 'badge-success' : 'badge-danger' }}">
+                                {{ $kitItem->is_checked ? '✓' : '✗' }}
+                            </span>
+                        @endif
                     </td>
                     <td style="font-size: 11px;">{{ $kitItem->notes ?? '-' }}</td>
                 </tr>

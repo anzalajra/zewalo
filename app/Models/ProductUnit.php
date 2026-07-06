@@ -19,6 +19,8 @@ class ProductUnit extends Model
         'purchase_price',
         'residual_value',
         'useful_life',
+        'accumulated_depreciation',
+        'rentals_since_last_maintenance',
         'notes',
         'last_checked_at',
         'maintenance_status',
@@ -28,14 +30,19 @@ class ProductUnit extends Model
         'purchase_date' => 'date',
         'purchase_price' => 'decimal:2',
         'residual_value' => 'decimal:2',
+        'accumulated_depreciation' => 'decimal:2',
         'useful_life' => 'integer',
         'last_checked_at' => 'datetime',
     ];
 
     public const STATUS_AVAILABLE = 'available';
+
     public const STATUS_SCHEDULED = 'scheduled';
+
     public const STATUS_RENTED = 'rented';
+
     public const STATUS_MAINTENANCE = 'maintenance';
+
     public const STATUS_RETIRED = 'retired';
 
     public function product(): BelongsTo
@@ -81,25 +88,38 @@ class ProductUnit extends Model
     public function getCurrentValueAttribute(): float
     {
         $cost = $this->purchase_price ?? 0;
-        if ($cost == 0) return 0;
-        
+        if ($cost == 0) {
+            return 0;
+        }
+
         $residual = $this->residual_value ?? 0;
         $lifeMonths = $this->useful_life ?? 60;
         $purchaseDate = $this->purchase_date;
-        
-        if (!$purchaseDate) return $cost;
-        
+
+        // Prefer the persisted accumulated depreciation (historical, posted by the
+        // monthly depreciation run) so book value doesn't shift retroactively when a
+        // useful-life parameter is later edited. Falls back to the straight-line
+        // estimate below for units that have never been through a run.
+        $accumulated = (float) ($this->accumulated_depreciation ?? 0);
+        if ($accumulated > 0) {
+            return max($residual, round($cost - $accumulated, 2));
+        }
+
+        if (! $purchaseDate) {
+            return $cost;
+        }
+
         // Calculate full months passed
         $ageMonths = $purchaseDate->diffInMonths(now());
-        
+
         if ($ageMonths >= $lifeMonths) {
             return $residual;
         }
-        
+
         $depreciableAmount = $cost - $residual;
         $monthlyDepreciation = $depreciableAmount / $lifeMonths;
         $depreciation = $monthlyDepreciation * $ageMonths;
-        
+
         return max($residual, round($cost - $depreciation, 2));
     }
 
@@ -143,7 +163,7 @@ class ProductUnit extends Model
         }
 
         // Check Warehouse Availability
-        if ($this->warehouse && (!$this->warehouse->is_active || !$this->warehouse->is_available_for_rental)) {
+        if ($this->warehouse && (! $this->warehouse->is_active || ! $this->warehouse->is_available_for_rental)) {
             return false;
         }
 
@@ -152,19 +172,19 @@ class ProductUnit extends Model
             ->where('rental_id', '!=', $excludeRentalId)
             ->whereHas('rental', function ($query) use ($startDate, $endDate) {
                 $query->whereIn('status', [
-                        Rental::STATUS_QUOTATION,
-                        Rental::STATUS_CONFIRMED,
-                        Rental::STATUS_ACTIVE,
-                        Rental::STATUS_LATE_PICKUP,
-                        Rental::STATUS_LATE_RETURN
-                    ])
+                    Rental::STATUS_QUOTATION,
+                    Rental::STATUS_CONFIRMED,
+                    Rental::STATUS_ACTIVE,
+                    Rental::STATUS_LATE_PICKUP,
+                    Rental::STATUS_LATE_RETURN,
+                ])
                     ->where(function ($q) use ($startDate, $endDate) {
-                         $q->whereBetween('start_date', [$startDate, $endDate])
-                           ->orWhereBetween('end_date', [$startDate, $endDate])
-                           ->orWhere(function ($sub) use ($startDate, $endDate) {
-                               $sub->where('start_date', '<', $startDate)
-                                   ->where('end_date', '>', $endDate);
-                           });
+                        $q->whereBetween('start_date', [$startDate, $endDate])
+                            ->orWhereBetween('end_date', [$startDate, $endDate])
+                            ->orWhere(function ($sub) use ($startDate, $endDate) {
+                                $sub->where('start_date', '<', $startDate)
+                                    ->where('end_date', '>', $endDate);
+                            });
                     });
             })
             ->exists();
@@ -176,29 +196,29 @@ class ProductUnit extends Model
         // 3. Check if this unit is a COMPONENT of a Bundle that is rented (Parent is rented)
         $isComponentRented = $this->linkedInKits()
             ->whereHas('unit', function ($qParentUnit) use ($startDate, $endDate, $excludeRentalId) {
-                 $qParentUnit->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
-                      $ri->where('rental_id', '!=', $excludeRentalId)
-                         ->whereHas('rental', function ($query) use ($startDate, $endDate) {
-                             $query->whereIn('status', [
-                                     Rental::STATUS_QUOTATION,
-                                     Rental::STATUS_CONFIRMED,
-                                     Rental::STATUS_ACTIVE,
-                                     Rental::STATUS_LATE_PICKUP,
-                                     Rental::STATUS_LATE_RETURN
-                                 ])
-                                 ->where(function ($q) use ($startDate, $endDate) {
-                                     $q->whereBetween('start_date', [$startDate, $endDate])
-                                       ->orWhereBetween('end_date', [$startDate, $endDate])
-                                       ->orWhere(function ($sub) use ($startDate, $endDate) {
-                                           $sub->where('start_date', '<', $startDate)
-                                               ->where('end_date', '>', $endDate);
-                                       });
+                $qParentUnit->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
+                    $ri->where('rental_id', '!=', $excludeRentalId)
+                        ->whereHas('rental', function ($query) use ($startDate, $endDate) {
+                            $query->whereIn('status', [
+                                Rental::STATUS_QUOTATION,
+                                Rental::STATUS_CONFIRMED,
+                                Rental::STATUS_ACTIVE,
+                                Rental::STATUS_LATE_PICKUP,
+                                Rental::STATUS_LATE_RETURN,
+                            ])
+                                ->where(function ($q) use ($startDate, $endDate) {
+                                    $q->whereBetween('start_date', [$startDate, $endDate])
+                                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                                        ->orWhere(function ($sub) use ($startDate, $endDate) {
+                                            $sub->where('start_date', '<', $startDate)
+                                                ->where('end_date', '>', $endDate);
+                                        });
                                 });
                         });
-                 });
+                });
             })
             ->exists();
-        
+
         if ($isComponentRented) {
             return false;
         }
@@ -207,55 +227,55 @@ class ProductUnit extends Model
         $isBundleComponentRented = $this->kits()
             ->whereNotNull('linked_unit_id')
             ->whereHas('linkedUnit', function ($q) use ($startDate, $endDate, $excludeRentalId) {
-                 // Check if the component is unavailable either directly or via another parent
-                 $q->where(function ($query) use ($startDate, $endDate, $excludeRentalId) {
-                     // 1. Component is directly rented
-                     $query->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
-                         $ri->where('rental_id', '!=', $excludeRentalId)
+                // Check if the component is unavailable either directly or via another parent
+                $q->where(function ($query) use ($startDate, $endDate, $excludeRentalId) {
+                    // 1. Component is directly rented
+                    $query->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
+                        $ri->where('rental_id', '!=', $excludeRentalId)
                             ->whereHas('rental', function ($query) use ($startDate, $endDate) {
                                 $query->whereIn('status', [
-                                        Rental::STATUS_QUOTATION,
-                                        Rental::STATUS_CONFIRMED,
-                                        Rental::STATUS_ACTIVE,
-                                        Rental::STATUS_LATE_PICKUP,
-                                        Rental::STATUS_LATE_RETURN
-                                    ])
+                                    Rental::STATUS_QUOTATION,
+                                    Rental::STATUS_CONFIRMED,
+                                    Rental::STATUS_ACTIVE,
+                                    Rental::STATUS_LATE_PICKUP,
+                                    Rental::STATUS_LATE_RETURN,
+                                ])
                                     ->where(function ($q) use ($startDate, $endDate) {
-                                         $q->whereBetween('start_date', [$startDate, $endDate])
-                                           ->orWhereBetween('end_date', [$startDate, $endDate])
-                                           ->orWhere(function ($sub) use ($startDate, $endDate) {
-                                               $sub->where('start_date', '<', $startDate)
-                                                   ->where('end_date', '>', $endDate);
-                                           });
+                                        $q->whereBetween('start_date', [$startDate, $endDate])
+                                            ->orWhereBetween('end_date', [$startDate, $endDate])
+                                            ->orWhere(function ($sub) use ($startDate, $endDate) {
+                                                $sub->where('start_date', '<', $startDate)
+                                                    ->where('end_date', '>', $endDate);
+                                            });
                                     });
                             });
-                     })
-                     // 2. Component is part of ANOTHER rented bundle (Parent is rented)
-                     ->orWhereHas('linkedInKits', function ($qLink) use ($startDate, $endDate, $excludeRentalId) {
-                          $qLink->whereHas('unit', function ($qParentUnit) use ($startDate, $endDate, $excludeRentalId) {
-                               $qParentUnit->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
+                    })
+                    // 2. Component is part of ANOTHER rented bundle (Parent is rented)
+                        ->orWhereHas('linkedInKits', function ($qLink) use ($startDate, $endDate, $excludeRentalId) {
+                            $qLink->whereHas('unit', function ($qParentUnit) use ($startDate, $endDate, $excludeRentalId) {
+                                $qParentUnit->whereHas('rentalItems', function ($ri) use ($startDate, $endDate, $excludeRentalId) {
                                     $ri->where('rental_id', '!=', $excludeRentalId)
-                                       ->whereHas('rental', function ($query) use ($startDate, $endDate) {
-                                           $query->whereIn('status', [
-                                                   Rental::STATUS_QUOTATION,
-                                                   Rental::STATUS_CONFIRMED,
-                                                   Rental::STATUS_ACTIVE,
-                                                   Rental::STATUS_LATE_PICKUP,
-                                                   Rental::STATUS_LATE_RETURN
-                                               ])
-                                               ->where(function ($q) use ($startDate, $endDate) {
+                                        ->whereHas('rental', function ($query) use ($startDate, $endDate) {
+                                            $query->whereIn('status', [
+                                                Rental::STATUS_QUOTATION,
+                                                Rental::STATUS_CONFIRMED,
+                                                Rental::STATUS_ACTIVE,
+                                                Rental::STATUS_LATE_PICKUP,
+                                                Rental::STATUS_LATE_RETURN,
+                                            ])
+                                                ->where(function ($q) use ($startDate, $endDate) {
                                                     $q->whereBetween('start_date', [$startDate, $endDate])
-                                                      ->orWhereBetween('end_date', [$startDate, $endDate])
-                                                      ->orWhere(function ($sub) use ($startDate, $endDate) {
-                                                          $sub->where('start_date', '<', $startDate)
-                                                              ->where('end_date', '>', $endDate);
-                                                      });
-                                               });
-                                       });
-                               });
-                          });
-                     });
-                 });
+                                                        ->orWhereBetween('end_date', [$startDate, $endDate])
+                                                        ->orWhere(function ($sub) use ($startDate, $endDate) {
+                                                            $sub->where('start_date', '<', $startDate)
+                                                                ->where('end_date', '>', $endDate);
+                                                        });
+                                                });
+                                        });
+                                });
+                            });
+                        });
+                });
             })
             ->exists();
 
@@ -289,13 +309,13 @@ class ProductUnit extends Model
             ->whereDoesntHave('deliveryItems', function ($q) {
                 $q->whereHas('delivery', function ($d) {
                     $d->where('type', 'in')
-                      ->where('status', 'completed');
+                        ->where('status', 'completed');
                 });
             })
             ->exists();
 
         // 2. Component of a Rented Bundle (via RentalItemKit)
-        if (!$isRented) {
+        if (! $isRented) {
             $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
 
             if ($unitKitIds->isNotEmpty()) {
@@ -346,7 +366,7 @@ class ProductUnit extends Model
                     })->exists();
 
                 // 2. Component Scheduled (via RentalItemKit)
-                if (!$isScheduled) {
+                if (! $isScheduled) {
                     $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
                     if ($unitKitIds->isNotEmpty()) {
                         $isComponentScheduled = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
@@ -420,41 +440,41 @@ class ProductUnit extends Model
         $isRented = $this->rentalItems()
             ->whereHas('rental', function ($query) {
                 $query->whereIn('status', [
-                    Rental::STATUS_ACTIVE, 
+                    Rental::STATUS_ACTIVE,
                     Rental::STATUS_LATE_RETURN,
-                    Rental::STATUS_PARTIAL_RETURN
+                    Rental::STATUS_PARTIAL_RETURN,
                 ]);
             })
             ->whereDoesntHave('deliveryItems', function ($q) {
                 $q->whereHas('delivery', function ($d) {
                     $d->where('type', 'in') // Delivery::TYPE_IN
-                      ->where('status', 'completed'); // Delivery::STATUS_COMPLETED
+                        ->where('status', 'completed'); // Delivery::STATUS_COMPLETED
                 });
             })
             ->exists();
 
         // 2. Component of a Rented Unit (via RentalItemKit)
-        if (!$isRented) {
-             $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
-             
-             if ($unitKitIds->isNotEmpty()) {
-                 $isComponentRented = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
-                     ->whereHas('rentalItem', function ($ri) {
-                         $ri->whereHas('rental', function ($r) {
-                             $r->whereIn('status', [
-                                Rental::STATUS_ACTIVE, 
+        if (! $isRented) {
+            $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
+
+            if ($unitKitIds->isNotEmpty()) {
+                $isComponentRented = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
+                    ->whereHas('rentalItem', function ($ri) {
+                        $ri->whereHas('rental', function ($r) {
+                            $r->whereIn('status', [
+                                Rental::STATUS_ACTIVE,
                                 Rental::STATUS_LATE_RETURN,
-                                Rental::STATUS_PARTIAL_RETURN
+                                Rental::STATUS_PARTIAL_RETURN,
                             ]);
-                         });
-                     })
-                     ->where('is_returned', false)
-                     ->exists();
-                 
-                 if ($isComponentRented) {
-                     $isRented = true;
-                 }
-             }
+                        });
+                    })
+                    ->where('is_returned', false)
+                    ->exists();
+
+                if ($isComponentRented) {
+                    $isRented = true;
+                }
+            }
         }
 
         if ($isRented) {
@@ -474,21 +494,21 @@ class ProductUnit extends Model
                 })->exists();
 
             // 2. Component Scheduled
-            if (!$isScheduled) {
-                 $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
-                 if ($unitKitIds->isNotEmpty()) {
-                     $isComponentScheduled = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
-                         ->whereHas('rentalItem', function ($ri) {
-                             $ri->whereHas('rental', function ($r) {
-                                 $r->whereIn('status', [Rental::STATUS_QUOTATION, Rental::STATUS_CONFIRMED, Rental::STATUS_LATE_PICKUP]);
-                             });
-                         })
-                         ->exists();
-                     
-                     if ($isComponentScheduled) {
-                         $isScheduled = true;
-                     }
-                 }
+            if (! $isScheduled) {
+                $unitKitIds = \App\Models\UnitKit::where('linked_unit_id', $this->id)->pluck('id');
+                if ($unitKitIds->isNotEmpty()) {
+                    $isComponentScheduled = \App\Models\RentalItemKit::whereIn('unit_kit_id', $unitKitIds)
+                        ->whereHas('rentalItem', function ($ri) {
+                            $ri->whereHas('rental', function ($r) {
+                                $r->whereIn('status', [Rental::STATUS_QUOTATION, Rental::STATUS_CONFIRMED, Rental::STATUS_LATE_PICKUP]);
+                            });
+                        })
+                        ->exists();
+
+                    if ($isComponentScheduled) {
+                        $isScheduled = true;
+                    }
+                }
             }
 
             if ($isScheduled) {

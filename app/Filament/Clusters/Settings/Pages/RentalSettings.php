@@ -6,6 +6,7 @@ use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
@@ -67,6 +68,12 @@ class RentalSettings extends Page implements HasForms
             }
         }
 
+        // Late fee tiers are stored as a JSON string but the Repeater needs an array.
+        if (isset($settings['late_fee_tiers'])) {
+            $decoded = json_decode($settings['late_fee_tiers'], true);
+            $settings['late_fee_tiers'] = is_array($decoded) ? $decoded : [];
+        }
+
         // Remove keys managed outside the Filament form
         unset($settings['holidays'], $settings['operational_days'], $settings['operational_schedule']);
 
@@ -111,21 +118,52 @@ class RentalSettings extends Page implements HasForms
 
                         Section::make('Late Fee Settings')
                             ->schema([
-                                Select::make('late_fee_type')
-                                    ->label('Late Fee Type')
+                                Select::make('late_fee_mode')
+                                    ->label('Late Fee Mode')
                                     ->options([
-                                        'percentage' => 'Percentage (%)',
-                                        'fixed' => 'Fixed Amount (Rp)',
+                                        'full_daily_rate' => 'Full daily rate per day',
+                                        'per_unit_per_day' => 'Fixed amount per unit per day',
+                                        'percentage_per_day' => 'Percentage of daily rate per day',
+                                        'flat_per_day' => 'Flat amount per day (whole rental)',
+                                        'tiered' => 'Tiered (by hours late)',
                                     ])
-                                    ->default('percentage')
+                                    ->default('full_daily_rate')
                                     ->live()
+                                    ->helperText('Controls how calculateOverdueFee() charges overdue rentals.')
                                     ->required(),
                                 TextInput::make('late_fee_amount')
-                                    ->label(fn ($get) => $get('late_fee_type') === 'percentage' ? 'Percentage per Day' : 'Amount per Day')
+                                    ->label(fn ($get) => $get('late_fee_mode') === 'percentage_per_day' ? 'Percentage per Day' : 'Amount per Day')
                                     ->numeric()
-                                    ->suffix(fn ($get) => $get('late_fee_type') === 'percentage' ? '%' : null)
-                                    ->prefix(fn ($get) => $get('late_fee_type') === 'fixed' ? 'Rp' : null)
-                                    ->required(),
+                                    ->suffix(fn ($get) => $get('late_fee_mode') === 'percentage_per_day' ? '%' : null)
+                                    ->prefix(fn ($get) => in_array($get('late_fee_mode'), ['per_unit_per_day', 'flat_per_day']) ? 'Rp' : null)
+                                    ->visible(fn ($get) => $get('late_fee_mode') !== 'tiered')
+                                    ->helperText(fn ($get) => $get('late_fee_mode') === 'full_daily_rate'
+                                        ? 'Not used in this mode — charges the item daily rate itself.'
+                                        : null),
+                                Repeater::make('late_fee_tiers')
+                                    ->label('Tiers')
+                                    ->visible(fn ($get) => $get('late_fee_mode') === 'tiered')
+                                    ->schema([
+                                        TextInput::make('up_to_hours')
+                                            ->label('Up to (hours late)')
+                                            ->numeric()
+                                            ->required(),
+                                        Select::make('charge_type')
+                                            ->label('Charge')
+                                            ->options([
+                                                'percentage' => 'Percentage of daily rate',
+                                                'fixed' => 'Fixed amount (Rp)',
+                                            ])
+                                            ->default('percentage')
+                                            ->required(),
+                                        TextInput::make('amount')
+                                            ->label('Value')
+                                            ->numeric()
+                                            ->required(),
+                                    ])
+                                    ->addActionLabel('Add tier')
+                                    ->default([])
+                                    ->helperText('Beyond the last tier, each additional 24h adds one daily rate.'),
                             ])->columnSpanFull(),
                     ]),
             ]);
@@ -162,6 +200,11 @@ class RentalSettings extends Page implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
+
+        // Late fee tiers persist as a JSON string (calculateOverdueFee json_decodes it).
+        if (array_key_exists('late_fee_tiers', $data)) {
+            $data['late_fee_tiers'] = json_encode(array_values($data['late_fee_tiers'] ?? []));
+        }
 
         // Persist schedule and holidays alongside form data
         $operationalDays = array_values(array_keys(array_filter($this->operationalSchedule, fn ($d) => $d['enabled'])));

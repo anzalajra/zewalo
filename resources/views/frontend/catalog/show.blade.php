@@ -38,6 +38,8 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <x-storefront-rental-disabled-banner />
+
     <!-- Breadcrumb -->
     <nav class="text-sm mb-6">
         <a href="{{ route('catalog.index') }}" class="text-gray-500 hover:text-primary-600">{{ __('storefront.catalog.title') }}</a>

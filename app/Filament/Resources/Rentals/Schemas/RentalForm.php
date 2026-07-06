@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Rentals\Schemas;
 
-use App\Models\User;
 use App\Models\ProductUnit;
 use App\Models\Rental;
 use App\Models\RentalItem;
-use Filament\Schemas\Components\Actions;
+use App\Models\User;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
@@ -14,14 +14,16 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Schema;
-use Carbon\Carbon;
 
 class RentalForm
 {
     // ── Cached data to avoid repeated queries during a single request ──
     private static ?array $cachedProductOptions = null;
+
     private static ?array $cachedProductList = null;
+
     private static ?array $cachedProductVariationMap = null;
 
     /**
@@ -50,6 +52,7 @@ class RentalForm
         }
 
         self::$cachedProductOptions = $options;
+
         return $options;
     }
 
@@ -85,6 +88,7 @@ class RentalForm
         }
 
         self::$cachedProductVariationMap = $map;
+
         return $map;
     }
 
@@ -134,10 +138,15 @@ class RentalForm
                             $totalHours = (int) $start->diffInHours($end);
                             $days = (int) floor($totalHours / 24);
                             $hours = $totalHours % 24;
-                            if ($days > 0 && $hours > 0) return "📅 Durasi: {$days} hari {$hours} jam";
-                            elseif ($days > 0) return "📅 Durasi: {$days} hari";
-                            else return "📅 Durasi: {$hours} jam";
+                            if ($days > 0 && $hours > 0) {
+                                return "📅 Durasi: {$days} hari {$hours} jam";
+                            } elseif ($days > 0) {
+                                return "📅 Durasi: {$days} hari";
+                            } else {
+                                return "📅 Durasi: {$hours} jam";
+                            }
                         }
+
                         return null;
                     }),
 
@@ -145,7 +154,7 @@ class RentalForm
                     ->options(Rental::getStatusOptions())
                     ->required()
                     ->default('quotation')
-                    ->disabled(fn ($record) => $record && (!$record->canBeEdited() || in_array($record->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN]))),
+                    ->disabled(fn ($record) => $record && (! $record->canBeEdited() || in_array($record->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN]))),
 
                 // ── Grouped Rental Items Repeater ──
                 Repeater::make('grouped_items')
@@ -198,11 +207,12 @@ class RentalForm
                                         $fields = [];
                                         for ($i = 0; $i < $quantity; $i++) {
                                             $fields[] = Select::make("unit_{$i}")
-                                                ->label("Unit #" . ($i + 1))
+                                                ->label('Unit #'.($i + 1))
                                                 ->options($options)
                                                 ->searchable()
                                                 ->required();
                                         }
+
                                         return $fields;
                                     })
                                     ->fillForm(function (callable $get): array {
@@ -211,6 +221,7 @@ class RentalForm
                                         foreach ($unitIds as $i => $uid) {
                                             $fill["unit_{$i}"] = $uid;
                                         }
+
                                         return $fill;
                                     })
                                     ->action(function (array $data, callable $get, callable $set) {
@@ -270,7 +281,7 @@ class RentalForm
                         ->label('Add Product')
                         ->icon('heroicon-m-plus')
                         ->button()
-                        ->visible(fn ($record) => !$record || !in_array($record->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN]))
+                        ->visible(fn ($record) => ! $record || ! in_array($record->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN]))
                         ->form(function () {
                             // Pre-load variation map once
                             $variationMap = self::getProductVariationMap();
@@ -288,16 +299,21 @@ class RentalForm
                                     ->label('Variation')
                                     ->options(function (callable $get) use ($variationMap) {
                                         $productId = $get('product_id');
-                                        if (!$productId) return [];
+                                        if (! $productId) {
+                                            return [];
+                                        }
+
                                         return $variationMap[$productId] ?? [];
                                     })
                                     ->visible(function (callable $get) use ($variationMap) {
                                         $productId = $get('product_id');
-                                        return $productId && !empty($variationMap[$productId] ?? []);
+
+                                        return $productId && ! empty($variationMap[$productId] ?? []);
                                     })
                                     ->required(function (callable $get) use ($variationMap) {
                                         $productId = $get('product_id');
-                                        return $productId && !empty($variationMap[$productId] ?? []);
+
+                                        return $productId && ! empty($variationMap[$productId] ?? []);
                                     })
                                     ->live(),
 
@@ -310,12 +326,15 @@ class RentalForm
                                     ->visible(fn (callable $get) => (bool) $get('product_id'))
                                     ->helperText(function (callable $get) {
                                         $productId = $get('product_id');
-                                        if (!$productId) return '';
+                                        if (! $productId) {
+                                            return '';
+                                        }
                                         $query = ProductUnit::where('product_id', $productId)
                                             ->whereNotIn('status', [ProductUnit::STATUS_MAINTENANCE, ProductUnit::STATUS_RETIRED]);
                                         if ($get('product_variation_id')) {
                                             $query->where('product_variation_id', $get('product_variation_id'));
                                         }
+
                                         return "Total unit tersedia: {$query->count()}";
                                     }),
                             ];
@@ -447,6 +466,7 @@ class RentalForm
                 ->title('Unit Tidak Cukup')
                 ->body("Hanya tersedia {$available->count()} unit untuk tanggal yang dipilih.")
                 ->danger()->send();
+
             return;
         }
 
@@ -503,7 +523,9 @@ class RentalForm
     // ═══════════════════════════════════════════════
     public static function handleQuantityChange(int $newQty, int $oldQty, callable $get, callable $set): void
     {
-        if ($newQty === $oldQty || $newQty < 1) return;
+        if ($newQty === $oldQty || $newQty < 1) {
+            return;
+        }
 
         $unitIds = json_decode($get('unit_ids') ?? '[]', true);
         $compositeId = $get('product_id');
@@ -534,6 +556,7 @@ class RentalForm
                     ->body("Hanya tersedia {$available->count()} unit tambahan.")
                     ->danger()->send();
                 $set('quantity', $oldQty);
+
                 return;
             }
 
@@ -557,7 +580,9 @@ class RentalForm
      */
     private static function getBookedUnitIds($startDate, $endDate, $excludeRentalId = null): array
     {
-        if (!$startDate || !$endDate) return [];
+        if (! $startDate || ! $endDate) {
+            return [];
+        }
 
         $activeStatuses = [
             Rental::STATUS_QUOTATION,
@@ -612,7 +637,7 @@ class RentalForm
             ->whereNotIn('condition', ['broken', 'lost'])
             ->when($productId, fn ($q) => $q->where('product_id', $productId))
             ->when($variationId, fn ($q) => $q->where('product_variation_id', $variationId))
-            ->when(!empty($allExcluded), fn ($q) => $q->whereNotIn('id', $allExcluded))
+            ->when(! empty($allExcluded), fn ($q) => $q->whereNotIn('id', $allExcluded))
             ->get();
     }
 
@@ -648,7 +673,9 @@ class RentalForm
     {
         $startDate = $get('start_date');
         $endDate = $get('end_date');
-        if (!$startDate || !$endDate) return;
+        if (! $startDate || ! $endDate) {
+            return;
+        }
 
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
@@ -735,56 +762,142 @@ class RentalForm
         $processedIds = [];
         $newlyCreatedItems = [];
 
+        // Disable RentalItem events during bulk sync to prevent cascading
+        // refreshStatus/linking queries on every single create/update.
+        // We'll do a single batch refresh at the end.
         RentalItem::withoutEvents(function () use ($rental, $groupedItems, $existingItems, &$processedIds, &$newlyCreatedItems) {
-            foreach ($groupedItems as $group) {
-                $unitIds = json_decode($group['unit_ids'] ?? '[]', true);
+            // Reset ghost-slot tracker per row (don't reuse ghosts across different products).
+            $existingGhosts = $existingItems->whereNull('product_unit_id')->groupBy(function ($it) {
+                $key = $it->product_id;
+                if ($it->product_variation_id) {
+                    $key .= ':'.$it->product_variation_id;
+                }
+
+                return (string) $key;
+            });
+            // Convert to a mutable structure keyed by composite_id => array of items.
+            $ghostPool = [];
+            foreach ($existingGhosts as $compositeKey => $items) {
+                $ghostPool[$compositeKey] = $items->all();
+            }
+
+            foreach ($groupedItems as $sortOrder => $group) {
+                $unitIds = json_decode($group['unit_ids'] ?? '[]', true) ?: [];
                 $days = (int) ($group['days'] ?? 1);
                 $dailyRate = (float) ($group['daily_rate'] ?? 0);
+                $rateType = (string) ($group['rate_type'] ?? 'day');
                 $discount = (float) ($group['discount'] ?? 0);
+                $quantity = (int) ($group['quantity'] ?? count($unitIds));
 
                 $gross = $dailyRate * $days;
                 $perUnitSubtotal = max(0, $gross - ($gross * $discount / 100));
 
+                // Derive product_id / variation_id from composite or from any of the unit_ids.
+                $compositeId = (string) ($group['product_id'] ?? '');
+                $rowProductId = null;
+                $rowVariationId = null;
+                if (str_contains($compositeId, ':')) {
+                    [$rowProductId, $rowVariationId] = array_map('intval', explode(':', $compositeId, 2));
+                } elseif ($compositeId !== '') {
+                    $rowProductId = (int) $compositeId;
+                }
+                // Fallback: look up via first unit_id when composite isn't usable.
+                if (! $rowProductId && ! empty($unitIds)) {
+                    $u = ProductUnit::find($unitIds[0]);
+                    if ($u) {
+                        $rowProductId = $u->product_id;
+                        $rowVariationId = $u->product_variation_id;
+                    }
+                }
+
+                // 1) Persist real (unit-bound) slots.
                 foreach ($unitIds as $unitId) {
                     $existing = $existingItems->where('product_unit_id', $unitId)->first();
 
                     if ($existing) {
                         $existing->update([
+                            'product_id' => $rowProductId,
+                            'product_variation_id' => $rowVariationId,
                             'daily_rate' => $dailyRate,
                             'days' => $days,
+                            'rate_type' => $rateType,
                             'discount' => $discount,
                             'subtotal' => $perUnitSubtotal,
+                            'sort_order' => $sortOrder,
                         ]);
                         $processedIds[] = $existing->id;
                     } else {
                         $newItem = $rental->items()->create([
                             'product_unit_id' => $unitId,
+                            'product_id' => $rowProductId,
+                            'product_variation_id' => $rowVariationId,
                             'daily_rate' => $dailyRate,
                             'days' => $days,
+                            'rate_type' => $rateType,
                             'discount' => $discount,
                             'subtotal' => $perUnitSubtotal,
+                            'sort_order' => $sortOrder,
                         ]);
                         $processedIds[] = $newItem->id;
                         $newlyCreatedItems[] = $newItem;
                     }
                 }
+
+                // 2) Persist ghost slots (intent-to-rent without an assigned serial yet).
+                $ghostCount = max(0, $quantity - count($unitIds));
+                if ($ghostCount > 0 && $rowProductId) {
+                    $compositeKey = $rowVariationId ? "{$rowProductId}:{$rowVariationId}" : (string) $rowProductId;
+                    $availableGhosts = $ghostPool[$compositeKey] ?? [];
+
+                    for ($i = 0; $i < $ghostCount; $i++) {
+                        if (! empty($availableGhosts)) {
+                            $reused = array_shift($availableGhosts);
+                            $reused->update([
+                                'daily_rate' => $dailyRate,
+                                'days' => $days,
+                                'rate_type' => $rateType,
+                                'discount' => $discount,
+                                'subtotal' => $perUnitSubtotal,
+                                'sort_order' => $sortOrder,
+                            ]);
+                            $processedIds[] = $reused->id;
+                        } else {
+                            $newGhost = $rental->items()->create([
+                                'product_unit_id' => null,
+                                'product_id' => $rowProductId,
+                                'product_variation_id' => $rowVariationId,
+                                'daily_rate' => $dailyRate,
+                                'days' => $days,
+                                'rate_type' => $rateType,
+                                'discount' => $discount,
+                                'subtotal' => $perUnitSubtotal,
+                                'sort_order' => $sortOrder,
+                            ]);
+                            $processedIds[] = $newGhost->id;
+                        }
+                    }
+                    $ghostPool[$compositeKey] = $availableGhosts;
+                }
             }
 
-            // Delete items no longer present
+            // Delete items no longer present (real + leftover ghosts).
             $toDelete = $existingItems->pluck('id')->diff($processedIds)->toArray();
-            if (!empty($toDelete)) {
+            if (! empty($toDelete)) {
                 $rental->items()->whereIn('parent_item_id', $toDelete)->delete();
                 $rental->items()->whereIn('id', $toDelete)->delete();
             }
         });
 
-        // Attach kits for newly-created items only (replicates the `created` event behavior
-        // that was suppressed above). Existing items already have their kits.
+        // Attach kits for newly created items (was in RentalItem::created event).
+        // Skip ghosts (no product_unit_id → no kits to attach).
         foreach ($newlyCreatedItems as $newItem) {
-            $newItem->attachKitsFromUnit();
+            if ($newItem->product_unit_id) {
+                $newItem->attachKitsFromUnit();
+            }
         }
 
         // Single batch refresh of all affected unit statuses instead of per-item cascades.
+        $rental->unsetRelation('items');
         $rental->load('items.productUnit.kits');
         $rental->refreshUnitStatuses();
     }
@@ -796,17 +909,39 @@ class RentalForm
     {
         $grouped = [];
 
+        // Respect the manual drag-and-drop ordering persisted in sort_order.
+        // Fall back to id for rows predating the column (sort_order default 0).
+        $items = collect($items)->sortBy([
+            ['sort_order', 'asc'],
+            ['id', 'asc'],
+        ])->values();
+
         foreach ($items as $item) {
-            if ($item->parent_item_id) continue;
+            if ($item->parent_item_id) {
+                continue;
+            }
 
             $unit = $item->productUnit;
-            if (!$unit) continue;
 
-            $compositeId = $unit->product_variation_id
-                ? "{$unit->product_id}:{$unit->product_variation_id}"
-                : (string) $unit->product_id;
+            // Determine product / variation IDs:
+            //   - real items (unit-bound) use the unit's product info
+            //   - ghost items (product_unit_id IS NULL) use their own product_id / product_variation_id columns
+            if ($unit) {
+                $productId = $unit->product_id;
+                $variationId = $unit->product_variation_id;
+            } else {
+                $productId = $item->product_id;
+                $variationId = $item->product_variation_id;
+                if (! $productId) {
+                    continue;
+                } // truly orphaned row — skip
+            }
 
-            if (!isset($grouped[$compositeId])) {
+            $compositeId = $variationId
+                ? "{$productId}:{$variationId}"
+                : (string) $productId;
+
+            if (! isset($grouped[$compositeId])) {
                 $grouped[$compositeId] = [
                     'product_id' => $compositeId,
                     'quantity' => 0,
@@ -819,7 +954,9 @@ class RentalForm
             }
 
             $grouped[$compositeId]['quantity']++;
-            $grouped[$compositeId]['unit_ids'][] = $unit->id;
+            if ($unit) {
+                $grouped[$compositeId]['unit_ids'][] = $unit->id;
+            }
             $grouped[$compositeId]['subtotal'] += (float) $item->subtotal;
         }
 

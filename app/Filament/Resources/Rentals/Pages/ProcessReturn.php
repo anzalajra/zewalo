@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Rentals\Pages;
 
+use App\Filament\Concerns\CapturesDeliveryHandover;
 use App\Filament\Resources\Rentals\RentalResource;
 use App\Models\Delivery;
 use App\Models\DeliveryItem;
@@ -11,29 +12,30 @@ use App\Services\JournalService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Filament\Schemas\Components\Section;
 use Illuminate\Contracts\Support\Htmlable;
 
 class ProcessReturn extends Page implements HasTable
 {
+    use CapturesDeliveryHandover;
     use InteractsWithTable;
+    use \Livewire\WithFileUploads;
 
     protected static string $resource = RentalResource::class;
 
     public ?Rental $rental = null;
+
     public ?Delivery $delivery = null;
 
     public function getView(): string
@@ -44,8 +46,8 @@ class ProcessReturn extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->rental = Rental::with([
-            'customer', 
-            'items.productUnit.product', 
+            'customer',
+            'items.productUnit.product',
             'items.rentalItemKits.unitKit',
             'deliveries.items.rentalItem.productUnit.product',
             'deliveries.items.rentalItemKit.unitKit',
@@ -66,7 +68,7 @@ class ProcessReturn extends Page implements HasTable
             ->first();
 
         // If no active delivery found, fallback to the latest one (even if completed)
-        if (!$this->delivery) {
+        if (! $this->delivery) {
             $this->delivery = $this->rental->deliveries()
                 ->with(['items.rentalItem.productUnit.product', 'items.rentalItemKit.unitKit'])
                 ->where('type', Delivery::TYPE_IN)
@@ -74,7 +76,7 @@ class ProcessReturn extends Page implements HasTable
                 ->first();
         }
 
-        if (!in_array($this->rental->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN, Rental::STATUS_PARTIAL_RETURN])) {
+        if (! in_array($this->rental->status, [Rental::STATUS_ACTIVE, Rental::STATUS_LATE_RETURN, Rental::STATUS_PARTIAL_RETURN])) {
             Notification::make()
                 ->title('Cannot return this rental')
                 ->body('This rental is not in active, partial return, or late return status.')
@@ -87,10 +89,146 @@ class ProcessReturn extends Page implements HasTable
 
     public function getTitle(): string|Htmlable
     {
-        return 'Return Operation - ' . $this->rental->rental_code;
+        return 'Return Operation - '.$this->rental->rental_code;
     }
 
+    // ─────────────────────────────────────────────────────────────
+    //  Camera unit scanner (@zxing) — Fase 4. Additive: the Filament
+    //  return checklist keeps working; this is an alternative fast input
+    //  that decodes a unit/kit code (UnitCodeService) and checks the match.
+    // ─────────────────────────────────────────────────────────────
 
+    /** IN-delivery items with the relations the scanner needs. */
+    protected function getDeliveryItems()
+    {
+        return $this->delivery
+            ? $this->delivery->items()
+                ->with(['rentalItem.productUnit.product', 'rentalItemKit.unitKit'])
+                ->get()
+            : collect();
+    }
+
+    /** Human label for a delivery item (kit name, or product name). */
+    public function itemLabel(DeliveryItem $item): string
+    {
+        if ($item->rentalItemKit) {
+            return $item->rentalItemKit->unitKit->name ?? 'Kit';
+        }
+
+        return $item->rentalItem?->productUnit?->product?->name ?? 'Item';
+    }
+
+    /** A unit is unavailable when retired/maintenance or physically broken/lost. */
+    public function isItemUnavailable(DeliveryItem $item): bool
+    {
+        $unit = $item->rentalItem?->productUnit;
+        if (! $unit) {
+            return false;
+        }
+
+        return in_array($unit->status, [\App\Models\ProductUnit::STATUS_MAINTENANCE, \App\Models\ProductUnit::STATUS_RETIRED], true)
+            || in_array($unit->condition, ['broken', 'lost'], true);
+    }
+
+    /** Mark a checklist item checked (received in Good condition) without opening the editor. */
+    public function quickCheck(int $id): void
+    {
+        $record = $this->delivery?->items()->find($id);
+        if ($record && ! $record->is_checked) {
+            $record->update(['is_checked' => true, 'condition' => $record->condition ?: 'good']);
+            $this->delivery->refresh();
+        }
+    }
+
+    /** Scanner checklist payload (skips auto-scan-with-parent kits + not-taken). */
+    public function scannableList(): array
+    {
+        return $this->getDeliveryItems()
+            ->reject(fn (DeliveryItem $it) => ($it->rentalItemKit && $it->rentalItemKit->unitKit?->auto_scan_with_parent) || $it->not_taken)
+            ->map(function (DeliveryItem $it) {
+                $isKit = $it->rentalItemKit !== null;
+
+                return [
+                    'id' => $it->id,
+                    'name' => $this->itemLabel($it),
+                    'serial' => $isKit
+                        ? ($it->rentalItemKit->unitKit->serial_number ?? '')
+                        : ($it->rentalItem?->productUnit?->serial_number ?? ''),
+                    'type' => $isKit ? 'kit' : 'unit',
+                    'checked' => (bool) $it->is_checked,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /** Decode a scanned/typed code and check the matching item (+ cascade auto-scan kits). */
+    public function scanByCode(string $raw, bool $cascade = true, bool $manual = false): array
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return ['status' => 'foreign'];
+        }
+
+        if ($manual) {
+            $serial = $raw;
+        } else {
+            $serial = app(\App\Services\UnitCodeService::class)->decode($raw);
+            if ($serial === null) {
+                return ['status' => 'foreign'];
+            }
+        }
+
+        $items = $this->getDeliveryItems();
+        $needle = mb_strtolower($serial);
+
+        $match = $items->first(fn (DeliveryItem $it) => ! $it->rentalItemKit && ! $it->not_taken
+            && mb_strtolower((string) $it->rentalItem?->productUnit?->serial_number) === $needle);
+
+        if (! $match) {
+            $match = $items->first(fn (DeliveryItem $it) => $it->rentalItemKit && ! $it->not_taken
+                && mb_strtolower((string) $it->rentalItemKit->unitKit?->serial_number) === $needle);
+        }
+
+        if (! $match && $manual) {
+            $match = $items->first(fn (DeliveryItem $it) => ! $it->not_taken
+                && str_contains(mb_strtolower($this->itemLabel($it)), $needle));
+        }
+
+        if (! $match) {
+            return ['status' => 'notfound', 'serial' => $serial];
+        }
+
+        $label = $this->itemLabel($match);
+        if ($this->isItemUnavailable($match)) {
+            return ['status' => 'unavailable', 'label' => $label];
+        }
+        if ($match->is_checked) {
+            return ['status' => 'already', 'label' => $label];
+        }
+
+        $this->quickCheck($match->id);
+        $checkedLabels = [$label];
+        $checkedIds = [$match->id];
+
+        if ($cascade && ! $match->rentalItemKit) {
+            $kits = $items->filter(fn (DeliveryItem $it) => $it->rentalItemKit
+                && $it->rental_item_id === $match->rental_item_id
+                && ! $it->is_checked
+                && $it->rentalItemKit->unitKit?->auto_scan_with_parent);
+
+            foreach ($kits as $kit) {
+                if ($this->isItemUnavailable($kit)) {
+                    continue;
+                }
+                $this->quickCheck($kit->id);
+                $checkedLabels[] = $this->itemLabel($kit);
+                $checkedIds[] = $kit->id;
+            }
+        }
+
+        return ['status' => 'ok', 'label' => $label, 'checked' => $checkedLabels, 'checked_ids' => $checkedIds];
+    }
 
     public function getMarkAllCheckedAction(): Action
     {
@@ -122,7 +260,7 @@ class ProcessReturn extends Page implements HasTable
                             $condition = $record->rentalItem->productUnit->condition ?? 'good';
                         }
                     }
-                    
+
                     $record->update([
                         'is_checked' => true,
                         'condition' => $condition,
@@ -131,11 +269,11 @@ class ProcessReturn extends Page implements HasTable
                     // Logic from check_item action
                     $isMaintenance = in_array($condition, ['broken', 'lost']);
                     $updates = ['condition' => $condition];
-                    
+
                     if ($isMaintenance) {
-                         $updates['notes'] = ($record->rentalItemKit ? $record->rentalItemKit->unitKit->notes : $record->rentalItem->productUnit->notes) . "\n[AUTO] Marked as {$condition} during Return.";
-                        
-                        if (!$record->rentalItemKit) {
+                        $updates['notes'] = ($record->rentalItemKit ? $record->rentalItemKit->unitKit->notes : $record->rentalItem->productUnit->notes)."\n[AUTO] Marked as {$condition} during Return.";
+
+                        if (! $record->rentalItemKit) {
                             $updates['status'] = \App\Models\ProductUnit::STATUS_MAINTENANCE;
                         }
                     }
@@ -155,14 +293,13 @@ class ProcessReturn extends Page implements HasTable
                 }
 
                 $this->delivery->refresh();
-                
+
                 Notification::make()
                     ->title('All items marked as checked')
                     ->success()
                     ->send();
             });
     }
-
 
     public function allItemsChecked(): bool
     {
@@ -183,11 +320,12 @@ class ProcessReturn extends Page implements HasTable
                     ->label('Item')
                     ->getStateUsing(function (DeliveryItem $record) {
                         if ($record->rentalItemKit) {
-                            return '↳ ' . $record->rentalItemKit->unitKit->name;
+                            return '↳ '.$record->rentalItemKit->unitKit->name;
                         }
                         $productName = $record->rentalItem->productUnit->product->name;
                         $variationName = $record->rentalItem->productUnit->variation->name ?? null;
-                        return $productName . ($variationName ? ' (' . $variationName . ')' : '');
+
+                        return $productName.($variationName ? ' ('.$variationName.')' : '');
                     }),
 
                 TextColumn::make('serial_number')
@@ -196,6 +334,7 @@ class ProcessReturn extends Page implements HasTable
                         if ($record->rentalItemKit) {
                             return $record->rentalItemKit->unitKit->serial_number ?? '-';
                         }
+
                         return $record->rentalItem->productUnit->serial_number;
                     }),
 
@@ -240,8 +379,8 @@ class ProcessReturn extends Page implements HasTable
                         }
 
                         return [
-                            'item_name' => $record->rentalItemKit 
-                                ? $record->rentalItemKit->unitKit->name 
+                            'item_name' => $record->rentalItemKit
+                                ? $record->rentalItemKit->unitKit->name
                                 : $record->rentalItem->productUnit->product->name,
                             'condition' => $currentCondition,
                             'is_checked' => $record->is_checked,
@@ -279,13 +418,13 @@ class ProcessReturn extends Page implements HasTable
                         $newCondition = $data['condition'];
                         $isMaintenance = in_array($newCondition, ['broken', 'lost']);
                         $updates = ['condition' => $newCondition];
-                        
+
                         if ($isMaintenance) {
                             // Add note about auto maintenance
-                            $updates['notes'] = ($record->rentalItemKit ? $record->rentalItemKit->unitKit->notes : $record->rentalItem->productUnit->notes) . "\n[AUTO] Marked as {$newCondition} during Return.";
-                            
+                            $updates['notes'] = ($record->rentalItemKit ? $record->rentalItemKit->unitKit->notes : $record->rentalItem->productUnit->notes)."\n[AUTO] Marked as {$newCondition} during Return.";
+
                             // Only update status for Main Unit, as Kit doesn't have status field
-                            if (!$record->rentalItemKit) {
+                            if (! $record->rentalItemKit) {
                                 $updates['status'] = \App\Models\ProductUnit::STATUS_MAINTENANCE;
                             }
                         }
@@ -331,13 +470,13 @@ class ProcessReturn extends Page implements HasTable
                     ->url(function () {
                         $rental = $this->rental;
                         $customer = $rental->customer;
-                        
+
                         if (empty($customer->phone)) {
                             return '#';
                         }
-                        
+
                         $pdfLink = \Illuminate\Support\Facades\URL::signedRoute('public-documents.rental.checklist', ['rental' => $rental]);
-                        
+
                         $data = [
                             'customer_name' => $customer->name,
                             'rental_ref' => $rental->rental_code,
@@ -345,13 +484,13 @@ class ProcessReturn extends Page implements HasTable
                             'link_pdf' => $pdfLink,
                             'company_name' => \App\Models\Setting::get('site_name', 'Zewalo'),
                         ];
-                        
+
                         $message = \App\Helpers\WhatsAppHelper::parseTemplate('whatsapp_template_rental_return', $data);
-                        
+
                         return \App\Helpers\WhatsAppHelper::getLink($customer->phone, $message);
                     })
                     ->openUrlInNewTab(),
-                
+
                 Action::make('send_email_return')
                     ->label('Return Reminder (Email)')
                     ->icon('heroicon-o-envelope')
@@ -359,10 +498,10 @@ class ProcessReturn extends Page implements HasTable
                     ->disabled()
                     ->tooltip('Coming Soon'),
             ])
-            ->label('Send')
-            ->icon('heroicon-o-paper-airplane')
-            ->color('info')
-            ->button(),
+                ->label('Send')
+                ->icon('heroicon-o-paper-airplane')
+                ->color('info')
+                ->button(),
 
             \Filament\Actions\ActionGroup::make([
                 Action::make('download_checklist')
@@ -370,12 +509,12 @@ class ProcessReturn extends Page implements HasTable
                     ->icon('heroicon-o-clipboard-document-list')
                     ->action(function () {
                         $this->rental->load(['customer', 'items.productUnit.product', 'items.rentalItemKits.unitKit']);
-                        
+
                         $pdf = Pdf::loadView('pdf.checklist-form', ['rental' => $this->rental]);
-                        
+
                         return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            'Checklist-' . $this->rental->rental_code . '.pdf'
+                            fn () => print ($pdf->output()),
+                            'Checklist-'.$this->rental->rental_code.'.pdf'
                         );
                     }),
 
@@ -384,19 +523,19 @@ class ProcessReturn extends Page implements HasTable
                     ->icon('heroicon-o-truck')
                     ->action(function () {
                         $this->delivery->load(['rental.customer', 'items.rentalItem.productUnit.product', 'items.rentalItemKit.unitKit', 'checkedBy']);
-                        
+
                         $pdf = Pdf::loadView('pdf.delivery-note', ['delivery' => $this->delivery]);
-                        
+
                         return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            $this->delivery->delivery_number . '.pdf'
+                            fn () => print ($pdf->output()),
+                            $this->delivery->delivery_number.'.pdf'
                         );
                     }),
             ])
-            ->label('Print')
-            ->icon('heroicon-o-printer')
-            ->color('info')
-            ->button(),
+                ->label('Print')
+                ->icon('heroicon-o-printer')
+                ->color('info')
+                ->button(),
 
             Action::make('rental_documents')
                 ->label('Delivery')
@@ -418,28 +557,46 @@ class ProcessReturn extends Page implements HasTable
             ->requiresConfirmation()
             ->modalHeading('Confirm Return & Financial Settlement')
             ->form(function () {
-                $lateFee = $this->rental->calculateOverdueFee();
+                $breakdown = $this->rental->lateFeeBreakdown();
+                $lateFee = $breakdown['fee'];
                 $deposit = $this->rental->security_deposit_amount;
                 $depositStatus = $this->rental->security_deposit_status;
-                
+
                 return [
                     Section::make('Financial Summary')
                         ->schema([
                             Placeholder::make('late_fee_preview')
                                 ->label('Calculated Late Fee')
-                                ->content(fn () => 'Rp ' . number_format($lateFee, 0, ',', '.'))
+                                ->content(fn () => 'Rp '.number_format($lateFee, 0, ',', '.'))
                                 ->helperText(fn () => $lateFee > 0 ? 'Based on overdue days.' : 'No late fee.'),
-                            
+
+                            Placeholder::make('late_fee_breakdown')
+                                ->label('Late Fee Breakdown')
+                                ->visible($breakdown['is_late'] && ! empty($breakdown['lines']))
+                                ->content(function () use ($breakdown): Htmlable {
+                                    $rows = '';
+                                    foreach ($breakdown['lines'] as $line) {
+                                        $rows .= '<div style="display:flex;justify-content:space-between;gap:1rem;padding:2px 0;">'
+                                            .'<span>'.e($line['label']).'<br><span style="opacity:.6;font-size:.8em;">'.e($line['detail']).'</span></span>'
+                                            .'<span style="white-space:nowrap;">Rp '.number_format($line['amount'], 0, ',', '.').'</span>'
+                                            .'</div>';
+                                    }
+                                    $summary = $breakdown['summary'] ? '<div style="opacity:.7;font-size:.8em;margin-bottom:.4rem;">'.e($breakdown['summary']).'</div>' : '';
+                                    $mode = '<div style="opacity:.7;font-size:.8em;margin-bottom:.4rem;">Mode: '.e($breakdown['mode_label']).' · '.$breakdown['overdue_days'].' hari</div>';
+
+                                    return new \Illuminate\Support\HtmlString($mode.$summary.$rows);
+                                }),
+
                             TextInput::make('manual_late_fee')
                                 ->label('Adjust Late Fee')
                                 ->numeric()
                                 ->prefix('Rp')
                                 ->default($lateFee),
-                                
+
                             Placeholder::make('deposit_info')
                                 ->label('Security Deposit Held')
-                                ->content('Rp ' . number_format($deposit, 0, ',', '.')),
-                                
+                                ->content('Rp '.number_format($deposit, 0, ',', '.')),
+
                             Select::make('final_deposit_action')
                                 ->label('Deposit Action')
                                 ->options([
@@ -450,7 +607,7 @@ class ProcessReturn extends Page implements HasTable
                                 ->default('refund')
                                 ->reactive()
                                 ->visible($deposit > 0 && $depositStatus !== 'refunded'),
-                                
+
                             TextInput::make('refund_amount')
                                 ->label('Refund Amount')
                                 ->numeric()
@@ -459,94 +616,130 @@ class ProcessReturn extends Page implements HasTable
                                 ->maxValue($deposit)
                                 ->visible(fn ($get) => $get('final_deposit_action') === 'partial')
                                 ->required(fn ($get) => $get('final_deposit_action') === 'partial'),
-                        ])
+                        ]),
                 ];
             })
             ->action(function (array $data) {
                 if ($this->allItemsChecked()) {
-                    // Apply manual late fee if provided
-                    if (isset($data['manual_late_fee'])) {
-                    $this->rental->late_fee = $data['manual_late_fee'];
+                    // Resolve the late fee once — a manual modal value (adjustment or
+                    // waiver) wins over the auto-calculated amount. This same value is
+                    // passed to validateReturn() below so it is not silently recomputed
+                    // and discarded.
+                    $lateFee = array_key_exists('manual_late_fee', $data) && $data['manual_late_fee'] !== null
+                        ? (float) $data['manual_late_fee']
+                        : $this->rental->calculateOverdueFee();
+
+                    $this->rental->late_fee = $lateFee;
                     $this->rental->recalculateTotal();
-                    $this->rental->save();
-                }
 
-                // JOURNAL: Recognize Rental Revenue (RENTAL_COMPLETION)
-                // Move from Unearned Revenue (2-1300) to Rental Revenue (4-1100)
-                // We exclude deposit and late fee from this specific entry as they are handled separately
-                $rentalRevenue = $this->rental->total - $this->rental->security_deposit_amount - ($this->rental->late_fee ?? 0);
-                
-                if ($rentalRevenue > 0) {
-                    JournalService::recordSimpleTransaction(
-                        'RENTAL_COMPLETION',
-                        $this->rental,
-                        $rentalRevenue,
-                        'Revenue recognition for Rental ' . $this->rental->rental_code
-                    );
-                }
+                    // JOURNAL: Recognize Rental Revenue (RENTAL_COMPLETION)
+                    // Move from Unearned Revenue (2-1300) to Rental Revenue (4-1100)
+                    // We exclude deposit and late fee from this specific entry as they are handled separately
+                    $rentalRevenue = $this->rental->total - $this->rental->security_deposit_amount - ($this->rental->late_fee ?? 0);
 
-                // Handle Deposit Logic
-                if (isset($data['final_deposit_action']) && $this->rental->security_deposit_amount > 0) {
-                    $action = $data['final_deposit_action'];
-                    $depositAmount = $this->rental->security_deposit_amount;
-
-                    if ($action === 'refund') {
-                        $this->rental->security_deposit_status = 'refunded';
-                        
+                    if (\App\Services\RentalAccountingService::isAdvanced()) {
+                        // Canonical: IFRS recognizes deferred→revenue once (SAK already recognized
+                        // at invoice, so this only stamps revenue_recognized_at). Idempotent.
+                        \App\Services\RentalAccountingService::postRevenueRecognition($this->rental);
+                    } elseif ($rentalRevenue > 0) {
                         JournalService::recordSimpleTransaction(
-                            'SECURITY_DEPOSIT_OUT',
+                            'RENTAL_COMPLETION',
                             $this->rental,
-                            $depositAmount,
-                            'Full deposit refund'
+                            $rentalRevenue,
+                            'Revenue recognition for Rental '.$this->rental->rental_code
                         );
-                        
-                    } elseif ($action === 'forfeit') {
-                        $this->rental->security_deposit_status = 'forfeited';
-                        
-                        JournalService::recordSimpleTransaction(
-                            'SECURITY_DEPOSIT_DEDUCTION',
-                            $this->rental,
-                            $depositAmount,
-                            'Full deposit forfeiture'
-                        );
-                        
-                    } elseif ($action === 'partial') {
-                        $this->rental->security_deposit_status = 'partial_refunded';
-                        
-                        $refundAmount = (float) ($data['refund_amount'] ?? 0);
-                        $forfeitAmount = $depositAmount - $refundAmount;
-
-                        if ($refundAmount > 0) {
-                            JournalService::recordSimpleTransaction(
-                                'SECURITY_DEPOSIT_OUT',
-                                $this->rental,
-                                $refundAmount,
-                                'Partial deposit refund'
-                            );
-                        }
-
-                        if ($forfeitAmount > 0) {
-                            JournalService::recordSimpleTransaction(
-                                'SECURITY_DEPOSIT_DEDUCTION',
-                                $this->rental,
-                                $forfeitAmount,
-                                'Partial deposit forfeiture'
-                            );
-                        }
                     }
-                    $this->rental->save();
-                }
 
-                $this->rental->validateReturn();
+                    // Handle Deposit Logic
+                    if (isset($data['final_deposit_action']) && $this->rental->security_deposit_amount > 0) {
+                        $action = $data['final_deposit_action'];
+                        $depositAmount = $this->rental->security_deposit_amount;
 
-                // Also complete the delivery
-                $this->delivery->complete();
+                        if ($action === 'refund') {
+                            $this->rental->security_deposit_status = 'refunded';
 
-                Notification::make()
-                    ->title('Return validated successfully')
-                    ->body('Rental status completed. Financials updated.')
-                    ->success()
-                    ->send();
+                            if (\App\Services\RentalAccountingService::isAdvanced()) {
+                                // Dr Uang Jaminan (2-1200) / Cr Kas (default cash, no account picked here).
+                                \App\Services\RentalAccountingService::postDepositRefund($this->rental, 0, $depositAmount);
+                            } else {
+                                JournalService::recordSimpleTransaction(
+                                    'SECURITY_DEPOSIT_OUT',
+                                    $this->rental,
+                                    $depositAmount,
+                                    'Full deposit refund'
+                                );
+                            }
+
+                        } elseif ($action === 'forfeit') {
+                            $this->rental->security_deposit_status = 'forfeited';
+
+                            if (\App\Services\RentalAccountingService::isAdvanced()) {
+                                // Dr Uang Jaminan (2-1200) / Cr Pendapatan Denda (4-1200).
+                                \App\Services\RentalAccountingService::postDepositForfeit($this->rental, $depositAmount);
+                            } else {
+                                JournalService::recordSimpleTransaction(
+                                    'SECURITY_DEPOSIT_DEDUCTION',
+                                    $this->rental,
+                                    $depositAmount,
+                                    'Full deposit forfeiture'
+                                );
+                            }
+
+                        } elseif ($action === 'partial') {
+                            $this->rental->security_deposit_status = 'partial_refunded';
+
+                            $refundAmount = (float) ($data['refund_amount'] ?? 0);
+                            $forfeitAmount = $depositAmount - $refundAmount;
+
+                            if ($refundAmount > 0) {
+                                if (\App\Services\RentalAccountingService::isAdvanced()) {
+                                    \App\Services\RentalAccountingService::postDepositRefund($this->rental, 0, $refundAmount);
+                                } else {
+                                    JournalService::recordSimpleTransaction(
+                                        'SECURITY_DEPOSIT_OUT',
+                                        $this->rental,
+                                        $refundAmount,
+                                        'Partial deposit refund'
+                                    );
+                                }
+                            }
+
+                            if ($forfeitAmount > 0) {
+                                if (\App\Services\RentalAccountingService::isAdvanced()) {
+                                    \App\Services\RentalAccountingService::postDepositForfeit($this->rental, $forfeitAmount);
+                                } else {
+                                    JournalService::recordSimpleTransaction(
+                                        'SECURITY_DEPOSIT_DEDUCTION',
+                                        $this->rental,
+                                        $forfeitAmount,
+                                        'Partial deposit forfeiture'
+                                    );
+                                }
+                            }
+                        }
+                        $this->rental->save();
+                    }
+
+                    // Pass the resolved late fee so validateReturn() honors it (manual
+                    // override / waiver) instead of recomputing and dropping it.
+                    $this->rental->validateReturn($lateFee);
+
+                    // Keep any linked invoice in step with the final total (e.g. a late
+                    // fee just raised the balance) so it shows in Accounts Receivable.
+                    // The full "issue an invoice when none exists yet" flow lands with the
+                    // accounting engine (Fase 6/7); here we only recalc an existing one.
+                    if ($this->rental->invoice_id && ($invoice = $this->rental->invoice)) {
+                        $invoice->recalculate();
+                    }
+
+                    // Also complete the delivery
+                    $this->delivery->complete();
+
+                    Notification::make()
+                        ->title('Return validated successfully')
+                        ->body('Rental status completed. Financials updated.')
+                        ->success()
+                        ->send();
 
                     $this->redirect(RentalResource::getUrl('index'));
                 } else {
@@ -570,7 +763,7 @@ class ProcessReturn extends Page implements HasTable
 
                     // 3. Complete the current delivery (now containing only checked items)
                     $this->delivery->complete();
-                    
+
                     // Update status of returned units
                     foreach ($this->delivery->items as $item) {
                         // Only process main units for status updates (kits don't affect main unit status directly here)
@@ -588,17 +781,17 @@ class ProcessReturn extends Page implements HasTable
                             }
                         }
                     }
-                    
+
                     // 4. Update rental status to Partial Return
                     // Fetch fresh instance to ensure no stale state overrides the update
                     $freshRental = $this->rental->fresh();
                     $freshRental->update([
-                        'status' => Rental::STATUS_PARTIAL_RETURN
+                        'status' => Rental::STATUS_PARTIAL_RETURN,
                     ]);
-                    
+
                     // Refresh current instance to reflect changes
                     $this->rental->refresh();
-                    
+
                     $finalStatus = $this->rental->status;
 
                     Notification::make()

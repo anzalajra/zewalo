@@ -233,6 +233,17 @@ class UnitsRelationManager extends RelationManager
             ])
             ->recordActions([
                 EditAction::make(),
+                \Filament\Actions\Action::make('label')
+                    ->label('Label')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('gray')
+                    ->modalHeading('Print Labels')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Close')
+                    ->modalContent(fn (\App\Models\ProductUnit $record) => view(
+                        'filament.resources.products.unit-label-modal',
+                        ['record' => $record->load('kits')],
+                    )),
                 \Filament\Actions\Action::make('duplicate')
                     ->label('Duplicate')
                     ->modalHeading('Duplicate Product Unit')
@@ -323,6 +334,13 @@ class UnitsRelationManager extends RelationManager
             ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('print_labels')
+                        ->label('Print Labels')
+                        ->icon('heroicon-o-printer')
+                        ->visible(fn () => \Illuminate\Support\Facades\Route::has('admin.print-label'))
+                        ->action(fn (\Illuminate\Database\Eloquent\Collection $records) => redirect()->to(
+                            route('admin.print-label', ['units' => $records->pluck('id')->implode(',')])
+                        )),
                     BulkAction::make('assign_warehouse')
                         ->label('Assign Warehouse')
                         ->icon('heroicon-o-building-storefront')

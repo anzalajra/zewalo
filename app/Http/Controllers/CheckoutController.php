@@ -30,25 +30,25 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        $subtotal = $cartItems->sum('subtotal');
+        // Cart prices are stored GROSS. The category discount is an explicit layer applied
+        // on top of the gross subtotal; $subtotal below is the NET base (after category) —
+        // the base that promotions, deposit and the grand total are computed from, so the
+        // payable is identical to the previous (baked) behaviour.
+        $grossTotal = $cartItems->sum('subtotal');
+        $totalDays = $cartItems->sum('days');
+        $totalDailyRate = $cartItems->sum('daily_rate'); // gross rates
 
-        // Calculate Gross Total and Category Discount
-        $grossTotal = 0;
-        $totalDays = 0;
-        $totalDailyRate = 0;
-        foreach ($cartItems as $item) {
-            $unit = $item->productUnit;
-            $originalDailyRate = $unit->variation->daily_rate ?? $unit->product->daily_rate;
-            $grossTotal += $originalDailyRate * $item->days;
-            $totalDays += $item->days;
-            $totalDailyRate += $item->daily_rate;
-        }
-        $categoryDiscountAmount = $grossTotal - $subtotal;
+        $categoryPercentage = $customer->getCategoryDiscountPercentage();
+        $factor = 1 - ($categoryPercentage / 100);
+        $categoryDiscountAmount = round($grossTotal * ($categoryPercentage / 100), 2);
         $categoryName = $customer->category ? $customer->category->name : null;
 
-        // Calculate average days and daily rate for promotions
+        $subtotal = round($grossTotal - $categoryDiscountAmount, 2); // net base after category
+
+        // Calculate average days and (net-equivalent) daily rate for promotions, so promo
+        // amounts match the pre-un-bake values that were computed on net prices.
         $avgDays = $cartItems->count() > 0 ? (int) round($totalDays / $cartItems->count()) : 0;
-        $avgDailyRate = $cartItems->count() > 0 ? $totalDailyRate / $cartItems->count() : 0;
+        $avgDailyRate = $cartItems->count() > 0 ? ($totalDailyRate / $cartItems->count()) * $factor : 0;
         $startDate = $cartItems->min('start_date');
 
         $deposit = Rental::calculateDeposit($subtotal);
@@ -123,7 +123,11 @@ class CheckoutController extends Controller
             return response()->json(['valid' => false, 'message' => 'Batas penggunaan kode diskon telah tercapai.']);
         }
 
-        $subtotal = $cartItems->sum('subtotal');
+        // Cart prices are GROSS; evaluate the coupon against the NET base (after the
+        // customer's category discount) so thresholds and percentage math match checkout.
+        $grossTotal = $cartItems->sum('subtotal');
+        $categoryPercentage = $customer->getCategoryDiscountPercentage();
+        $subtotal = round($grossTotal * (1 - ($categoryPercentage / 100)), 2);
 
         if ($subtotal < $discount->min_rental_amount) {
             return response()->json(['valid' => false, 'message' => 'Minimal total belanja Rp '.number_format($discount->min_rental_amount, 0, ',', '.').' belum terpenuhi.']);
@@ -208,6 +212,12 @@ class CheckoutController extends Controller
     {
         $customer = Auth::guard('customer')->user();
 
+        // Storefront rental temporarily disabled by admin (Settings → Disable Storefront Rental).
+        if (\App\Models\Setting::isStorefrontRentalDisabled()) {
+            return redirect()->route('cart.index')
+                ->with('error', \App\Models\Setting::storefrontRentalDisabledMessage());
+        }
+
         // Check if customer is verified
         if (! $customer->canRent()) {
             return redirect()->route('customer.profile')
@@ -226,12 +236,19 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        // Calculate global totals and averages for promotions
-        $globalSubtotal = $cartItems->sum('subtotal');
+        // Cart prices are GROSS. The category discount is applied as an explicit layer:
+        // $globalSubtotal is the NET base (gross − category), the same base promotions were
+        // computed on before the un-bake, so payable totals are unchanged.
+        $globalGross = $cartItems->sum('subtotal');
+        $categoryPercentage = $customer->getCategoryDiscountPercentage();
+        $categoryName = $customer->category ? $customer->category->name : null;
+        $factor = 1 - ($categoryPercentage / 100);
+        $globalSubtotal = round($globalGross * $factor, 2); // net base after category
+
         $totalDays = $cartItems->sum('days');
-        $totalDailyRate = $cartItems->sum('daily_rate');
+        $totalDailyRate = $cartItems->sum('daily_rate'); // gross rates
         $avgDays = $cartItems->count() > 0 ? (int) round($totalDays / $cartItems->count()) : 0;
-        $avgDailyRate = $cartItems->count() > 0 ? $totalDailyRate / $cartItems->count() : 0;
+        $avgDailyRate = $cartItems->count() > 0 ? ($totalDailyRate / $cartItems->count()) * $factor : 0;
         $startDate = $cartItems->min('start_date');
 
         $discountCode = session('checkout_discount_code');
@@ -271,14 +288,17 @@ class CheckoutController extends Controller
 
             foreach ($groupedItems as $dateKey => $items) {
                 $firstItem = $items->first();
-                $subtotal = $items->sum('subtotal');
+                $grossSubtotal = $items->sum('subtotal'); // gross (list) for this rental
+                $rentalCategoryDiscount = round($grossSubtotal * ($categoryPercentage / 100), 2);
+                $subtotal = round($grossSubtotal - $rentalCategoryDiscount, 2); // net base
 
-                // Calculate proportional discount for this rental
+                // Calculate proportional promo discount for this rental (ratio is identical
+                // whether measured on gross or net since the category factor is uniform).
                 $rentalDiscount = 0;
                 $rentalDailyDiscountAmount = 0;
                 $rentalDatePromotionAmount = 0;
-                if ($globalSubtotal > 0) {
-                    $proportion = $subtotal / $globalSubtotal;
+                if ($globalGross > 0) {
+                    $proportion = $grossSubtotal / $globalGross;
                     $rentalDiscount = $globalDiscountAmount * $proportion;
                     $rentalDailyDiscountAmount = $globalDailyDiscountAmount * $proportion;
                     $rentalDatePromotionAmount = $globalDatePromotionAmount * $proportion;
@@ -286,8 +306,8 @@ class CheckoutController extends Controller
 
                 $rentalTotalDiscount = $rentalDiscount + $rentalDailyDiscountAmount + $rentalDatePromotionAmount;
 
-                // Deposit calculation
-                $deposit = Rental::calculateDeposit($subtotal); // Keeping it based on subtotal as per original logic
+                // Deposit on the net base (after category), matching prior behaviour.
+                $deposit = Rental::calculateDeposit($subtotal);
 
                 // Create Quotation first (only if feature is enabled)
                 $quotationId = null;
@@ -297,7 +317,7 @@ class CheckoutController extends Controller
                         'date' => now(),
                         'valid_until' => now()->addDays(7),
                         'status' => \App\Models\Quotation::STATUS_ON_QUOTE,
-                        'subtotal' => $subtotal,
+                        'subtotal' => $grossSubtotal,
                         'tax' => 0,
                         'total' => $subtotal - $rentalTotalDiscount,
                         'notes' => $request->notes,
@@ -311,7 +331,9 @@ class CheckoutController extends Controller
                     'end_date' => $firstItem->end_date,
                     'status' => Rental::STATUS_QUOTATION,
                     'quotation_id' => $quotationId,
-                    'subtotal' => $subtotal,
+                    'subtotal' => $grossSubtotal,
+                    'category_discount_amount' => $rentalCategoryDiscount,
+                    'category_name' => $categoryName,
                     'discount' => $rentalDiscount,
                     'discount_id' => $discountId,
                     'discount_code' => $discountCode,

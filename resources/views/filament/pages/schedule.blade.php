@@ -8,6 +8,7 @@
         'late_pickup'    => ['solid' => '#ef4444', 'bg' => '#fef2f2', 'fg' => '#b91c1c', 'label' => 'Late'],
         'late_return'    => ['solid' => '#ef4444', 'bg' => '#fef2f2', 'fg' => '#b91c1c', 'label' => 'Late'],
         'partial_return' => ['solid' => '#eab308', 'bg' => '#fefce8', 'fg' => '#854d0e', 'label' => 'Partial'],
+        'expired'        => ['solid' => '#9ca3af', 'bg' => '#f9fafb', 'fg' => '#374151', 'label' => 'Expired'],
     ];
     $sc = $statusColors;
 @endphp
@@ -51,7 +52,7 @@
 
         {{-- Status Legend --}}
         <div class="zw-legend">
-            @foreach (['quotation','confirmed','active','completed','cancelled','late_pickup','partial_return'] as $k)
+            @foreach (['quotation','confirmed','active','completed','cancelled','late_pickup','partial_return','expired'] as $k)
                 @php $c = $sc[$k]; @endphp
                 <div class="zw-legend__item">
                     <span class="zw-legend__dot" style="background:{{ $c['solid'] }}"></span>

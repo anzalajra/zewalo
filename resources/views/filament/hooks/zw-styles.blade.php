@@ -223,8 +223,14 @@
         font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif;
     }
     @media (max-width: 767px) {
+        /* Phones use the Filament top-bar user menu (useTopNav via isPhone), so the
+           capsule is hidden there — the bottom nav handles navigation. */
         .zw-capsule-root { display: none !important; }
     }
+    /* Portrait tablet (compact, >= 768px): keep the capsule — it carries the account
+       menu + notifications while the sidebar is hidden — but lift it clear of the
+       bottom nav bar. On desktop/landscape (not compact) it stays anchored bottom-left. */
+    body.gr-compact .zw-capsule-root { bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px); }
 
     .zw-capsule {
         background: #1f2937;
@@ -335,11 +341,12 @@
     /* MOBILE BOTTOM NAV                                       */
     /* ─────────────────────────────────────────────────────── */
 
+    /* Bottom nav shows in COMPACT mode (body.gr-compact = portrait tablet OR < 1024px),
+       driven by the orientation engine in responsive-navigation.blade.php — so portrait
+       iPads (exactly 1024px wide) get it too, which the old @media 767px rule missed. */
     .zw-mobnav-root { display: none; font-family: 'Figtree', ui-sans-serif, system-ui, sans-serif; }
-    @media (max-width: 767px) {
-        .zw-mobnav-root { display: block; }
-        body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
-    }
+    body.gr-compact .zw-mobnav-root { display: block; }
+    body.gr-compact { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 
     .zw-mobnav {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 9998;

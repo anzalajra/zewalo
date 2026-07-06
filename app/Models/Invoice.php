@@ -32,6 +32,12 @@ class Invoice extends Model
         'price_includes_tax',
         'tax_invoice_number',
         'tax_invoice_date',
+        'currency',
+        'exchange_rate',
+        'pph23_withheld',
+        'pph23_rate',
+        'pph23_amount',
+        'pph23_bukti_potong_number',
     ];
 
     protected $casts = [
@@ -50,12 +56,20 @@ class Invoice extends Model
         'pph_amount' => 'decimal:2',
         'is_taxable' => 'boolean',
         'price_includes_tax' => 'boolean',
+        'exchange_rate' => 'decimal:6',
+        'pph23_withheld' => 'boolean',
+        'pph23_rate' => 'decimal:2',
+        'pph23_amount' => 'decimal:2',
     ];
 
     public const STATUS_SENT = 'sent';
+
     public const STATUS_NEGOTIATION = 'negotiation';
+
     public const STATUS_WAITING_FOR_PAYMENT = 'waiting_for_payment';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_PARTIAL = 'partial';
 
     public static function getStatusOptions(): array
@@ -91,7 +105,8 @@ class Invoice extends Model
         $date = now()->format('Ymd');
         $last = self::whereDate('created_at', today())->latest()->first();
         $sequence = $last ? intval(substr($last->number, -4)) + 1 : 1;
-        return $prefix . $date . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.$date.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
     public function user(): BelongsTo
@@ -131,13 +146,13 @@ class Invoice extends Model
     {
         // Aggregate from Rentals
         $rentals = $this->rentals;
-        
+
         // Subtotal (Sum of Rental Subtotals)
         $this->subtotal = $rentals->sum('subtotal');
-        
+
         // Tax Base
         $this->tax_base = $rentals->sum('tax_base');
-        
+
         // Taxes
         $this->ppn_amount = $rentals->sum('ppn_amount');
         $this->pph_amount = $rentals->sum('pph_amount');
@@ -150,27 +165,43 @@ class Invoice extends Model
             $this->is_taxable = $firstRental->is_taxable;
             $this->price_includes_tax = $firstRental->price_includes_tax;
         }
-        
+
         // Late Fee
         $this->late_fee = $rentals->sum('late_fee');
-        
+
         // Total (Sum of Rental Totals - which includes everything)
         $this->total = $rentals->sum('total');
-        
+
         // Recalculate paid amount from transactions
         $this->paid_amount = $this->transactions()
             ->where('type', FinanceTransaction::TYPE_INCOME)
             ->sum('amount');
-            
-        // Update status based on payment
-        if ($this->paid_amount >= $this->total - 0.01) {
+
+        // PPh 23 withheld by the customer counts toward settlement: the customer pays
+        // net cash but the withheld amount is our prepaid-tax credit, so the invoice is
+        // fully settled once cash paid + PPh23 credit ≥ total.
+        $settled = (float) $this->paid_amount + (float) ($this->pph23_amount ?? 0);
+
+        // Update status based on settlement
+        if ($settled >= (float) $this->total - 0.01) {
             $this->status = self::STATUS_PAID;
-        } elseif ($this->paid_amount > 0) {
+        } elseif ($settled > 0) {
             $this->status = self::STATUS_PARTIAL;
         } else {
             $this->status = self::STATUS_WAITING_FOR_PAYMENT;
         }
-        
+
         $this->save();
+    }
+
+    /**
+     * Outstanding balance (total − paid). The single place this math lives — used
+     * by the table balance column, action ->visible() guards, and the View page.
+     */
+    public function getBalanceAttribute(): float
+    {
+        // PPh 23 withheld is a settled portion (prepaid-tax credit), so it reduces the
+        // outstanding cash balance alongside actual payments.
+        return round((float) $this->total - (float) $this->paid_amount - (float) ($this->pph23_amount ?? 0), 2);
     }
 }

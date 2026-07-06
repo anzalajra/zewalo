@@ -3,54 +3,39 @@
 namespace App\Filament\Resources\Rentals\Pages;
 
 use App\Filament\Resources\Rentals\RentalResource;
-use App\Filament\Resources\Rentals\Schemas\RentalForm;
-use App\Services\Tenancy\RentalLimitService;
-use Filament\Actions\Action;
-use Filament\Resources\Pages\CreateRecord;
-use Filament\Notifications\Notification;
+use App\Models\Rental;
+use Filament\Resources\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 
-class CreateRental extends CreateRecord
+/**
+ * Create rental — renders the custom Livewire RentalEditor (Fase 3 port) instead
+ * of the Filament form. The editor owns the whole create flow: catalog popup,
+ * stock-aware assignment, ghost slots, promo picker, and totals. Tenant rental
+ * quota (RentalLimitService) is enforced inside the editor's save path.
+ */
+class CreateRental extends Page
 {
     protected static string $resource = RentalResource::class;
 
-    protected array $groupedItemsData = [];
+    public ?Rental $record = null;
 
-    protected function mutateFormDataBeforeCreate(array $data): array
+    public function getView(): string
     {
-        // Ensure tenant still has rental quota before creating new rental
-        RentalLimitService::ensureRentalLimitNotExceeded();
-
-        // Extract grouped_items before saving (not a DB column)
-        $this->groupedItemsData = $data['grouped_items'] ?? [];
-        unset($data['grouped_items']);
-        return $data;
+        return 'filament.rentals.editor';
     }
 
-    protected function afterCreate(): void
+    public function getTitle(): string|Htmlable
     {
-        // Sync rental items from grouped data
-        RentalForm::syncRentalItems($this->record, $this->groupedItemsData);
-
-        // Recalculate totals from actual DB items
-        $this->record->refresh();
-        $subtotal = $this->record->items()->sum('subtotal');
-        $total = $subtotal - ($this->record->discount ?? 0);
-
-        $this->record->update([
-            'subtotal' => $subtotal,
-            'total' => $total,
-        ]);
-
-        // Increment monthly rental count for tenant
-        RentalLimitService::incrementRentalCount();
+        return '';
     }
 
-    protected function getFormActions(): array
+    public function getHeading(): string|Htmlable
     {
-        return [
-            $this->getCreateFormAction(),
-            $this->getCreateAnotherFormAction(),
-            $this->getCancelFormAction(),
-        ];
+        return '';
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return [];
     }
 }

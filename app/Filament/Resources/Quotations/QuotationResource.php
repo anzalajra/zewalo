@@ -8,6 +8,7 @@ use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Quotations\Pages\CreateQuotation;
 use App\Filament\Resources\Quotations\Pages\EditQuotation;
 use App\Filament\Resources\Quotations\Pages\ListQuotations;
+use App\Filament\Resources\Quotations\Pages\ViewQuotation;
 use App\Filament\Resources\Quotations\RelationManagers\RentalsRelationManager;
 use App\Models\Invoice;
 use App\Models\Quotation;
@@ -124,6 +125,7 @@ class QuotationResource extends Resource
                 //
             ])
             ->recordActions([
+                \App\Filament\Actions\ConvertQuotationToInvoiceAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
                 Action::make('change_status')
@@ -219,6 +221,7 @@ class QuotationResource extends Resource
         return [
             'index' => ListQuotations::route('/'),
             'create' => CreateQuotation::route('/create'),
+            'view' => ViewQuotation::route('/{record}'),
             'edit' => EditQuotation::route('/{record}/edit'),
         ];
     }

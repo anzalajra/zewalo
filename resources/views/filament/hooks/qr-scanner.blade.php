@@ -49,27 +49,47 @@
         // Play beep sound (optional, simple implementation)
         // const audio = new Audio('/sounds/beep.mp3'); audio.play().catch(e => {});
 
+        // A same-origin URL QR (e.g. a document link) redirects directly, as before.
         try {
             const url = new URL(decodedText);
-            // Verify it's a system URL (same origin)
             if (url.origin === window.location.origin) {
-                 this.scanResult = 'QR Code Valid! Redirecting...';
-                 
-                 new FilamentNotification()
+                this.scanResult = 'QR Code Valid! Redirecting...';
+
+                new FilamentNotification()
                     .title('QR Code Detected')
                     .body('Redirecting to document...')
                     .success()
                     .send();
 
-                 setTimeout(() => {
-                     window.location.href = decodedText;
-                 }, 1000);
-            } else {
-                this.handleError('Invalid QR Code: Origin mismatch. Must be from this system.');
+                setTimeout(() => {
+                    window.location.href = decodedText;
+                }, 1000);
+                return;
             }
         } catch (e) {
-             this.handleError('Invalid QR Code Format: Not a valid URL.');
+            // Not a URL — fall through to closed-system unit/kit code resolution.
         }
+
+        // Otherwise treat the scan as a closed-system unit/kit label (PREFIX:serial)
+        // or a raw serial and resolve it to the product via admin.scan-resolve.
+        fetch(`{{ route('admin.scan-resolve') }}?code=${encodeURIComponent(decodedText)}`, {
+            headers: { 'Accept': 'application/json' },
+        })
+            .then(async (res) => {
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    this.scanResult = 'Unit ditemukan! Membuka produk...';
+                    new FilamentNotification()
+                        .title('Unit Terdeteksi')
+                        .body(data.label || 'Membuka produk...')
+                        .success()
+                        .send();
+                    setTimeout(() => { window.location.href = data.url; }, 800);
+                } else {
+                    this.handleError(data.message || 'Kode tidak dikenali.');
+                }
+            })
+            .catch(() => this.handleError('Gagal menghubungi server untuk resolve kode.'));
     },
     handleError(message) {
         this.isLoading = false;

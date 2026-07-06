@@ -26,6 +26,15 @@ class JournalService
             return;
         }
 
+        // Advanced accounting mode: rental-lifecycle payments & deposits post through
+        // the canonical engine (revenue recognized once, PPN split to Tax Payable,
+        // payments clear Receivable). Route them there and skip the generic
+        // Dr-Cash/Cr-contra posting below to avoid a double / mis-categorized entry.
+        // Simple mode and non-lifecycle categories (Maintenance, etc.) fall through.
+        if (RentalAccountingService::postFromTransaction($transaction)) {
+            return;
+        }
+
         // 1. Get the Cash/Bank Account (from FinanceAccount)
         $financeAccount = $transaction->account;
 
@@ -145,7 +154,14 @@ class JournalService
     protected static function isCategoryAutomaticallyResolvable(?string $category): bool
     {
         if (empty($category)) return false;
-        
+
+        // In advanced mode the canonical engine owns these rental-lifecycle categories,
+        // so they never need a manual GL mapping.
+        if (RentalAccountingService::isAdvanced()
+            && in_array($category, RentalAccountingService::EXPLICITLY_POSTED_CATEGORIES, true)) {
+            return true;
+        }
+
         // Check Category Mapping
         if (CategoryMapping::where('category', $category)->exists()) {
             return true;
@@ -200,17 +216,24 @@ class JournalService
             return null;
         }
 
-        // Validate balance
-        $totalDebit = collect($items)->sum('debit');
-        $totalCredit = collect($items)->sum('credit');
+        // Enforce the fundamental double-entry rule: debit MUST equal credit.
+        // An unbalanced entry corrupts the ledger, so refuse it (rolls back the
+        // surrounding transaction) instead of silently saving a broken row.
+        $totalDebit = round((float) collect($items)->sum('debit'), 2);
+        $totalCredit = round((float) collect($items)->sum('credit'), 2);
 
         if (abs($totalDebit - $totalCredit) > 0.01) {
-            $description .= " [WARNING: Unbalanced D:$totalDebit C:$totalCredit]";
+            throw new \RuntimeException(
+                "Refusing to post unbalanced journal entry (Debit: {$totalDebit}, Credit: {$totalCredit}) — {$description}"
+            );
         }
+
+        // Refuse to post into a closed accounting period (tutup buku).
+        self::assertPeriodOpen($date);
 
         return DB::transaction(function () use ($reference, $description, $items, $date) {
             $entry = JournalEntry::create([
-                'reference_number' => 'JRN-' . date('YmdHis') . '-' . str_pad((string)rand(0, 999), 3, '0', STR_PAD_LEFT),
+                'reference_number' => self::nextReferenceNumber($date),
                 'date' => $date ?? now(),
                 'description' => $description,
                 'reference_type' => get_class($reference),
@@ -240,6 +263,108 @@ class JournalService
 
             return $entry;
         });
+    }
+
+    /**
+     * The date up to and including which the books are closed. Postings dated on or
+     * before it are rejected. Stored in Setting `finance_locked_until` (YYYY-MM-DD).
+     */
+    public static function periodLockDate(): ?\Carbon\Carbon
+    {
+        $raw = Setting::get('finance_locked_until');
+        if (empty($raw)) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($raw)->endOfDay();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Guard against posting into a closed period. Throws when $date <= lock date.
+     */
+    public static function assertPeriodOpen(?string $date = null): void
+    {
+        $lock = self::periodLockDate();
+        if (! $lock) {
+            return;
+        }
+
+        $entryDate = $date ? \Carbon\Carbon::parse($date) : now();
+        if ($entryDate->lte($lock)) {
+            throw new \RuntimeException(
+                'Periode akuntansi sudah ditutup sampai '.$lock->toDateString().'. Buka periode (Settings → Finance) untuk memposting tanggal ini.'
+            );
+        }
+    }
+
+    /**
+     * Reverse a posted journal entry by creating a mirror entry (debit/credit swapped)
+     * in an OPEN period, dated today (or $date). Marks the original as reversed.
+     * The correct way to undo a posting without editing/deleting history.
+     */
+    public static function reverseEntry(JournalEntry $original, ?string $reason = null, ?string $date = null): ?JournalEntry
+    {
+        if ($original->isReversal()) {
+            throw new \RuntimeException('Tidak bisa membalik entri pembalik.');
+        }
+        if ($original->isReversed()) {
+            throw new \RuntimeException('Entri jurnal ini sudah pernah dibalik.');
+        }
+
+        $original->loadMissing('items');
+        if ($original->items->isEmpty()) {
+            return null;
+        }
+
+        $date = $date ?? now()->toDateString();
+        self::assertPeriodOpen($date);
+
+        return DB::transaction(function () use ($original, $reason, $date) {
+            $entry = JournalEntry::create([
+                'reference_number' => self::nextReferenceNumber($date),
+                'date' => $date,
+                'description' => 'Pembalik: '.$original->description.($reason ? ' — '.$reason : ''),
+                'reference_type' => $original->reference_type,
+                'reference_id' => $original->reference_id,
+                'reversal_of_id' => $original->id,
+            ]);
+
+            foreach ($original->items as $item) {
+                JournalEntryItem::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id' => $item->account_id,
+                    'debit' => $item->credit, // swapped
+                    'credit' => $item->debit,
+                ]);
+                $item->account?->recalculateBalance();
+            }
+
+            $original->update(['reversed_at' => now()]);
+
+            return $entry;
+        });
+    }
+
+    /**
+     * Sequential, collision-free journal number: JRN-YYYYMM-##### (5-digit running
+     * sequence per month). Replaces the old rand()-based suffix which was neither
+     * sequential nor unique — a requirement for auditable Indonesian bookkeeping.
+     */
+    protected static function nextReferenceNumber(?string $date = null): string
+    {
+        $prefix = 'JRN-' . ($date ? date('Ym', strtotime($date)) : date('Ym')) . '-';
+
+        $last = JournalEntry::where('reference_number', 'like', $prefix . '%')
+            ->orderByDesc('reference_number')
+            ->value('reference_number');
+
+        $sequence = $last ? ((int) substr($last, -5)) + 1 : 1;
+
+        return $prefix . str_pad((string) $sequence, 5, '0', STR_PAD_LEFT);
     }
 
     /**
